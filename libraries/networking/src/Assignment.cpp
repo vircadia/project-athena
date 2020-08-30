@@ -62,7 +62,6 @@ Assignment::Assignment(Assignment::Command command, Assignment::Type type, const
     _location(location),
     _payload(),
     _isStatic(false),
-    _walletUUID(),
     _nodeVersion(),
     _dataDirectory(dataDirectory)
 {
@@ -78,7 +77,6 @@ Assignment::Assignment(ReceivedMessage& message) :
     _pool(),
     _location(GlobalLocation),
     _payload(),
-    _walletUUID(),
     _nodeVersion()
 {
     if (message.getType() == PacketType::RequestAssignment) {
@@ -104,7 +102,6 @@ Assignment::Assignment(const Assignment& otherAssignment) : QObject() {
     _location = otherAssignment._location;
     _pool = otherAssignment._pool;
     _payload = otherAssignment._payload;
-    _walletUUID = otherAssignment._walletUUID;
     _nodeVersion = otherAssignment._nodeVersion;
 }
 
@@ -123,7 +120,6 @@ void Assignment::swap(Assignment& otherAssignment) {
     swap(_location, otherAssignment._location);
     swap(_pool, otherAssignment._pool);
     swap(_payload, otherAssignment._payload);
-    swap(_walletUUID, otherAssignment._walletUUID);
     swap(_nodeVersion, otherAssignment._nodeVersion);
 }
 
@@ -167,7 +163,7 @@ QDataStream& operator<<(QDataStream &out, const Assignment& assignment) {
     out << (quint8) assignment._type << assignment._uuid << assignment._pool << assignment._payload;
     
     if (assignment._command == Assignment::RequestCommand) {
-        out << assignment._nodeVersion << assignment._walletUUID;
+        out << assignment._nodeVersion;
     }
     
     return out;
@@ -179,7 +175,7 @@ QDataStream& operator>>(QDataStream &in, Assignment& assignment) {
     assignment._type = (Assignment::Type) packedType;
     
     if (assignment._command == Assignment::RequestCommand) {
-        in >> assignment._nodeVersion >> assignment._walletUUID;
+        in >> assignment._nodeVersion;
     }
     
     return in;

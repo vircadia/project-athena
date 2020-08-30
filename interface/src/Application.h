@@ -524,8 +524,6 @@ private slots:
     void nodeAdded(SharedNodePointer node);
     void nodeActivated(SharedNodePointer node);
     void nodeKilled(SharedNodePointer node);
-    static void packetSent(quint64 length);
-    static void addingEntityWithCertificate(const QString& certificateID, const QString& placeName);
     void updateDisplayMode();
     void setDisplayPlugin(DisplayPluginPointer newPlugin);
     void domainConnectionRefused(const QString& reasonMessage, int reason, const QString& extraInfo);

@@ -248,25 +248,6 @@ public slots:
     Q_INVOKABLE bool canRezTmp();
 
     /**jsdoc
-     * Checks whether or not the script can rez (create) new certified entities in the domain. Certified entities are entities 
-     * that have PoP certificates.
-     * @function Entities.canRezCertified
-     * @returns {boolean} <code>true</code> if the domain server will allow the script to rez (create) new certified entities,
-     *     otherwise <code>false</code>.
-     */
-    Q_INVOKABLE bool canRezCertified();
-
-    /**jsdoc
-     * Checks whether or not the script can rez (create) new temporary certified entities in the domain. Temporary entities are 
-     * entities with a finite <code>lifetime</code> property value set. Certified entities are entities that have PoP 
-     * certificates.
-     * @function Entities.canRezTmpCertified
-     * @returns {boolean} <code>true</code> if the domain server will allow the script to rez (create) new temporary certified 
-     *     entities, otherwise <code>false</code>.
-     */
-    Q_INVOKABLE bool canRezTmpCertified();
-
-    /**jsdoc
      * Checks whether or not the script can make changes to the asset server's assets.
      * @function Entities.canWriteAssets
      * @returns {boolean} <code>true</code> if the domain server will allow the script to make changes to the asset server's 
@@ -2127,25 +2108,6 @@ public slots:
 
 
     /**jsdoc
-     * Gets the static certificate for an entity. The static certificate contains static properties of the item which cannot
-     * be altered.
-     * @function Entities.getStaticCertificateJSON
-     * @param {Uuid} entityID - The ID of the entity to get the static certificate for.
-     * @returns {string} The entity's static certificate as a JSON string if the entity can be found, otherwise <code>""</code>.
-     */
-    Q_INVOKABLE QString getStaticCertificateJSON(const QUuid& entityID);
-
-    /**jsdoc
-     * Verifies the entity's proof of provenance, i.e., that the entity's <code>certificateID</code> property was produced by
-     * High Fidelity signing the entity's static certificate JSON.
-     * @function Entities.verifyStaticCertificateProperties
-     * @param {Uuid} entityID - The ID of the entity to verify.
-     * @returns {boolean} <code>true</code> if the entity can be found, its <code>certificateID</code> property is present, and  
-     *     its value matches the entity's static certificate JSON; otherwise <code>false</code>.
-     */
-    Q_INVOKABLE bool verifyStaticCertificateProperties(const QUuid& entityID);
-
-    /**jsdoc
      * Gets information about an entity property, including a minimum to maximum range for some numerical properties.
      * @function Entities.getPropertyInfo
      * @param {string} propertyName - The name of the property to get the information for.
@@ -2230,26 +2192,6 @@ signals:
      * @returns {Signal}
      */
     void canRezTmpChanged(bool canRezTmp);
-
-    /**jsdoc
-     * Triggered when your ability to rez (create) certified entities changes. Certified entities are entities that have PoP
-     * certificates.
-     * @function Entities.canRezCertifiedChanged
-     * @param {boolean} canRezCertified - <code>true</code> if the script can rez (create) certified entities, 
-     *     <code>false</code> if it can't.
-     * @returns {Signal}
-     */
-    void canRezCertifiedChanged(bool canRezCertified);
-
-    /**jsdoc
-     * Triggered when your ability to rez (create) temporary certified entities changes. Temporary entities are entities with a
-     * finite <code>lifetime</code> property value set. Certified entities are entities that have PoP certificates.
-     * @function Entities.canRezTmpCertifiedChanged
-     * @param {boolean} canRezTmpCertified - <code>true</code> if the script can rez (create) temporary certified entities,
-     *     <code>false</code> if it can't.
-     * @returns {Signal}
-     */
-    void canRezTmpCertifiedChanged(bool canRezTmpCertified);
 
     /**jsdoc
      * Triggered when your ability to make changes to the asset server's assets changes.

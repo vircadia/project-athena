@@ -10,7 +10,7 @@
 /* global Script, Controller, RIGHT_HAND, LEFT_HAND, Mat4, MyAvatar, Vec3, Quat, getEnabledModuleByName, makeRunningValues,
    Entities, enableDispatcherModule, disableDispatcherModule, entityIsGrabbable, makeDispatcherModuleParameters, MSECS_PER_SEC,
    HAPTIC_PULSE_STRENGTH, HAPTIC_PULSE_DURATION, TRIGGER_OFF_VALUE, TRIGGER_ON_VALUE, ZERO_VEC,
-   projectOntoEntityXYPlane, ContextOverlay, HMD, Picks, makeLaserLockInfo, makeLaserParams, AddressManager,
+   projectOntoEntityXYPlane, HMD, Picks, makeLaserLockInfo, makeLaserParams, AddressManager,
    getEntityParents, Selection, DISPATCHER_HOVERING_LIST, unhighlightTargetEntity, Messages, findGrabbableGroupParent,
    worldPositionToRegistrationFrameMatrix, DISPATCHER_PROPERTIES, handsAreTracked
 */
@@ -53,9 +53,6 @@ Script.include("/~/system/libraries/controllers.js");
         this.targetEntityID = null;
         this.targetObject = null;
         this.previouslyUnhooked = {};
-        this.potentialEntityWithContextOverlay = false;
-        this.entityWithContextOverlay = false;
-        this.contextOverlayTimer = false;
         this.reticleMinX = MARGIN;
         this.reticleMaxX = 0;
         this.reticleMinY = MARGIN;
@@ -333,7 +330,6 @@ Script.include("/~/system/libraries/controllers.js");
             }));
             unhighlightTargetEntity(this.targetEntityID);
             this.grabbing = false;
-            this.potentialEntityWithContextOverlay = false;
             MyAvatar.clearJointData(FAR_GRAB_JOINTS[this.hand]);
             this.initialEntityRotation = Quat.IDENTITY;
             this.initialControllerRotation = Quat.IDENTITY;
@@ -369,14 +365,6 @@ Script.include("/~/system/libraries/controllers.js");
                 return true;
             }
             return false;
-        };
-
-        this.destroyContextOverlay = function (controllerData) {
-            if (this.entityWithContextOverlay) {
-                ContextOverlay.destroyContextOverlay(this.entityWithContextOverlay);
-                this.entityWithContextOverlay = false;
-                this.potentialEntityWithContextOverlay = false;
-            }
         };
 
         this.targetIsNull = function () {
@@ -418,8 +406,6 @@ Script.include("/~/system/libraries/controllers.js");
                     var otherModule = this.getOtherModule();
                     otherModule.disabled = true;
                     return makeRunningValues(true, [], []);
-                } else {
-                    this.destroyContextOverlay();
                 }
             }
             return makeRunningValues(false, [], []);
@@ -484,15 +470,7 @@ Script.include("/~/system/libraries/controllers.js");
                         this.targetObject = new TargetObject(entityID, targetProps);
                         this.targetObject.parentProps = getEntityParents(targetProps);
 
-                        if (this.contextOverlayTimer) {
-                            Script.clearTimeout(this.contextOverlayTimer);
-                        }
-                        this.contextOverlayTimer = false;
-                        if (entityID === this.entityWithContextOverlay) {
-                            this.destroyContextOverlay();
-                        } else {
-                            Selection.removeFromSelectedItemsList("contextOverlayHighlightList", "entity", entityID);
-                        }
+                        Selection.removeFromSelectedItemsList("contextOverlayHighlightList", "entity", entityID);
 
                         var targetEntity = this.targetObject.getTargetEntity();
                         entityID = targetEntity.id;
@@ -504,41 +482,6 @@ Script.include("/~/system/libraries/controllers.js");
                             this.grabbedDistance = rayPickInfo.distance;
                             this.distanceHolding = true;
                             this.startFarGrabEntity(controllerData, targetProps);
-                        }
-                    } else if (!this.entityWithContextOverlay) {
-                        var _this = this;
-
-                        if (_this.potentialEntityWithContextOverlay !== rayPickInfo.objectID) {
-                            if (_this.contextOverlayTimer) {
-                                Script.clearTimeout(_this.contextOverlayTimer);
-                            }
-                            _this.contextOverlayTimer = false;
-                            _this.potentialEntityWithContextOverlay = rayPickInfo.objectID;
-                        }
-
-                        if (!_this.contextOverlayTimer) {
-                            _this.contextOverlayTimer = Script.setTimeout(function () {
-                                if (!_this.entityWithContextOverlay &&
-                                    _this.contextOverlayTimer &&
-                                    _this.potentialEntityWithContextOverlay === rayPickInfo.objectID) {
-                                    var cotProps = Entities.getEntityProperties(rayPickInfo.objectID,
-                                        DISPATCHER_PROPERTIES);
-                                    var pointerEvent = {
-                                        type: "Move",
-                                        id: _this.hand + 1, // 0 is reserved for hardware mouse
-                                        pos2D: projectOntoEntityXYPlane(rayPickInfo.objectID,
-                                            rayPickInfo.intersection, cotProps),
-                                        pos3D: rayPickInfo.intersection,
-                                        normal: rayPickInfo.surfaceNormal,
-                                        direction: Vec3.subtract(ZERO_VEC, rayPickInfo.surfaceNormal),
-                                        button: "Secondary"
-                                    };
-                                    if (ContextOverlay.createOrDestroyContextOverlay(rayPickInfo.objectID, pointerEvent)) {
-                                        _this.entityWithContextOverlay = rayPickInfo.objectID;
-                                    }
-                                }
-                                _this.contextOverlayTimer = false;
-                            }, 500);
                         }
                     }
                 }

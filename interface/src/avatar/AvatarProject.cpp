@@ -226,43 +226,6 @@ QStringList AvatarProject::getProjectFiles() const {
     return paths;
 }
 
-MarketplaceItemUploader* AvatarProject::upload(bool updateExisting) {
-    QUuid itemID;
-    if (updateExisting) {
-        itemID = _fst->getMarketplaceID();
-    }
-    auto uploader = new MarketplaceItemUploader(getProjectName(), "", QFileInfo(getFSTPath()).fileName(),
-                                                itemID, _projectFiles);
-    connect(uploader, &MarketplaceItemUploader::completed, this, [this, uploader]() {
-        if (uploader->getError() == MarketplaceItemUploader::Error::None) {
-            _fst->setMarketplaceID(uploader->getMarketplaceID());
-            _fst->write();
-        }
-    });
-
-    return uploader;
-}
-
 AvatarDoctor* AvatarProject::diagnose() {
     return new AvatarDoctor(QUrl(getFSTPath()));
-}
-
-void AvatarProject::openInInventory() const {
-    constexpr int TIME_TO_WAIT_FOR_INVENTORY_TO_OPEN_MS { 1000 };
-
-    auto tablet = dynamic_cast<TabletProxy*>(
-        DependencyManager::get<TabletScriptingInterface>()->getTablet("com.highfidelity.interface.tablet.system"));
-    tablet->loadQMLSource("hifi/commerce/wallet/Wallet.qml");
-    DependencyManager::get<HMDScriptingInterface>()->openTablet();
-
-    // I'm not a fan of this, but it's the only current option.
-    auto name = getProjectName();
-    QTimer::singleShot(TIME_TO_WAIT_FOR_INVENTORY_TO_OPEN_MS, [name, tablet]() {
-        tablet->sendToQml(QVariantMap({ { "method", "updatePurchases" }, { "filterText", name } }));
-    });
-
-    QQuickItem* root = tablet->getTabletRoot();
-    if (root) {
-        root->forceActiveFocus();
-    }
 }

@@ -37,7 +37,7 @@ class AssignmentClientMonitor : public QObject, public HTTPRequestHandler {
 public:
     AssignmentClientMonitor(const unsigned int numAssignmentClientForks, const unsigned int minAssignmentClientForks,
                             const unsigned int maxAssignmentClientForks, Assignment::Type requestAssignmentType,
-                            QString assignmentPool, quint16 listenPort, quint16 childMinListenPort, QUuid walletUUID,
+                            QString assignmentPool, quint16 listenPort, quint16 childMinListenPort,
                             QString assignmentServerHostname, quint16 assignmentServerPort, quint16 httpStatusServerPort,
                             QString logDirectory);
     ~AssignmentClientMonitor();
@@ -70,7 +70,6 @@ private:
 
     Assignment::Type _requestAssignmentType;
     QString _assignmentPool;
-    QUuid _walletUUID;
     QString _assignmentServerHostname;
     quint16 _assignmentServerPort;
 

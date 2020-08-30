@@ -467,27 +467,21 @@ function savePermissions() {
           "id_can_connect": anonymousCanConnect,
           "id_can_rez_avatar_entities": anonymousCanConnect,
           "id_can_rez": anonymousCanRez,
-          "id_can_rez_certified": anonymousCanRez,
           "id_can_rez_tmp": anonymousCanRez,
-          "id_can_rez_tmp_certified": anonymousCanRez,
           "permissions_id": "anonymous"
         },
         {
           "id_can_connect": friendsCanConnect,
           "id_can_rez_avatar_entities": friendsCanConnect,
           "id_can_rez": friendsCanRez,
-          "id_can_rez_certified": friendsCanRez,
           "id_can_rez_tmp": friendsCanRez,
-          "id_can_rez_tmp_certified": friendsCanRez,
           "permissions_id": "friends"
         },
         {
           "id_can_connect": loggedInCanConnect,
           "id_can_rez_avatar_entities": loggedInCanConnect,
           "id_can_rez": loggedInCanRez,
-          "id_can_rez_certified": loggedInCanRez,
           "id_can_rez_tmp": loggedInCanRez,
-          "id_can_rez_tmp_certified": loggedInCanRez,
           "permissions_id": "logged-in"
         },
         {
@@ -498,9 +492,7 @@ function savePermissions() {
           "id_can_kick": localhostPermissions,
           "id_can_replace_content": localhostPermissions,
           "id_can_rez": localhostPermissions,
-          "id_can_rez_certified": localhostPermissions,
           "id_can_rez_tmp": localhostPermissions,
-          "id_can_rez_tmp_certified": localhostPermissions,
           "id_can_write_to_asset_server": localhostPermissions,
           "permissions_id": "localhost"
         }

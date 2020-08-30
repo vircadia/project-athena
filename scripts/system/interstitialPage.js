@@ -54,7 +54,6 @@
         "Tip: Take and share your snapshots with everyone using the Snap app.",
         "Tip: Did you know you can show websites in-world by creating a web entity?",
         "Tip: Find out more information about domains by visiting our website!",
-        "Tip: Did you know you can get cool new apps from the Marketplace?",
         "Tip: Print your snapshots from the Snap app to share with others!",
         "Tip: Log in to make friends, visit new domains, and save avatars!"
     ];

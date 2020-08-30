@@ -23,8 +23,6 @@ class FST : public QObject {
     Q_OBJECT
     Q_PROPERTY(QString name READ getName WRITE setName NOTIFY nameChanged)
     Q_PROPERTY(QString modelPath READ getModelPath WRITE setModelPath NOTIFY modelPathChanged)
-    Q_PROPERTY(QUuid marketplaceID READ getMarketplaceID)
-    Q_PROPERTY(bool hasMarketplaceID READ getHasMarketplaceID NOTIFY marketplaceIDChanged)
 public:
     FST(QString fstPath, QVariantHash data);
 
@@ -38,10 +36,6 @@ public:
     QString getModelPath() const { return _modelPath; }
     void setModelPath(const QString& modelPath);
 
-    Q_INVOKABLE bool getHasMarketplaceID() const { return !_marketplaceID.isNull(); }
-    QUuid getMarketplaceID() const { return _marketplaceID; }
-    void setMarketplaceID(QUuid marketplaceID);
-
     QStringList getScriptPaths() const { return _scriptPaths; }
     void setScriptPaths(QStringList scriptPaths) { _scriptPaths = scriptPaths; }
 
@@ -54,14 +48,12 @@ public:
 signals:
     void nameChanged(const QString& name);
     void modelPathChanged(const QString& modelPath);
-    void marketplaceIDChanged();
 
 private:
     QString _fstPath;
 
     QString _name{};
     QString _modelPath{};
-    QUuid _marketplaceID{};
 
     QStringList _scriptPaths{};
 

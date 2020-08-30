@@ -43,7 +43,7 @@ const QString ASSIGNMENT_CLIENT_TARGET_NAME = "assignment-client";
 const long long ASSIGNMENT_REQUEST_INTERVAL_MSECS = 1 * 1000;
 
 AssignmentClient::AssignmentClient(Assignment::Type requestAssignmentType, QString assignmentPool,
-                                   quint16 listenPort, QUuid walletUUID, QString assignmentServerHostname,
+                                   quint16 listenPort, QString assignmentServerHostname,
                                    quint16 assignmentServerPort, quint16 assignmentMonitorPort) :
     _assignmentServerHostname(DEFAULT_ASSIGNMENT_SERVER_HOSTNAME)
 {
@@ -68,13 +68,6 @@ AssignmentClient::AssignmentClient(Assignment::Type requestAssignmentType, QStri
 
     // setup our _requestAssignment member variable from the passed arguments
     _requestAssignment = Assignment(Assignment::RequestCommand, requestAssignmentType, assignmentPool);
-
-    // check for a wallet UUID on the command line or in the config
-    // this would represent where the user running AC wants funds sent to
-    if (!walletUUID.isNull()) {
-        qCDebug(assignment_client) << "The destination wallet UUID for credits is" << uuidStringWithoutCurlyBraces(walletUUID);
-        _requestAssignment.setWalletUUID(walletUUID);
-    }
 
     // check for an overriden assignment server hostname
     if (assignmentServerHostname != "") {

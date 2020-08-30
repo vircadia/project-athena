@@ -138,9 +138,6 @@ public:
     virtual bool handlesEditPacketType(PacketType packetType) const { return false; }
     virtual int processEditPacketData(ReceivedMessage& message, const unsigned char* editData, int maxLength,
                                       const SharedNodePointer& sourceNode) { return 0; }
-    virtual void processChallengeOwnershipRequestPacket(ReceivedMessage& message, const SharedNodePointer& sourceNode) { return; }
-    virtual void processChallengeOwnershipReplyPacket(ReceivedMessage& message, const SharedNodePointer& sourceNode) { return; }
-    virtual void processChallengeOwnershipPacket(ReceivedMessage& message, const SharedNodePointer& sourceNode) { return; }
 
     virtual bool rootElementHasData() const { return false; }
     virtual void releaseSceneEncodeData(OctreeElementExtraEncodeData* extraEncodeData) const { }
@@ -218,8 +215,8 @@ public:
     bool readFromFile(const char* filename);
     bool readFromURL(const QString& url, const bool isObservable = true, const qint64 callerId = -1, const bool isImport = false); // will support file urls as well...
     bool readFromByteArray(const QString& url, const QByteArray& byteArray);
-    bool readFromStream(uint64_t streamLength, QDataStream& inputStream, const QString& marketplaceID="", const bool isImport = false, const QUrl& urlString = QUrl());
-    bool readJSONFromStream(uint64_t streamLength, QDataStream& inputStream, const QString& marketplaceID="", const bool isImport = false, const QUrl& urlString = QUrl());
+    bool readFromStream(uint64_t streamLength, QDataStream& inputStream, const bool isImport = false, const QUrl& urlString = QUrl());
+    bool readJSONFromStream(uint64_t streamLength, QDataStream& inputStream, const bool isImport = false, const QUrl& urlString = QUrl());
     bool readJSONFromGzippedFile(QString qFileName);
     virtual bool readFromMap(QVariantMap& entityDescription, const bool isImport = false) = 0;
 

@@ -7,7 +7,7 @@
 
 /* global Script, Entities, enableDispatcherModule, disableDispatcherModule, makeRunningValues,
    makeDispatcherModuleParameters, Overlays, HMD, TRIGGER_ON_VALUE, TRIGGER_OFF_VALUE, getEnabledModuleByName,
-   ContextOverlay, Picks, makeLaserParams, Settings, MyAvatar, RIGHT_HAND, LEFT_HAND, DISPATCHER_PROPERTIES
+   Picks, makeLaserParams, Settings, MyAvatar, RIGHT_HAND, LEFT_HAND, DISPATCHER_PROPERTIES
 */
 
 Script.include("/~/system/libraries/controllerDispatcherUtils.js");
@@ -173,20 +173,6 @@ Script.include("/~/system/libraries/controllers.js");
             return intersectionType["None"];
         };
 
-        this.deleteContextOverlay = function() {
-            var farGrabModule = getEnabledModuleByName(this.hand === RIGHT_HAND ?
-                                                       "RightFarActionGrabEntity" :
-                                                       "LeftFarActionGrabEntity");
-            if (farGrabModule) {
-                var entityWithContextOverlay = farGrabModule.entityWithContextOverlay;
-
-                if (entityWithContextOverlay) {
-                    ContextOverlay.destroyContextOverlay(entityWithContextOverlay);
-                    farGrabModule.entityWithContextOverlay = false;
-                }
-            }
-        };
-
         this.updateAlwaysOn = function(type) {
             var PREFER_STYLUS_OVER_LASER = "preferStylusOverLaser";
             this.parameters.handLaser.alwaysOn = (!Settings.getValue(PREFER_STYLUS_OVER_LASER, false) || type === intersectionType["HifiKeyboard"]);
@@ -267,7 +253,6 @@ Script.include("/~/system/libraries/controllers.js");
                 return makeRunningValues(true, [], []);
             }
 
-            this.deleteContextOverlay();
             this.running = false;
             this.dominantHandOverride = false;
             return makeRunningValues(false, [], []);

@@ -126,7 +126,6 @@ LogDialog::LogDialog(QWidget* parent, AbstractLoggerInterface* logger) : BaseLog
     _filterDropdown->addItem("hifi.audioclient");
     _filterDropdown->addItem("hifi.animation");
     _filterDropdown->addItem("hifi.avatars");
-    _filterDropdown->addItem("hifi.commerce");
     _filterDropdown->addItem("hifi.controllers");
     _filterDropdown->addItem("hifi.entities");
     _filterDropdown->addItem("hifi.gl");

@@ -127,7 +127,7 @@ void FSTReader::writeVariant(QBuffer& buffer, QVariantHash::const_iterator& it) 
 
 QByteArray FSTReader::writeMapping(const QVariantHash& mapping) {
     static const QStringList PREFERED_ORDER = QStringList() << NAME_FIELD << TYPE_FIELD << SCALE_FIELD << FILENAME_FIELD
-    << MARKETPLACE_ID_FIELD << TEXDIR_FIELD << SCRIPT_FIELD << JOINT_FIELD
+    << TEXDIR_FIELD << SCRIPT_FIELD << JOINT_FIELD
     << BLENDSHAPE_FIELD << JOINT_INDEX_FIELD;
     QBuffer buffer;
     buffer.open(QIODevice::WriteOnly);

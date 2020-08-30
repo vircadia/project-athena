@@ -1,7 +1,7 @@
 "use strict";
 /*jslint vars:true, plusplus:true, forin:true*/
 /*global Tablet, Script, Entities, MyAvatar, Camera, Quat, HMD, Account, UserActivityLogger, Messages, print,
-  AvatarBookmarks, ContextOverlay, AddressManager
+  AvatarBookmarks, AddressManager
 */
 /* eslint indent: ["error", 4, { "outerIIFEBody": 0 }] */
 //
@@ -175,8 +175,6 @@ function onAnimGraphUrlChanged(url) {
 var selectedAvatarEntityID = null;
 var grabbedAvatarEntityChangeNotifier = null;
 
-var MARKETPLACE_PURCHASES_QML_PATH = "hifi/commerce/wallet/Wallet.qml";
-var MARKETPLACE_URL = Account.metaverseServerURL + "/marketplace";
 var MARKETPLACES_INJECT_SCRIPT_URL = Script.resolvePath("html/js/marketplacesInject.js");
 
 function getWearablesFrozen() {
@@ -340,14 +338,7 @@ function fromQml(message) { // messages are {method, params}, like json-rpc. See
         break;
     case 'navigate':
         var tablet = Tablet.getTablet("com.highfidelity.interface.tablet.system");
-        if(message.url.indexOf('app://') === 0) {
-            if (message.url === 'app://marketplace') {
-                tablet.gotoWebScreen(MARKETPLACE_URL, MARKETPLACES_INJECT_SCRIPT_URL);
-            } else if (message.url === 'app://purchases') {
-                tablet.pushOntoStack(MARKETPLACE_PURCHASES_QML_PATH);
-            }
-
-        } else if(message.url.indexOf('hifi://') === 0) {
+        if(message.url.indexOf('hifi://') === 0) {
             AddressManager.handleLookupString(message.url, false);
         } else if(message.url.indexOf('https://') === 0 || message.url.indexOf('http://') === 0) {
             tablet.gotoWebScreen(message.url, MARKETPLACES_INJECT_SCRIPT_URL);
@@ -604,7 +595,6 @@ function onTabletButtonClicked() {
         // for toolbar-mode: go back to home screen, this will close the window.
         tablet.gotoHomeScreen();
     } else {
-        ContextOverlay.enabled = false;
         tablet.loadQMLSource(AVATARAPP_QML_SOURCE);
     }
 }

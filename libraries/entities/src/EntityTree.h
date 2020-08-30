@@ -90,9 +90,6 @@ public:
     void fixupTerseEditLogging(EntityItemProperties& properties, QList<QString>& changedProperties);
     virtual int processEditPacketData(ReceivedMessage& message, const unsigned char* editData, int maxLength,
                                       const SharedNodePointer& senderNode) override;
-    virtual void processChallengeOwnershipRequestPacket(ReceivedMessage& message, const SharedNodePointer& sourceNode) override;
-    virtual void processChallengeOwnershipReplyPacket(ReceivedMessage& message, const SharedNodePointer& sourceNode) override;
-    virtual void processChallengeOwnershipPacket(ReceivedMessage& message, const SharedNodePointer& sourceNode) override;
 
     virtual EntityItemID evalRayIntersection(const glm::vec3& origin, const glm::vec3& direction,
         QVector<EntityItemID> entityIdsToInclude, QVector<EntityItemID> entityIdsToDiscard,
@@ -251,9 +248,6 @@ public:
 
     static const float DEFAULT_MAX_TMP_ENTITY_LIFETIME;
 
-    QByteArray computeNonce(const EntityItemID& entityID, const QString ownerKey);
-    bool verifyNonce(const EntityItemID& entityID, const QString& nonce);
-
     QUuid getMyAvatarSessionUUID() { return _myAvatar ? _myAvatar->getSessionUUID() : QUuid(); }
     void setMyAvatar(std::shared_ptr<AvatarData> myAvatar) { _myAvatar = myAvatar; }
 
@@ -281,7 +275,6 @@ public:
 
     void updateEntityQueryAACube(SpatiallyNestablePointer object, EntityEditPacketSender* packetSender,
                                  bool force, bool tellServer);
-    void startDynamicDomainVerificationOnServer(float minimumAgeToRemove);
 
 signals:
     void deletingEntity(const EntityItemID& entityID);
@@ -330,12 +323,6 @@ protected:
     mutable QReadWriteLock _entityMapLock;
     QHash<EntityItemID, EntityItemPointer> _entityMap;
 
-    mutable QReadWriteLock _entityCertificateIDMapLock;
-    QHash<QString, QList<EntityItemID>> _entityCertificateIDMap;
-
-    mutable QReadWriteLock _entityNonceMapLock;
-    QHash<EntityItemID, QPair<QUuid, QString>> _entityNonceMap;
-
     EntitySimulationPointer _simulation;
 
     bool _wantEditLogging = false;
@@ -380,15 +367,7 @@ protected:
     MovingEntitiesOperator _entityMover;
     QHash<EntityItemID, EntityItemPointer> _entitiesToAdd;
 
-    Q_INVOKABLE void startChallengeOwnershipTimer(const EntityItemID& entityItemID);
-
 private:
-    void addCertifiedEntityOnServer(EntityItemPointer entity);
-    void removeCertifiedEntityOnServer(EntityItemPointer entity);
-    void sendChallengeOwnershipPacket(const QString& certID, const QString& ownerKey, const EntityItemID& entityItemID, const SharedNodePointer& senderNode);
-    void sendChallengeOwnershipRequestPacket(const QByteArray& id, const QByteArray& text, const QByteArray& nodeToChallenge, const SharedNodePointer& senderNode);
-    void validatePop(const QString& certID, const EntityItemID& entityItemID, const SharedNodePointer& senderNode);
-
     std::shared_ptr<AvatarData> _myAvatar{ nullptr };
 
     static std::function<QObject*(const QUuid&)> _getEntityObjectOperator;

@@ -34,11 +34,10 @@ DomainGatekeeper::DomainGatekeeper(DomainServer* server) :
     initLocalIDManagement();
 }
 
-void DomainGatekeeper::addPendingAssignedNode(const QUuid& nodeUUID, const QUuid& assignmentUUID,
-                                              const QUuid& walletUUID, const QString& nodeVersion) {
+void DomainGatekeeper::addPendingAssignedNode(const QUuid& nodeUUID, const QUuid& assignmentUUID, const QString& nodeVersion) {
     _pendingAssignedNodes.emplace(std::piecewise_construct,
                                   std::forward_as_tuple(nodeUUID),
-                                  std::forward_as_tuple(assignmentUUID, walletUUID, nodeVersion));
+                                  std::forward_as_tuple(assignmentUUID, nodeVersion));
 }
 
 QUuid DomainGatekeeper::assignmentUUIDForPendingAssignment(const QUuid& tempUUID) {
@@ -348,8 +347,6 @@ void DomainGatekeeper::updateNodePermissions() {
             userPerms.permissions |= NodePermissions::Permission::canAdjustLocks;
             userPerms.permissions |= NodePermissions::Permission::canRezPermanentEntities;
             userPerms.permissions |= NodePermissions::Permission::canRezTemporaryEntities;
-            userPerms.permissions |= NodePermissions::Permission::canRezPermanentCertifiedEntities;
-            userPerms.permissions |= NodePermissions::Permission::canRezTemporaryCertifiedEntities;
             userPerms.permissions |= NodePermissions::Permission::canWriteToAssetServer;
             userPerms.permissions |= NodePermissions::Permission::canReplaceDomainContent;
             userPerms.permissions |= NodePermissions::Permission::canGetAndSetPrivateUserData;
@@ -426,7 +423,6 @@ SharedNodePointer DomainGatekeeper::processAssignmentConnectRequest(const NodeCo
 
     // set assignment related data on the linked data for this node
     nodeData->setAssignmentUUID(matchingQueuedAssignment->getUUID());
-    nodeData->setWalletUUID(it->second.getWalletUUID());
     nodeData->setNodeVersion(it->second.getNodeVersion());
     nodeData->setHardwareAddress(nodeConnection.hardwareAddress);
     nodeData->setMachineFingerprint(nodeConnection.machineFingerprint);
@@ -444,8 +440,6 @@ SharedNodePointer DomainGatekeeper::processAssignmentConnectRequest(const NodeCo
     userPerms.permissions |= NodePermissions::Permission::canAdjustLocks;
     userPerms.permissions |= NodePermissions::Permission::canRezPermanentEntities;
     userPerms.permissions |= NodePermissions::Permission::canRezTemporaryEntities;
-    userPerms.permissions |= NodePermissions::Permission::canRezPermanentCertifiedEntities;
-    userPerms.permissions |= NodePermissions::Permission::canRezTemporaryCertifiedEntities;
     userPerms.permissions |= NodePermissions::Permission::canWriteToAssetServer;
     userPerms.permissions |= NodePermissions::Permission::canReplaceDomainContent;
     userPerms.permissions |= NodePermissions::Permission::canGetAndSetPrivateUserData;

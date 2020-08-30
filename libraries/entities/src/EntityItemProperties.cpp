@@ -482,20 +482,6 @@ EntityPropertyFlags EntityItemProperties::getChangedProperties() const {
     CHECK_PROPERTY_CHANGE(PROP_SCRIPT_TIMESTAMP, scriptTimestamp);
     CHECK_PROPERTY_CHANGE(PROP_SERVER_SCRIPTS, serverScripts);
 
-    // Certifiable Properties
-    CHECK_PROPERTY_CHANGE(PROP_ITEM_NAME, itemName);
-    CHECK_PROPERTY_CHANGE(PROP_ITEM_DESCRIPTION, itemDescription);
-    CHECK_PROPERTY_CHANGE(PROP_ITEM_CATEGORIES, itemCategories);
-    CHECK_PROPERTY_CHANGE(PROP_ITEM_ARTIST, itemArtist);
-    CHECK_PROPERTY_CHANGE(PROP_ITEM_LICENSE, itemLicense);
-    CHECK_PROPERTY_CHANGE(PROP_LIMITED_RUN, limitedRun);
-    CHECK_PROPERTY_CHANGE(PROP_MARKETPLACE_ID, marketplaceID);
-    CHECK_PROPERTY_CHANGE(PROP_EDITION_NUMBER, editionNumber);
-    CHECK_PROPERTY_CHANGE(PROP_ENTITY_INSTANCE_NUMBER, entityInstanceNumber);
-    CHECK_PROPERTY_CHANGE(PROP_CERTIFICATE_ID, certificateID);
-    CHECK_PROPERTY_CHANGE(PROP_CERTIFICATE_TYPE, certificateType);
-    CHECK_PROPERTY_CHANGE(PROP_STATIC_CERTIFICATE_VERSION, staticCertificateVersion);
-
     // Location data for scripts
     CHECK_PROPERTY_CHANGE(PROP_LOCAL_POSITION, localPosition);
     CHECK_PROPERTY_CHANGE(PROP_LOCAL_ROTATION, localRotation);
@@ -834,23 +820,6 @@ EntityPropertyFlags EntityItemProperties::getChangedProperties() const {
  *     property to control which axis is facing you.
  *
  * @property {Entities.Grab} grab - The entity's grab-related properties.
- *
- * @property {string} itemName="" - Certifiable name of the Marketplace item.
- * @property {string} itemDescription="" - Certifiable description of the Marketplace item.
- * @property {string} itemCategories="" - Certifiable category of the Marketplace item.
- * @property {string} itemArtist="" - Certifiable artist that created the Marketplace item.
- * @property {string} itemLicense="" - Certifiable license URL for the Marketplace item.
- * @property {number} limitedRun=4294967295 - Certifiable maximum integer number of editions (copies) of the Marketplace item
- *     allowed to be sold.
- * @property {number} editionNumber=0 - Certifiable integer edition (copy) number or the Marketplace item. Each copy sold in
- *     the Marketplace is numbered sequentially, starting at 1.
- * @property {number} entityInstanceNumber=0 - Certifiable integer instance number for identical entities in a Marketplace
- *     item. A Marketplace item may have multiple, identical parts. If so, then each is numbered sequentially with an instance
- *     number.
- * @property {string} marketplaceID="" - Certifiable UUID for the Marketplace item, as used in the URL of the item's download
- *     and its Marketplace Web page.
- * @property {string} certificateID="" - Hash of the entity's static certificate JSON, signed by the artist's private key.
- * @property {number} staticCertificateVersion=0 - The version of the method used to generate the <code>certificateID</code>.
  *
  * @comment The different entity types have additional properties as follows:
  * @see {@link Entities.EntityProperties-Box|EntityProperties-Box}
@@ -1672,20 +1641,6 @@ QScriptValue EntityItemProperties::copyToScriptValue(QScriptEngine* engine, bool
     COPY_PROPERTY_TO_QSCRIPTVALUE(PROP_SCRIPT_TIMESTAMP, scriptTimestamp);
     COPY_PROPERTY_TO_QSCRIPTVALUE(PROP_SERVER_SCRIPTS, serverScripts);
 
-    // Certifiable Properties
-    COPY_PROPERTY_TO_QSCRIPTVALUE(PROP_ITEM_NAME, itemName);
-    COPY_PROPERTY_TO_QSCRIPTVALUE(PROP_ITEM_DESCRIPTION, itemDescription);
-    COPY_PROPERTY_TO_QSCRIPTVALUE(PROP_ITEM_CATEGORIES, itemCategories);
-    COPY_PROPERTY_TO_QSCRIPTVALUE(PROP_ITEM_ARTIST, itemArtist);
-    COPY_PROPERTY_TO_QSCRIPTVALUE(PROP_ITEM_LICENSE, itemLicense);
-    COPY_PROPERTY_TO_QSCRIPTVALUE(PROP_LIMITED_RUN, limitedRun);
-    COPY_PROPERTY_TO_QSCRIPTVALUE(PROP_MARKETPLACE_ID, marketplaceID);
-    COPY_PROPERTY_TO_QSCRIPTVALUE(PROP_EDITION_NUMBER, editionNumber);
-    COPY_PROPERTY_TO_QSCRIPTVALUE(PROP_ENTITY_INSTANCE_NUMBER, entityInstanceNumber);
-    COPY_PROPERTY_TO_QSCRIPTVALUE(PROP_CERTIFICATE_ID, certificateID);
-    COPY_PROPERTY_TO_QSCRIPTVALUE(PROP_CERTIFICATE_TYPE, certificateType);
-    COPY_PROPERTY_TO_QSCRIPTVALUE(PROP_STATIC_CERTIFICATE_VERSION, staticCertificateVersion);
-
     // Local props for scripts
     COPY_PROPERTY_TO_QSCRIPTVALUE(PROP_LOCAL_POSITION, localPosition);
     COPY_PROPERTY_TO_QSCRIPTVALUE(PROP_LOCAL_ROTATION, localRotation);
@@ -2096,20 +2051,6 @@ void EntityItemProperties::copyFromScriptValue(const QScriptValue& object, bool 
     COPY_PROPERTY_FROM_QSCRIPTVALUE(scriptTimestamp, quint64, setScriptTimestamp);
     COPY_PROPERTY_FROM_QSCRIPTVALUE(serverScripts, QString, setServerScripts);
 
-    // Certifiable Properties
-    COPY_PROPERTY_FROM_QSCRIPTVALUE(itemName, QString, setItemName);
-    COPY_PROPERTY_FROM_QSCRIPTVALUE(itemDescription, QString, setItemDescription);
-    COPY_PROPERTY_FROM_QSCRIPTVALUE(itemCategories, QString, setItemCategories);
-    COPY_PROPERTY_FROM_QSCRIPTVALUE(itemArtist, QString, setItemArtist);
-    COPY_PROPERTY_FROM_QSCRIPTVALUE(itemLicense, QString, setItemLicense);
-    COPY_PROPERTY_FROM_QSCRIPTVALUE(limitedRun, quint32, setLimitedRun);
-    COPY_PROPERTY_FROM_QSCRIPTVALUE(marketplaceID, QString, setMarketplaceID);
-    COPY_PROPERTY_FROM_QSCRIPTVALUE(editionNumber, quint32, setEditionNumber);
-    COPY_PROPERTY_FROM_QSCRIPTVALUE(entityInstanceNumber, quint32, setEntityInstanceNumber);
-    COPY_PROPERTY_FROM_QSCRIPTVALUE(certificateID, QString, setCertificateID);
-    COPY_PROPERTY_FROM_QSCRIPTVALUE(certificateType, QString, setCertificateType);
-    COPY_PROPERTY_FROM_QSCRIPTVALUE(staticCertificateVersion, quint32, setStaticCertificateVersion);
-
     // Script location data
     COPY_PROPERTY_FROM_QSCRIPTVALUE(localPosition, vec3, setLocalPosition);
     COPY_PROPERTY_FROM_QSCRIPTVALUE(localRotation, quat, setLocalRotation);
@@ -2390,20 +2331,6 @@ void EntityItemProperties::merge(const EntityItemProperties& other) {
     COPY_PROPERTY_IF_CHANGED(script);
     COPY_PROPERTY_IF_CHANGED(scriptTimestamp);
     COPY_PROPERTY_IF_CHANGED(serverScripts);
-
-    // Certifiable Properties
-    COPY_PROPERTY_IF_CHANGED(itemName);
-    COPY_PROPERTY_IF_CHANGED(itemDescription);
-    COPY_PROPERTY_IF_CHANGED(itemCategories);
-    COPY_PROPERTY_IF_CHANGED(itemArtist);
-    COPY_PROPERTY_IF_CHANGED(itemLicense);
-    COPY_PROPERTY_IF_CHANGED(limitedRun);
-    COPY_PROPERTY_IF_CHANGED(marketplaceID);
-    COPY_PROPERTY_IF_CHANGED(editionNumber);
-    COPY_PROPERTY_IF_CHANGED(entityInstanceNumber);
-    COPY_PROPERTY_IF_CHANGED(certificateID);
-    COPY_PROPERTY_IF_CHANGED(certificateType);
-    COPY_PROPERTY_IF_CHANGED(staticCertificateVersion);
 
     // Local props for scripts
     COPY_PROPERTY_IF_CHANGED(localPosition);
@@ -2718,20 +2645,6 @@ bool EntityItemProperties::getPropertyInfo(const QString& propertyName, EntityPr
         ADD_PROPERTY_TO_MAP(PROP_SCRIPT, Script, script, QString);
         ADD_PROPERTY_TO_MAP(PROP_SCRIPT_TIMESTAMP, ScriptTimestamp, scriptTimestamp, quint64);
         ADD_PROPERTY_TO_MAP(PROP_SERVER_SCRIPTS, ServerScripts, serverScripts, QString);
-
-        // Certifiable Properties
-        ADD_PROPERTY_TO_MAP(PROP_ITEM_NAME, ItemName, itemName, QString);
-        ADD_PROPERTY_TO_MAP(PROP_ITEM_DESCRIPTION, ItemDescription, itemDescription, QString);
-        ADD_PROPERTY_TO_MAP(PROP_ITEM_CATEGORIES, ItemCategories, itemCategories, QString);
-        ADD_PROPERTY_TO_MAP(PROP_ITEM_ARTIST, ItemArtist, itemArtist, QString);
-        ADD_PROPERTY_TO_MAP(PROP_ITEM_LICENSE, ItemLicense, itemLicense, QString);
-        ADD_PROPERTY_TO_MAP(PROP_LIMITED_RUN, LimitedRun, limitedRun, quint32);
-        ADD_PROPERTY_TO_MAP(PROP_MARKETPLACE_ID, MarketplaceID, marketplaceID, QString);
-        ADD_PROPERTY_TO_MAP(PROP_EDITION_NUMBER, EditionNumber, editionNumber, quint32);
-        ADD_PROPERTY_TO_MAP(PROP_ENTITY_INSTANCE_NUMBER, EntityInstanceNumber, entityInstanceNumber, quint32);
-        ADD_PROPERTY_TO_MAP(PROP_CERTIFICATE_ID, CertificateID, certificateID, QString);
-        ADD_PROPERTY_TO_MAP(PROP_CERTIFICATE_TYPE, CertificateType, certificateType, QString);
-        ADD_PROPERTY_TO_MAP(PROP_STATIC_CERTIFICATE_VERSION, StaticCertificateVersion, staticCertificateVersion, quint32);
 
         // Local script props
         ADD_PROPERTY_TO_MAP(PROP_LOCAL_POSITION, LocalPosition, localPosition, vec3);
@@ -3186,20 +3099,6 @@ OctreeElement::AppendState EntityItemProperties::encodeEntityEditPacket(PacketTy
             APPEND_ENTITY_PROPERTY(PROP_SCRIPT, properties.getScript());
             APPEND_ENTITY_PROPERTY(PROP_SCRIPT_TIMESTAMP, properties.getScriptTimestamp());
             APPEND_ENTITY_PROPERTY(PROP_SERVER_SCRIPTS, properties.getServerScripts());
-
-            // Certifiable Properties
-            APPEND_ENTITY_PROPERTY(PROP_ITEM_NAME, properties.getItemName());
-            APPEND_ENTITY_PROPERTY(PROP_ITEM_DESCRIPTION, properties.getItemDescription());
-            APPEND_ENTITY_PROPERTY(PROP_ITEM_CATEGORIES, properties.getItemCategories());
-            APPEND_ENTITY_PROPERTY(PROP_ITEM_ARTIST, properties.getItemArtist());
-            APPEND_ENTITY_PROPERTY(PROP_ITEM_LICENSE, properties.getItemLicense());
-            APPEND_ENTITY_PROPERTY(PROP_LIMITED_RUN, properties.getLimitedRun());
-            APPEND_ENTITY_PROPERTY(PROP_MARKETPLACE_ID, properties.getMarketplaceID());
-            APPEND_ENTITY_PROPERTY(PROP_EDITION_NUMBER, properties.getEditionNumber());
-            APPEND_ENTITY_PROPERTY(PROP_ENTITY_INSTANCE_NUMBER, properties.getEntityInstanceNumber());
-            APPEND_ENTITY_PROPERTY(PROP_CERTIFICATE_ID, properties.getCertificateID());
-            APPEND_ENTITY_PROPERTY(PROP_CERTIFICATE_TYPE, properties.getCertificateType());
-            APPEND_ENTITY_PROPERTY(PROP_STATIC_CERTIFICATE_VERSION, properties.getStaticCertificateVersion());
 
             if (properties.getType() == EntityTypes::ParticleEffect) {
                 APPEND_ENTITY_PROPERTY(PROP_SHAPE_TYPE, (uint32_t)(properties.getShapeType()));
@@ -3679,20 +3578,6 @@ bool EntityItemProperties::decodeEntityEditPacket(const unsigned char* data, int
     READ_ENTITY_PROPERTY_TO_PROPERTIES(PROP_SCRIPT_TIMESTAMP, quint64, setScriptTimestamp);
     READ_ENTITY_PROPERTY_TO_PROPERTIES(PROP_SERVER_SCRIPTS, QString, setServerScripts);
 
-    // Certifiable Properties
-    READ_ENTITY_PROPERTY_TO_PROPERTIES(PROP_ITEM_NAME, QString, setItemName);
-    READ_ENTITY_PROPERTY_TO_PROPERTIES(PROP_ITEM_DESCRIPTION, QString, setItemDescription);
-    READ_ENTITY_PROPERTY_TO_PROPERTIES(PROP_ITEM_CATEGORIES, QString, setItemCategories);
-    READ_ENTITY_PROPERTY_TO_PROPERTIES(PROP_ITEM_ARTIST, QString, setItemArtist);
-    READ_ENTITY_PROPERTY_TO_PROPERTIES(PROP_ITEM_LICENSE, QString, setItemLicense);
-    READ_ENTITY_PROPERTY_TO_PROPERTIES(PROP_LIMITED_RUN, quint32, setLimitedRun);
-    READ_ENTITY_PROPERTY_TO_PROPERTIES(PROP_MARKETPLACE_ID, QString, setMarketplaceID);
-    READ_ENTITY_PROPERTY_TO_PROPERTIES(PROP_EDITION_NUMBER, quint32, setEditionNumber);
-    READ_ENTITY_PROPERTY_TO_PROPERTIES(PROP_ENTITY_INSTANCE_NUMBER, quint32, setEntityInstanceNumber);
-    READ_ENTITY_PROPERTY_TO_PROPERTIES(PROP_CERTIFICATE_ID, QString, setCertificateID);
-    READ_ENTITY_PROPERTY_TO_PROPERTIES(PROP_CERTIFICATE_TYPE, QString, setCertificateType);
-    READ_ENTITY_PROPERTY_TO_PROPERTIES(PROP_STATIC_CERTIFICATE_VERSION, quint32, setStaticCertificateVersion);
-
     if (properties.getType() == EntityTypes::ParticleEffect) {
         READ_ENTITY_PROPERTY_TO_PROPERTIES(PROP_SHAPE_TYPE, ShapeType, setShapeType);
         READ_ENTITY_PROPERTY_TO_PROPERTIES(PROP_COMPOUND_SHAPE_URL, QString, setCompoundShapeURL);
@@ -4100,20 +3985,6 @@ void EntityItemProperties::markAllChanged() {
     _scriptChanged = true;
     _scriptTimestampChanged = true;
     _serverScriptsChanged = true;
-
-    // Certifiable Properties
-    _itemNameChanged = true;
-    _itemDescriptionChanged = true;
-    _itemCategoriesChanged = true;
-    _itemArtistChanged = true;
-    _itemLicenseChanged = true;
-    _limitedRunChanged = true;
-    _marketplaceIDChanged = true;
-    _editionNumberChanged = true;
-    _entityInstanceNumberChanged = true;
-    _certificateIDChanged = true;
-    _certificateTypeChanged = true;
-    _staticCertificateVersionChanged = true;
 
     // Common
     _shapeTypeChanged = true;
@@ -4562,44 +4433,6 @@ QList<QString> EntityItemProperties::listChangedProperties() {
         out += "serverScripts";
     }
 
-    // Certifiable Properties
-    if (itemNameChanged()) {
-        out += "itemName";
-    }
-    if (itemDescriptionChanged()) {
-        out += "itemDescription";
-    }
-    if (itemCategoriesChanged()) {
-        out += "itemCategories";
-    }
-    if (itemArtistChanged()) {
-        out += "itemArtist";
-    }
-    if (itemLicenseChanged()) {
-        out += "itemLicense";
-    }
-    if (limitedRunChanged()) {
-        out += "limitedRun";
-    }
-    if (marketplaceIDChanged()) {
-        out += "marketplaceID";
-    }
-    if (editionNumberChanged()) {
-        out += "editionNumber";
-    }
-    if (entityInstanceNumberChanged()) {
-        out += "entityInstanceNumber";
-    }
-    if (certificateIDChanged()) {
-        out += "certificateID";
-    }
-    if (certificateTypeChanged()) {
-        out += "certificateType";
-    }
-    if (staticCertificateVersionChanged()) {
-        out += "staticCertificateVersion";
-    }
-
     // Common
     if (shapeTypeChanged()) {
         out += "shapeType";
@@ -5044,133 +4877,6 @@ bool EntityItemProperties::grabbingRelatedPropertyChanged() const {
         grabProperties.equippableRightPositionChanged() || grabProperties.equippableLeftRotationChanged() ||
         grabProperties.equippableRightRotationChanged() || grabProperties.equippableIndicatorURLChanged() ||
         grabProperties.equippableIndicatorScaleChanged() || grabProperties.equippableIndicatorOffsetChanged();
-}
-
-// Checking Certifiable Properties
-#define ADD_STRING_PROPERTY(n, N) if (!get##N().isEmpty()) json[#n] = get##N()
-#define ADD_ENUM_PROPERTY(n, N) json[#n] = get##N##AsString()
-#define ADD_INT_PROPERTY(n, N) if (get##N() != 0) json[#n] = (get##N() == (quint32) -1) ? -1.0 : ((double) get##N())
-QByteArray EntityItemProperties::getStaticCertificateJSON() const {
-    // Produce a compact json of every non-default static certificate property, with the property names in alphabetical order.
-    // The static certificate properties include all an only those properties that cannot be changed without altering the identity
-    // of the entity as reviewed during the certification submission.
-
-    QJsonObject json;
-
-    quint32 staticCertificateVersion = getStaticCertificateVersion();
-
-    if (!getAnimation().getURL().isEmpty()) {
-        json["animationURL"] = getAnimation().getURL();
-    }
-    if (staticCertificateVersion >= 3) {
-        ADD_STRING_PROPERTY(certificateType, CertificateType);
-    }
-    ADD_STRING_PROPERTY(collisionSoundURL, CollisionSoundURL);
-    ADD_STRING_PROPERTY(compoundShapeURL, CompoundShapeURL);
-    ADD_INT_PROPERTY(editionNumber, EditionNumber);
-    ADD_INT_PROPERTY(entityInstanceNumber, EntityInstanceNumber);
-    ADD_STRING_PROPERTY(itemArtist, ItemArtist);
-    ADD_STRING_PROPERTY(itemCategories, ItemCategories);
-    ADD_STRING_PROPERTY(itemDescription, ItemDescription);
-    ADD_STRING_PROPERTY(itemLicenseUrl, ItemLicense);
-    ADD_STRING_PROPERTY(itemName, ItemName);
-    ADD_INT_PROPERTY(limitedRun, LimitedRun);
-    ADD_STRING_PROPERTY(marketplaceID, MarketplaceID);
-    ADD_STRING_PROPERTY(modelURL, ModelURL);
-    ADD_STRING_PROPERTY(script, Script);
-    if (staticCertificateVersion >= 1) {
-        ADD_STRING_PROPERTY(serverScripts, ServerScripts);
-    }
-    ADD_ENUM_PROPERTY(shapeType, ShapeType);
-    ADD_INT_PROPERTY(staticCertificateVersion, StaticCertificateVersion);
-    json["type"] = EntityTypes::getEntityTypeName(getType());
-
-    return QJsonDocument(json).toJson(QJsonDocument::Compact);
-}
-QByteArray EntityItemProperties::getStaticCertificateHash() const {
-    return QCryptographicHash::hash(getStaticCertificateJSON(), QCryptographicHash::Sha256);
-}
-
-// FIXME: This is largely copied from EntityItemProperties::verifyStaticCertificateProperties, which should be refactored to use this.
-// I also don't like the nested-if style, but for this step I'm deliberately preserving the similarity.
-bool EntityItemProperties::verifySignature(const QString& publicKey, const QByteArray& digestByteArray, const QByteArray& signatureByteArray) {
-
-    if (digestByteArray.isEmpty()) {
-        return false;
-    }
-
-    auto keyByteArray = publicKey.toUtf8();
-    auto key = keyByteArray.constData();
-    int keyLength = publicKey.length();
-
-    BIO *bio = BIO_new_mem_buf((void*)key, keyLength);
-    EVP_PKEY* evp_key = PEM_read_bio_PUBKEY(bio, NULL, NULL, NULL);
-    if (evp_key) {
-        EC_KEY* ec = EVP_PKEY_get1_EC_KEY(evp_key);
-        if (ec) {
-            const unsigned char* digest = reinterpret_cast<const unsigned char*>(digestByteArray.constData());
-            int digestLength = digestByteArray.length();
-
-            const unsigned char* signature = reinterpret_cast<const unsigned char*>(signatureByteArray.constData());
-            int signatureLength = signatureByteArray.length();
-
-            ERR_clear_error();
-            // ECSDA verification prototype: note that type is currently ignored
-            // int ECDSA_verify(int type, const unsigned char *dgst, int dgstlen,
-            // const unsigned char *sig, int siglen, EC_KEY *eckey);
-            int answer = ECDSA_verify(0,
-                digest,
-                digestLength,
-                signature,
-                signatureLength,
-                ec);
-            long error = ERR_get_error();
-            if (error != 0 || answer == -1) {
-                qCWarning(entities) << "ERROR while verifying signature!"
-                    << "\nKey:" << publicKey << "\nutf8 Key Length:" << keyLength
-                    << "\nDigest:" << digest << "\nDigest Length:" << digestLength
-                    << "\nSignature:" << signature << "\nSignature Length:" << signatureLength;
-                while (error != 0) {
-                    const char* error_str = ERR_error_string(error, NULL);
-                    qCWarning(entities) << "EC error:" << error_str;
-                    error = ERR_get_error();
-                }
-            }
-            EC_KEY_free(ec);
-            if (bio) {
-                BIO_free(bio);
-            }
-            if (evp_key) {
-                EVP_PKEY_free(evp_key);
-            }
-            return (answer == 1);
-        } else {
-            if (bio) {
-                BIO_free(bio);
-            }
-            if (evp_key) {
-                EVP_PKEY_free(evp_key);
-            }
-            long error = ERR_get_error();
-            const char* error_str = ERR_error_string(error, NULL);
-            qCWarning(entities) << "Failed to verify signature! key" << publicKey << " EC key error:" << error_str;
-            return false;
-        }
-    } else {
-        if (bio) {
-            BIO_free(bio);
-        }
-        long error = ERR_get_error();
-        const char* error_str = ERR_error_string(error, NULL);
-        qCWarning(entities) << "Failed to verify signature! key" << publicKey << " EC PEM error:" << error_str;
-        return false;
-    }
-}
-
-bool EntityItemProperties::verifyStaticCertificateProperties() {
-    // True IFF a non-empty certificateID matches the static certificate json.
-    // I.e., if we can verify that the certificateID was produced by Vircadia signing the static certificate hash.
-    return verifySignature(EntityItem::_marketplacePublicKey, getStaticCertificateHash(), QByteArray::fromBase64(getCertificateID().toUtf8()));
 }
 
 void EntityItemProperties::convertToCloneProperties(const EntityItemID& entityIDToClone) {

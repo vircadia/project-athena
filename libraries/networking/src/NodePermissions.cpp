@@ -61,8 +61,6 @@ NodePermissions::NodePermissions(QMap<QString, QVariant> perms) {
     permissions |= perms["id_can_adjust_locks"].toBool() ? Permission::canAdjustLocks : Permission::none;
     permissions |= perms["id_can_rez"].toBool() ? Permission::canRezPermanentEntities : Permission::none;
     permissions |= perms["id_can_rez_tmp"].toBool() ? Permission::canRezTemporaryEntities : Permission::none;
-    permissions |= perms["id_can_rez_certified"].toBool() ? Permission::canRezPermanentCertifiedEntities : Permission::none;
-    permissions |= perms["id_can_rez_tmp_certified"].toBool() ? Permission::canRezTemporaryCertifiedEntities : Permission::none;
     permissions |= perms["id_can_write_to_asset_server"].toBool() ? Permission::canWriteToAssetServer : Permission::none;
     permissions |= perms["id_can_connect_past_max_capacity"].toBool() ?
         Permission::canConnectPastMaxCapacity : Permission::none;
@@ -92,8 +90,6 @@ QVariant NodePermissions::toVariant(QHash<QUuid, GroupRank> groupRanks) {
     values["id_can_adjust_locks"] = can(Permission::canAdjustLocks);
     values["id_can_rez"] = can(Permission::canRezPermanentEntities);
     values["id_can_rez_tmp"] = can(Permission::canRezTemporaryEntities);
-    values["id_can_rez_certified"] = can(Permission::canRezPermanentCertifiedEntities);
-    values["id_can_rez_tmp_certified"] = can(Permission::canRezTemporaryCertifiedEntities);
     values["id_can_write_to_asset_server"] = can(Permission::canWriteToAssetServer);
     values["id_can_connect_past_max_capacity"] = can(Permission::canConnectPastMaxCapacity);
     values["id_can_kick"] = can(Permission::canKick);
@@ -155,12 +151,6 @@ QDebug operator<<(QDebug debug, const NodePermissions& perms) {
     }
     if (perms.can(NodePermissions::Permission::canRezTemporaryEntities)) {
         debug << " rez-tmp";
-    }
-    if (perms.can(NodePermissions::Permission::canRezPermanentCertifiedEntities)) {
-        debug << " rez-certified";
-    }
-    if (perms.can(NodePermissions::Permission::canRezTemporaryCertifiedEntities)) {
-        debug << " rez-tmp-certified";
     }
     if (perms.can(NodePermissions::Permission::canWriteToAssetServer)) {
         debug << " asset-server";

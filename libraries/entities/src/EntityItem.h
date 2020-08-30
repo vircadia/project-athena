@@ -363,32 +363,6 @@ public:
     bool pendingRelease(uint64_t timestamp) const;
     bool stillWaitingToTakeOwnership(uint64_t timestamp) const;
 
-    // Certifiable Properties
-    QString getItemName() const;
-    void setItemName(const QString& value);
-    QString getItemDescription() const;
-    void setItemDescription(const QString& value);
-    QString getItemCategories() const;
-    void setItemCategories(const QString& value);
-    QString getItemArtist() const;
-    void setItemArtist(const QString& value);
-    QString getItemLicense() const;
-    void setItemLicense(const QString& value);
-    quint32 getLimitedRun() const;
-    void setLimitedRun(const quint32&);
-    QString getMarketplaceID() const;
-    void setMarketplaceID(const QString& value);
-    quint32 getEditionNumber() const;
-    void setEditionNumber(const quint32&);
-    quint32 getEntityInstanceNumber() const;
-    void setEntityInstanceNumber(const quint32&);
-    QString getCertificateID() const;
-    void setCertificateID(const QString& value);
-    QString getCertificateType() const;
-    void setCertificateType(const QString& value);
-    quint32 getStaticCertificateVersion() const;
-    void setStaticCertificateVersion(const quint32&);
-
     bool getCloneable() const;
     void setCloneable(bool value);
     float getCloneLifetime() const;
@@ -545,9 +519,6 @@ public:
     ChangeHandlerId registerChangeHandler(const ChangeHandlerCallback& handler);
     void deregisterChangeHandler(const ChangeHandlerId& changeHandlerId);
 
-    static QString _marketplacePublicKey;
-    static void retrieveMarketplacePublicKey();
-
     void collectChildrenForDelete(std::vector<EntityItemPointer>& entitiesToDelete, const QUuid& sessionID) const;
 
     float getBoundingRadius() const { return _boundingRadius; }
@@ -670,20 +641,6 @@ protected:
     QString _name { ENTITY_ITEM_DEFAULT_NAME };
     QString _href; //Hyperlink href
     QString _description; //Hyperlink description
-
-    // Certifiable Properties
-    QString _itemName { ENTITY_ITEM_DEFAULT_ITEM_NAME };
-    QString _itemDescription { ENTITY_ITEM_DEFAULT_ITEM_DESCRIPTION };
-    QString _itemCategories { ENTITY_ITEM_DEFAULT_ITEM_CATEGORIES };
-    QString _itemArtist { ENTITY_ITEM_DEFAULT_ITEM_ARTIST };
-    QString _itemLicense { ENTITY_ITEM_DEFAULT_ITEM_LICENSE };
-    quint32 _limitedRun { ENTITY_ITEM_DEFAULT_LIMITED_RUN };
-    QString _certificateID { ENTITY_ITEM_DEFAULT_CERTIFICATE_ID };
-    QString _certificateType { ENTITY_ITEM_DEFAULT_CERTIFICATE_TYPE };
-    quint32 _editionNumber { ENTITY_ITEM_DEFAULT_EDITION_NUMBER };
-    quint32 _entityInstanceNumber { ENTITY_ITEM_DEFAULT_ENTITY_INSTANCE_NUMBER };
-    QString _marketplaceID { ENTITY_ITEM_DEFAULT_MARKETPLACE_ID };
-    quint32 _staticCertificateVersion { ENTITY_ITEM_DEFAULT_STATIC_CERTIFICATE_VERSION };
 
 
     // NOTE: Damping is applied like this:  v *= pow(1 - damping, dt)

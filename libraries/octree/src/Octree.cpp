@@ -687,7 +687,7 @@ bool Octree::readFromFile(const char* fileName) {
     uint64_t fileLength = fileInfo.size();
     QUrl relativeURL = QUrl::fromLocalFile(qFileName).adjusted(QUrl::RemoveFilename);
 
-    bool success = readFromStream(fileLength, fileInputStream, "", false, relativeURL);
+    bool success = readFromStream(fileLength, fileInputStream, false, relativeURL);
 
     file.close();
 
@@ -711,27 +711,7 @@ bool Octree::readJSONFromGzippedFile(QString qFileName) {
     QDataStream jsonStream(jsonData);
     QUrl relativeURL = QUrl::fromLocalFile(qFileName).adjusted(QUrl::RemoveFilename);
 
-    return readJSONFromStream(-1, jsonStream, "", false, relativeURL);
-}
-
-// hack to get the marketplace id into the entities.  We will create a way to get this from a hash of
-// the entity later, but this helps us move things along for now
-QString getMarketplaceID(const QString& urlString) {
-    // the url should be http://mpassets.highfidelity.com/<uuid>-v1/<item name>.extension
-    // a regex for the this is a PITA as there are several valid versions of uuids, and so
-    // lets strip out the uuid (if any) and try to create a UUID from the string, relying on
-    // QT to parse it
-    static const QRegularExpression re("^http:\\/\\/mpassets.highfidelity.com\\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})-v[\\d]+\\/.*");
-    QRegularExpressionMatch match = re.match(urlString);
-    if (match.hasMatch()) {
-        QString matched = match.captured(1);
-        if (QUuid(matched).isNull()) {
-            qDebug() << "invalid uuid for marketplaceID";
-        } else {
-            return matched;
-        }
-    }
-    return QString();
+    return readJSONFromStream(-1, jsonStream, false, relativeURL);
 }
 
 bool Octree::readFromURL(
@@ -741,7 +721,6 @@ bool Octree::readFromURL(
     const bool isImport
 ) {
     QString trimmedUrl = urlString.trimmed();
-    QString marketplaceID = getMarketplaceID(trimmedUrl);
     auto request = std::unique_ptr<ResourceRequest>(
         DependencyManager::get<ResourceManager>()->createResourceRequest(
             this, trimmedUrl, isObservable, callerId, "Octree::readFromURL"));
@@ -768,11 +747,11 @@ bool Octree::readFromURL(
 
     if (wasCompressed) {
         QDataStream inputStream(uncompressedJsonData);
-        return readFromStream(uncompressedJsonData.size(), inputStream, marketplaceID, isImport, relativeURL);
+        return readFromStream(uncompressedJsonData.size(), inputStream, isImport, relativeURL);
     }
 
     QDataStream inputStream(data);
-    return readFromStream(data.size(), inputStream, marketplaceID, isImport, relativeURL);
+    return readFromStream(data.size(), inputStream, isImport, relativeURL);
 }
 
 bool Octree::readFromByteArray(
@@ -780,7 +759,6 @@ bool Octree::readFromByteArray(
     const QByteArray& data
 ) {
     QString trimmedUrl = urlString.trimmed();
-    QString marketplaceID = getMarketplaceID(trimmedUrl);
 
     QByteArray uncompressedJsonData;
     bool wasCompressed = gunzip(data, uncompressedJsonData);
@@ -789,17 +767,16 @@ bool Octree::readFromByteArray(
 
     if (wasCompressed) {
         QDataStream inputStream(uncompressedJsonData);
-        return readFromStream(uncompressedJsonData.size(), inputStream, marketplaceID, false, relativeURL);
+        return readFromStream(uncompressedJsonData.size(), inputStream, false, relativeURL);
     }
 
     QDataStream inputStream(data);
-    return readFromStream(data.size(), inputStream, marketplaceID, false, relativeURL);
+    return readFromStream(data.size(), inputStream, false, relativeURL);
 }
 
 bool Octree::readFromStream(
     uint64_t streamLength,
     QDataStream& inputStream,
-    const QString& marketplaceID,
     const bool isImport,
     const QUrl& relativeURL
 ) {
@@ -814,37 +791,16 @@ bool Octree::readFromStream(
         return false;
     } else {
         qCDebug(octree) << "Reading from JSON SVO Stream length:" << streamLength;
-        return readJSONFromStream(streamLength, inputStream, marketplaceID, isImport, relativeURL);
+        return readJSONFromStream(streamLength, inputStream, isImport, relativeURL);
     }
 }
 
 
-namespace {
-// hack to get the marketplace id into the entities.  We will create a way to get this from a hash of
-// the entity later, but this helps us move things along for now
-QVariantMap addMarketplaceIDToDocumentEntities(QVariantMap& doc, const QString& marketplaceID) {
-    if (!marketplaceID.isEmpty()) {
-        QVariantList newEntitiesArray;
-
-        // build a new entities array
-        auto entitiesArray = doc["Entities"].toList();
-        for (auto it = entitiesArray.begin(); it != entitiesArray.end(); it++) {
-            auto entity = (*it).toMap();
-            entity["marketplaceID"] = marketplaceID;
-            newEntitiesArray.append(entity);
-        }
-        doc["Entities"] = newEntitiesArray;
-    }
-    return doc;
-}
-
-}  // Unnamed namepsace
 const int READ_JSON_BUFFER_SIZE = 2048;
 
 bool Octree::readJSONFromStream(
     uint64_t streamLength,
     QDataStream& inputStream,
-    const QString& marketplaceID, /*=""*/
     const bool isImport,
     const QUrl& relativeURL
 ) {
@@ -874,10 +830,6 @@ bool Octree::readJSONFromStream(
     if (!octreeParser.parseEntities(asMap)) {
         qCritical() << "Couldn't parse Entities JSON:" << octreeParser.getErrorString().c_str();
         return false;
-    }
-
-    if (!marketplaceID.isEmpty()) {
-        addMarketplaceIDToDocumentEntities(asMap, marketplaceID);
     }
 
     bool success = readFromMap(asMap, isImport);

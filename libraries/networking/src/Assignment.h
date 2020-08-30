@@ -84,9 +84,6 @@ public:
     void setIsStatic(bool isStatic) { _isStatic = isStatic; }
     bool isStatic() const  { return _isStatic; }
     
-    void setWalletUUID(const QUuid& walletUUID) { _walletUUID = walletUUID; }
-    const QUuid& getWalletUUID() const { return _walletUUID; }
-    
     const QString& getNodeVersion() const { return _nodeVersion; }
     
     const char* getTypeName() const;
@@ -104,7 +101,6 @@ protected:
     Assignment::Location _location; /// the location of the assignment, allows a domain to preferentially use local ACs
     QByteArray _payload; /// an optional payload attached to this assignment, a maximum for 1024 bytes will be packed
     bool _isStatic; /// defines if this assignment needs to be re-queued in the domain-server if it stops being fulfilled
-    QUuid _walletUUID; /// the UUID for the wallet that should be paid for this assignment
     QString _nodeVersion;
     QString _dataDirectory;
 };

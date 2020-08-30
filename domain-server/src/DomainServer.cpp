@@ -1394,107 +1394,13 @@ void DomainServer::processRequestAssignmentPacket(QSharedPointer<ReceivedMessage
 
         // give the information for that deployed assignment to the gatekeeper so it knows to that that node
         // in when it comes back around
-        _gatekeeper.addPendingAssignedNode(uniqueAssignment.getUUID(), assignmentToDeploy->getUUID(),
-                                           requestAssignment.getWalletUUID(), requestAssignment.getNodeVersion());
+        _gatekeeper.addPendingAssignedNode(uniqueAssignment.getUUID(), assignmentToDeploy->getUUID(), requestAssignment.getNodeVersion());
     } else {
         static bool printedAssignmentRequestMessage = false;
         if (!printedAssignmentRequestMessage && requestAssignment.getType() != Assignment::AgentType) {
             printedAssignmentRequestMessage = true;
             qDebug() << "Unable to fulfill assignment request of type" << requestAssignment.getType()
                 << "from" << message->getSenderSockAddr();
-        }
-    }
-}
-
-void DomainServer::setupPendingAssignmentCredits() {
-    // enumerate the NodeList to find the assigned nodes
-    DependencyManager::get<LimitedNodeList>()->eachNode([&](const SharedNodePointer& node){
-        DomainServerNodeData* nodeData = static_cast<DomainServerNodeData*>(node->getLinkedData());
-
-        if (!nodeData->getAssignmentUUID().isNull() && !nodeData->getWalletUUID().isNull()) {
-            // check if we have a non-finalized transaction for this node to add this amount to
-            TransactionHash::iterator i = _pendingAssignmentCredits.find(nodeData->getWalletUUID());
-            WalletTransaction* existingTransaction = NULL;
-
-            while (i != _pendingAssignmentCredits.end() && i.key() == nodeData->getWalletUUID()) {
-                if (!i.value()->isFinalized()) {
-                    existingTransaction = i.value();
-                    break;
-                } else {
-                    ++i;
-                }
-            }
-
-            qint64 elapsedMsecsSinceLastPayment = nodeData->getPaymentIntervalTimer().elapsed();
-            nodeData->getPaymentIntervalTimer().restart();
-
-            const float CREDITS_PER_HOUR = 0.10f;
-            const float CREDITS_PER_MSEC = CREDITS_PER_HOUR / (60 * 60 * 1000);
-            const int SATOSHIS_PER_MSEC = CREDITS_PER_MSEC * SATOSHIS_PER_CREDIT;
-
-            float pendingCredits = elapsedMsecsSinceLastPayment * SATOSHIS_PER_MSEC;
-
-            if (existingTransaction) {
-                existingTransaction->incrementAmount(pendingCredits);
-            } else {
-                // create a fresh transaction to pay this node, there is no transaction to append to
-                WalletTransaction* freshTransaction = new WalletTransaction(nodeData->getWalletUUID(), pendingCredits);
-                _pendingAssignmentCredits.insert(nodeData->getWalletUUID(), freshTransaction);
-            }
-        }
-    });
-}
-
-void DomainServer::sendPendingTransactionsToServer() {
-
-    auto accountManager = DependencyManager::get<AccountManager>();
-
-    if (accountManager->hasValidAccessToken()) {
-
-        // enumerate the pending transactions and send them to the server to complete payment
-        TransactionHash::iterator i = _pendingAssignmentCredits.begin();
-
-        JSONCallbackParameters transactionCallbackParams;
-
-        transactionCallbackParams.callbackReceiver = this;
-        transactionCallbackParams.jsonCallbackMethod = "transactionJSONCallback";
-
-        while (i != _pendingAssignmentCredits.end()) {
-            accountManager->sendRequest("/api/v1/transactions",
-                                       AccountManagerAuth::Required,
-                                       QNetworkAccessManager::PostOperation,
-                                       transactionCallbackParams, i.value()->postJson().toJson());
-
-            // set this transaction to finalized so we don't add additional credits to it
-            i.value()->setIsFinalized(true);
-
-            ++i;
-        }
-    }
-}
-
-void DomainServer::transactionJSONCallback(const QJsonObject& data) {
-    // check if this was successful - if so we can remove it from our list of pending
-    if (data.value("status").toString() == "success") {
-        // create a dummy wallet transaction to unpack the JSON to
-        WalletTransaction dummyTransaction;
-        dummyTransaction.loadFromJson(data);
-
-        TransactionHash::iterator i = _pendingAssignmentCredits.find(dummyTransaction.getDestinationUUID());
-
-        while (i != _pendingAssignmentCredits.end() && i.key() == dummyTransaction.getDestinationUUID()) {
-            if (i.value()->getUUID() == dummyTransaction.getUUID()) {
-                // we have a match - we can remove this from the hash of pending credits
-                // and delete it for clean up
-
-                WalletTransaction* matchingTransaction = i.value();
-                _pendingAssignmentCredits.erase(i);
-                delete matchingTransaction;
-
-                break;
-            } else {
-                ++i;
-            }
         }
     }
 }
@@ -1975,18 +1881,6 @@ QJsonObject DomainServer::jsonObjectForNode(const SharedNodePointer& node) {
     SharedAssignmentPointer matchingAssignment = _allAssignments.value(nodeData->getAssignmentUUID());
     if (matchingAssignment) {
         nodeJson[JSON_KEY_POOL] = matchingAssignment->getPool();
-
-        if (!nodeData->getWalletUUID().isNull()) {
-            TransactionHash::iterator i = _pendingAssignmentCredits.find(nodeData->getWalletUUID());
-            float pendingCreditAmount = 0;
-
-            while (i != _pendingAssignmentCredits.end() && i.key() == nodeData->getWalletUUID()) {
-                pendingCreditAmount += i.value()->getAmount() / SATOSHIS_PER_CREDIT;
-                ++i;
-            }
-
-            nodeJson[JSON_KEY_PENDING_CREDITS] = pendingCreditAmount;
-        }
     }
 
     return nodeJson;
@@ -2190,24 +2084,6 @@ bool DomainServer::handleHTTPRequest(HTTPConnection* connection, const QUrl& url
             connection->respond(HTTPConnection::StatusCode200, assignmentDocument.toJson(), qPrintable(JSON_MIME_TYPE));
 
             // we've processed this request
-            return true;
-        } else if (url.path() == "/transactions.json") {
-            // enumerate our pending transactions and display them in an array
-            QJsonObject rootObject;
-            QJsonArray transactionArray;
-
-            TransactionHash::iterator i = _pendingAssignmentCredits.begin();
-            while (i != _pendingAssignmentCredits.end()) {
-                transactionArray.push_back(i.value()->toJson());
-                ++i;
-            }
-
-            rootObject["pending_transactions"] = transactionArray;
-
-            // print out the created JSON
-            QJsonDocument transactionsDocument(rootObject);
-            connection->respond(HTTPConnection::StatusCode200, transactionsDocument.toJson(), qPrintable(JSON_MIME_TYPE));
-
             return true;
         } else if (url.path() == QString("%1.json").arg(URI_NODES)) {
             // setup the JSON
