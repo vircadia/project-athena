@@ -8,8 +8,10 @@
 struct Parameters
 {
     BT_VEC2 _deltaUV;
+    float _offset;
     float _threshold;
     int _sampleCount;
+    float _padding[3];
 };
 
     // <@if 1@>

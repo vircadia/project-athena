@@ -43,18 +43,19 @@ protected:
 
 class RenderTransparentDeferred {
 public:
-    using Inputs = render::VaryingSet7<render::ItemBounds, HazeStage::FramePointer, LightStage::FramePointer, LightingModelPointer, LightClustersPointer, LightStage::ShadowFramePointer, glm::vec2>;
+    using Inputs = render::VaryingSet7<render::ItemBounds, HazeStage::FramePointer, LightStage::FramePointer, LightingModelPointer, LightClustersPointer, LightStage::ShadowFramePointer, DeferredFrameTransformPointer>;
     using Config = RenderTransparentDeferredConfig;
     using JobModel = render::Job::ModelI<RenderTransparentDeferred, Inputs, Config>;
 
-    RenderTransparentDeferred(render::ShapePlumberPointer shapePlumber)
-        : _shapePlumber{ shapePlumber } {}
+    RenderTransparentDeferred(render::ShapePlumberPointer shapePlumber, uint transformSlot)
+        : _shapePlumber(shapePlumber), _transformSlot(transformSlot) {}
 
     void configure(const Config& config) { _maxDrawn = config.maxDrawn; }
     void run(const render::RenderContextPointer& renderContext, const Inputs& inputs);
 
 protected:
     render::ShapePlumberPointer _shapePlumber;
+    uint _transformSlot;
     int _maxDrawn;  // initialized by Config
 };
 
@@ -83,13 +84,13 @@ protected:
 
 class DrawStateSortDeferred {
 public:
-    using Inputs = render::VaryingSet3<render::ItemBounds, LightingModelPointer, glm::vec2>;
+    using Inputs = render::VaryingSet3<render::ItemBounds, LightingModelPointer, DeferredFrameTransformPointer>;
 
     using Config = DrawStateSortConfig;
     using JobModel = render::Job::ModelI<DrawStateSortDeferred, Inputs, Config>;
 
-    DrawStateSortDeferred(render::ShapePlumberPointer shapePlumber)
-        : _shapePlumber{ shapePlumber } {
+    DrawStateSortDeferred(render::ShapePlumberPointer shapePlumber, uint transformSlot)
+        : _shapePlumber(shapePlumber), _transformSlot(transformSlot) {
     }
 
     void configure(const Config& config) {
@@ -100,6 +101,7 @@ public:
 
 protected:
     render::ShapePlumberPointer _shapePlumber;
+    uint _transformSlot;
     int _maxDrawn;  // initialized by Config
     bool _stateSort;
 };
@@ -141,12 +143,8 @@ public:
     using Config = RenderDeferredTaskConfig;
     using JobModel = render::Task::ModelI<RenderDeferredTask, Input, Config>;
 
-    RenderDeferredTask();
-
     void configure(const Config& config);
-    void build(JobModel& task, const render::Varying& input, render::Varying& output);
-
-private:
+    void build(JobModel& task, const render::Varying& input, render::Varying& output, uint8_t transformOffset);
 };
 
 

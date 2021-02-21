@@ -24,7 +24,8 @@ public:
 
     RenderShadowsAndDeferredTask() {}
 
-    void build(JobModel& task, const render::Varying& inputs, render::Varying& outputs, render::CullFunctor cullFunctor, uint8_t tagBits, uint8_t tagMask);
+    void build(JobModel& task, const render::Varying& inputs, render::Varying& outputs, render::CullFunctor cullFunctor,
+        uint8_t tagBits, uint8_t tagMask, uint8_t transformOffset);
 
 };
 
@@ -36,7 +37,8 @@ public:
     DeferredForwardSwitchJob() {}
 
     void configure(const render::SwitchConfig& config) {}
-    void build(JobModel& task, const render::Varying& inputs, render::Varying& outputs, render::CullFunctor cullFunctor, uint8_t tagBits, uint8_t tagMask);
+    void build(JobModel& task, const render::Varying& inputs, render::Varying& outputs, render::CullFunctor cullFunctor,
+        uint8_t tagBits, uint8_t tagMask, uint8_t transformOffset);
 
 };
 
@@ -47,7 +49,13 @@ public:
 
     RenderViewTask() {}
 
-    void build(JobModel& task, const render::Varying& inputs, render::Varying& outputs, render::CullFunctor cullFunctor, uint8_t tagBits = 0x00, uint8_t tagMask = 0x00);
+    enum TransformOffset: uint8_t {
+        MAIN_VIEW = 0,
+        SECONDARY_VIEW = 2 // each view uses 1 transform for the main view, and one for the background, so these need to be increments of 2
+    };
+
+    void build(JobModel& task, const render::Varying& inputs, render::Varying& outputs, render::CullFunctor cullFunctor,
+        uint8_t tagBits = 0x00, uint8_t tagMask = 0x00, TransformOffset transformOffset = TransformOffset::MAIN_VIEW);
 
 };
 

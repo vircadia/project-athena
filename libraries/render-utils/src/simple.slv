@@ -5,6 +5,7 @@
 //
 //  Created by Andrzej Kapolka on 9/15/14.
 //  Copyright 2014 High Fidelity, Inc.
+//  Copyright 2020 Vircadia contributors.
 //
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
@@ -24,10 +25,13 @@
     layout(location=RENDER_UTILS_ATTR_POSITION_WS) out vec4 _positionWS;
 <@endif@>
 
-<@if not HIFI_USE_UNLIT@>
-    <@if HIFI_USE_FORWARD or HIFI_USE_TRANSLUCENT@>
+<@if HIFI_USE_FORWARD or HIFI_USE_TRANSLUCENT@>
+    <@if not HIFI_USE_UNLIT@>
         layout(location=RENDER_UTILS_ATTR_POSITION_ES) out vec4 _positionES;
     <@endif@>
+<@endif@>
+<@if not HIFI_USE_FORWARD@>
+    layout(location=RENDER_UTILS_ATTR_PREV_POSITION_CS) out vec4 _prevPositionCS;
 <@endif@>
 layout(location=RENDER_UTILS_ATTR_NORMAL_WS) out vec3 _normalWS;
 layout(location=RENDER_UTILS_ATTR_COLOR) out vec4 _color;
@@ -39,12 +43,13 @@ void main(void) {
 
     TransformCamera cam = getTransformCamera();
     TransformObject obj = getTransformObject();
-<@if not HIFI_USE_UNLIT@>
-    <@if HIFI_USE_FORWARD or HIFI_USE_TRANSLUCENT@>
-        <$transformModelToEyeAndClipPos(cam, obj, inPosition, _positionES, gl_Position)$>
-    <@else@>
-        <$transformModelToClipPos(cam, obj, inPosition, gl_Position)$>
+<@if HIFI_USE_FORWARD or HIFI_USE_TRANSLUCENT@>
+    <@if not HIFI_USE_UNLIT@>
+        <$transformModelToEyeWorldAlignedPos(cam, obj, inPosition, _positionES)$>
     <@endif@>
+<@endif@>
+<@if not HIFI_USE_FORWARD@>
+    <$transformModelToClipPosAndPrevClipPos(cam, obj, inPosition, gl_Position, _prevPositionCS)$>
 <@else@>
     <$transformModelToClipPos(cam, obj, inPosition, gl_Position)$>
 <@endif@>

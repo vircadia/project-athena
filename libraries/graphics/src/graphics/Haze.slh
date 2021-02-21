@@ -181,10 +181,9 @@ vec4 computeHazeColor(vec3 fragPositionES, vec3 fragPositionWS, vec3 eyePosition
 
     // Mix with background at far range
     const float BLEND_DISTANCE = 27000.0f;
-    vec4 outFragColor = potentialFragColor;
-    outFragColor.a *= mix(1.0, hazeParams.backgroundBlend, float(distance > BLEND_DISTANCE));
+    potentialFragColor.a *= mix(1.0, hazeParams.backgroundBlend, float(distance > BLEND_DISTANCE));
 
-    return outFragColor;
+    return potentialFragColor;
 }
 
 <@endif@>

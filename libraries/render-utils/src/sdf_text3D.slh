@@ -35,6 +35,7 @@ LAYOUT(binding=0) uniform textParamsBuffer {
 #define TAA_TEXTURE_LOD_BIAS    -3.0
 
 const float interiorCutoff = 0.5;
+const float smoothStrength = 4.0;
 const float taaBias = pow(2.0, TAA_TEXTURE_LOD_BIAS);
 
 vec4 evalSDF(vec2 texCoord, vec4 glyphBounds) {
@@ -73,18 +74,16 @@ vec4 evalSDF(vec2 texCoord, vec4 glyphBounds) {
 }
 
 vec4 evalSDFSuperSampled(vec2 texCoord, vec4 glyphBounds) {
-    vec2 dxTexCoord = dFdx(texCoord) * 0.5 * taaBias;
-    vec2 dyTexCoord = dFdy(texCoord) * 0.5 * taaBias;
+    vec4 color = evalSDF(texCoord, glyphBounds);
 
-    // Perform 4x supersampling for anisotropic filtering
-    vec4 color;
-    color = evalSDF(texCoord, glyphBounds);
-    color += evalSDF(texCoord + dxTexCoord, glyphBounds);
-    color += evalSDF(texCoord + dyTexCoord, glyphBounds);
-    color += evalSDF(texCoord + dxTexCoord + dyTexCoord, glyphBounds);
-    color *= 0.25;
+    // Rely on TAA for anti-aliasing but smooth transition when minification
+    // to help filtering
+    float uvFootprint = length(fwidth(texCoord) * smoothStrength);
+    float smoothStart = max(0.0, 0.5 - uvFootprint);
+    float smoothEnd = min(1.0, 0.5 + uvFootprint);
+    float alpha = max(smoothstep(smoothStart, smoothEnd, color.a), step(interiorCutoff, color.a));
 
-    return vec4(color.rgb, step(interiorCutoff, color.a));
+    return vec4(color.rgb, alpha);
 }
 
 <@endfunc@>

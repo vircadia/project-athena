@@ -5,6 +5,7 @@
 //
 //  Created by Hifi Engine Team
 //  Copyright 2019 High Fidelity, Inc.
+//  Copyright 2020 Vircadia contributors.
 //
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
@@ -48,6 +49,7 @@ layout(location=RENDER_UTILS_ATTR_TEXCOORD01) out vec4 _texCoord01;
     layout(location=RENDER_UTILS_ATTR_POSITION_ES) out vec4 _positionES;
     layout(location=RENDER_UTILS_ATTR_NORMAL_WS) out vec3 _normalWS;
     layout(location=RENDER_UTILS_ATTR_COLOR) out vec4 _color;
+    layout(location=RENDER_UTILS_ATTR_PREV_POSITION_CS) out vec4 _prevPositionCS;
     <@if HIFI_USE_NORMALMAP@>
         layout(location=RENDER_UTILS_ATTR_TANGENT_WS) out vec3 _tangentWS;
     <@endif@>
@@ -73,7 +75,7 @@ void main(void) {
     TransformCamera cam = getTransformCamera();
     TransformObject obj = getTransformObject();
 <@if not HIFI_USE_SHADOW@>
-        <$transformModelToWorldAndEyeAndClipPos(cam, obj, positionMS, _positionWS, _positionES, gl_Position)$>
+        <$transformModelToWorldEyeClipPosAndPrevClipPos(cam, obj, positionMS, _positionWS, _positionES, gl_Position, _prevPositionCS)$>
         <$transformModelToWorldDir(cam, obj, normalMS, _normalWS)$>
 <@else@>
         <$transformModelToClipPos(cam, obj, positionMS, gl_Position)$>

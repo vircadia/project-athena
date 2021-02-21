@@ -10,15 +10,13 @@
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
 //
 
-<@if not HIFI_USE_TRANSLUCENT@>
-    <@include DeferredBufferWrite.slh@>
-<@else@>
+<@include DeferredBufferWrite.slh@>
+
+<@if HIFI_USE_TRANSLUCENT@>
     <@include DefaultMaterials.slh@>
 
     <@include GlobalLight.slh@>
     <$declareEvalGlobalLightingAlphaBlended()$>
-
-    layout(location=0) out vec4 _fragColor0;
 <@endif@>
 
 <@include gpu/Transform.slh@>
@@ -29,6 +27,7 @@
 
 layout(location=RENDER_UTILS_ATTR_POSITION_MS) in vec4 _positionMS;
 layout(location=RENDER_UTILS_ATTR_POSITION_ES) in vec4 _positionES;
+layout(location=RENDER_UTILS_ATTR_PREV_POSITION_CS) in vec4 _prevPositionCS;
 layout(location=RENDER_UTILS_ATTR_NORMAL_MS) in vec3 _normalMS;
 layout(location=RENDER_UTILS_ATTR_NORMAL_WS) in vec3 _normalWS;
 layout(location=RENDER_UTILS_ATTR_COLOR) in vec4 _color;
@@ -147,6 +146,7 @@ void main(void) {
 <@if not HIFI_USE_TRANSLUCENT@>
     if (emissiveAmount > 0.0) {
         packDeferredFragmentLightmap(
+            _prevPositionCS,
             normal,
             1.0,
             diffuse,
@@ -155,6 +155,7 @@ void main(void) {
             emissive);
     } else {
         packDeferredFragment(
+            _prevPositionCS,
             normal,
             1.0,
             diffuse,
@@ -165,10 +166,11 @@ void main(void) {
             scattering);
     }
 <@else@>
+    vec4 color;
     if (emissiveAmount > 0.0) {
-        _fragColor0 = vec4(diffuse, alpha);
+        color = vec4(diffuse, alpha);
     } else {
-        _fragColor0 = vec4(evalGlobalLightingAlphaBlended(
+        color = vec4(evalGlobalLightingAlphaBlended(
             cam._viewInverse,
             1.0,
             occlusion,
@@ -181,5 +183,6 @@ void main(void) {
             roughness, alpha),
             alpha);
     }
+    packDeferredFragmentTranslucent(_prevPositionCS, normal, color.a, color.rgb, roughness);
 <@endif@>
 }

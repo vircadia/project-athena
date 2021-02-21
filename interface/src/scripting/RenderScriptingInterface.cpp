@@ -54,9 +54,15 @@ void RenderScriptingInterface::forceRenderMethod(RenderMethod renderMethod) {
         _renderMethod = (int)renderMethod;
         _renderMethodSetting.set((int)renderMethod);
 
-        auto config = dynamic_cast<render::SwitchConfig*>(qApp->getRenderEngine()->getConfiguration()->getConfig("RenderMainView.DeferredForwardSwitch"));
+        auto renderConfig = qApp->getRenderEngine()->getConfiguration();
+        auto config = dynamic_cast<render::SwitchConfig*>(renderConfig->getConfig("RenderMainView.DeferredForwardSwitch"));
         if (config) {
             config->setBranch((int)renderMethod);
+        }
+
+        auto secondaryConfig = dynamic_cast<render::SwitchConfig*>(renderConfig->getConfig("RenderSecondView.DeferredForwardSwitch"));
+        if (secondaryConfig) {
+            secondaryConfig->setBranch((int)renderMethod);
         }
     });
 }
@@ -81,17 +87,16 @@ void RenderScriptingInterface::forceShadowsEnabled(bool enabled) {
     _renderSettingLock.withWriteLock([&] {
         _shadowsEnabled = (enabled);
         _shadowsEnabledSetting.set(enabled);
+        Menu::getInstance()->setIsOptionChecked(MenuOption::Shadows, enabled);
 
         auto renderConfig = qApp->getRenderEngine()->getConfiguration();
         assert(renderConfig);
         auto lightingModelConfig = renderConfig->getConfig<MakeLightingModel>("RenderMainView.LightingModel");
         if (lightingModelConfig) {
-            Menu::getInstance()->setIsOptionChecked(MenuOption::Shadows, enabled);
             lightingModelConfig->setShadow(enabled);
         }
         auto secondaryLightingModelConfig = renderConfig->getConfig<MakeLightingModel>("RenderSecondView.LightingModel");
         if (secondaryLightingModelConfig) {
-            Menu::getInstance()->setIsOptionChecked(MenuOption::Shadows, enabled);
             secondaryLightingModelConfig->setShadow(enabled);
         }
     });
@@ -112,11 +117,17 @@ void RenderScriptingInterface::forceAmbientOcclusionEnabled(bool enabled) {
     _renderSettingLock.withWriteLock([&] {
         _ambientOcclusionEnabled = (enabled);
         _ambientOcclusionEnabledSetting.set(enabled);
+        Menu::getInstance()->setIsOptionChecked(MenuOption::AmbientOcclusion, enabled);
 
-        auto lightingModelConfig = qApp->getRenderEngine()->getConfiguration()->getConfig<MakeLightingModel>("RenderMainView.LightingModel");
+        auto renderConfig = qApp->getRenderEngine()->getConfiguration();
+        auto lightingModelConfig = renderConfig->getConfig<MakeLightingModel>("RenderMainView.LightingModel");
         if (lightingModelConfig) {
-            Menu::getInstance()->setIsOptionChecked(MenuOption::AmbientOcclusion, enabled);
             lightingModelConfig->setAmbientOcclusion(enabled);
+        }
+
+        auto secondaryLightingModelConfig = renderConfig->getConfig<MakeLightingModel>("RenderSecondView.LightingModel");
+        if (secondaryLightingModelConfig) {
+            secondaryLightingModelConfig->setAmbientOcclusion(enabled);
         }
     });
 }
@@ -136,18 +147,30 @@ void RenderScriptingInterface::forceAntialiasingEnabled(bool enabled) {
     _renderSettingLock.withWriteLock([&] {
         _antialiasingEnabled = (enabled);
         _antialiasingEnabledSetting.set(enabled);
+        Menu::getInstance()->setIsOptionChecked(MenuOption::AntiAliasing, enabled);
 
-        auto mainViewJitterCamConfig = qApp->getRenderEngine()->getConfiguration()->getConfig<JitterSample>("RenderMainView.JitterCam");
-        auto mainViewAntialiasingConfig = qApp->getRenderEngine()->getConfiguration()->getConfig<Antialiasing>("RenderMainView.Antialiasing");
-        if (mainViewJitterCamConfig && mainViewAntialiasingConfig) {
-            Menu::getInstance()->setIsOptionChecked(MenuOption::AntiAliasing, enabled);
+        auto renderConfig = qApp->getRenderEngine()->getConfiguration();
+        auto mainViewAntialiasingSetupConfig  = renderConfig->getConfig<AntialiasingSetup>("RenderMainView.AntialiasingSetup");
+        auto mainViewAntialiasingConfig = renderConfig->getConfig<Antialiasing>("RenderMainView.Antialiasing");
+        if (mainViewAntialiasingSetupConfig && mainViewAntialiasingConfig) {
             if (enabled) {
-                mainViewJitterCamConfig->play();
+                mainViewAntialiasingSetupConfig ->play();
                 mainViewAntialiasingConfig->setDebugFXAA(false);
-            }
-            else {
-                mainViewJitterCamConfig->none();
+            } else {
+                mainViewAntialiasingSetupConfig ->none();
                 mainViewAntialiasingConfig->setDebugFXAA(true);
+            }
+        }
+
+        auto secondViewAntialiasingSetupConfig  = renderConfig->getConfig<AntialiasingSetup>("RenderSecondView.AntialiasingSetup");
+        auto secondViewAntialiasingConfig = renderConfig->getConfig<Antialiasing>("RenderSecondView.Antialiasing");
+        if (secondViewAntialiasingSetupConfig && secondViewAntialiasingConfig) {
+            if (enabled) {
+                secondViewAntialiasingSetupConfig ->play();
+                secondViewAntialiasingConfig->setDebugFXAA(false);
+            } else {
+                secondViewAntialiasingSetupConfig ->none();
+                secondViewAntialiasingConfig->setDebugFXAA(true);
             }
         }
     });
@@ -171,7 +194,7 @@ void RenderScriptingInterface::forceViewportResolutionScale(float scale) {
         return;
     }
     _renderSettingLock.withWriteLock([&] {
-        _viewportResolutionScale = (scale);
+        _viewportResolutionScale = scale;
         _viewportResolutionScaleSetting.set(scale);
 
         auto renderConfig = qApp->getRenderEngine()->getConfiguration();
@@ -179,12 +202,23 @@ void RenderScriptingInterface::forceViewportResolutionScale(float scale) {
         auto deferredView = renderConfig->getConfig("RenderMainView.RenderDeferredTask");
         // mainView can be null if we're rendering in forward mode
         if (deferredView) {
-            deferredView->setProperty("resolutionScale", _viewportResolutionScale);
+            deferredView->setProperty("resolutionScale", scale);
         }
         auto forwardView = renderConfig->getConfig("RenderMainView.RenderForwardTask");
         // mainView can be null if we're rendering in forward mode
         if (forwardView) {
-            forwardView->setProperty("resolutionScale", _viewportResolutionScale);
+            forwardView->setProperty("resolutionScale", scale);
+        }
+
+        auto deferredSecondView = renderConfig->getConfig("RenderSecondView.RenderDeferredTask");
+        // mainView can be null if we're rendering in forward mode
+        if (deferredSecondView) {
+            deferredSecondView->setProperty("resolutionScale", scale);
+        }
+        auto forwardSecondView = renderConfig->getConfig("RenderMainView.RenderForwardTask");
+        // mainView can be null if we're rendering in forward mode
+        if (forwardSecondView) {
+            forwardSecondView->setProperty("resolutionScale", scale);
         }
     });
 }

@@ -4,6 +4,7 @@
 //
 //  Created by Andrew Meadows 2017.01.17
 //  Copyright 2017 High Fidelity, Inc.
+//  Copyright 2020 Vircadia contributors.
 //
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
@@ -77,7 +78,10 @@ void CauterizedMeshPartPayload::bindTransform(gpu::Batch& batch, const Transform
         if (_cauterizedClusterBuffer) {
             batch.setUniformBuffer(graphics::slot::buffer::Skinning, _cauterizedClusterBuffer);
         }
-        batch.setModelTransform(_cauterizedTransform);
+        batch.setModelTransform(_cauterizedTransform, _prevRenderTransform);
+        if (renderMode == Args::RenderMode::DEFAULT_RENDER_MODE || renderMode == Args::RenderMode::MIRROR_RENDER_MODE) {
+            _prevRenderTransform = _cauterizedTransform;
+        }
     } else {
         ModelMeshPartPayload::bindTransform(batch, transform, renderMode);
     }

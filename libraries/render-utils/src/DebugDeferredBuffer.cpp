@@ -4,6 +4,7 @@
 //
 //  Created by Clement on 12/3/15.
 //  Copyright 2015 High Fidelity, Inc.
+//  Copyright 2020 Vircadia contributors.
 //
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
@@ -131,11 +132,10 @@ static const std::string DEFAULT_SHADOW_DEPTH_SHADER{
 static const std::string DEFAULT_SHADOW_CASCADE_SHADER{
     "vec3 cascadeColors[4] = vec3[4]( vec3(0,1,0), vec3(0,0,1), vec3(1,0,0), vec3(1) );"
     "vec4 getFragmentColor() {"
-    "    DeferredFrameTransform deferredTransform = getDeferredFrameTransform();"
-    "    DeferredFragment frag = unpackDeferredFragment(deferredTransform, uv);"
+    "    DeferredFragment frag = unpackDeferredFragment(uv);"
     "    vec4 viewPosition = vec4(frag.position.xyz, 1.0);"
     "    float viewDepth = -viewPosition.z;"
-    "    vec4 worldPosition = getViewInverse() * viewPosition;"
+    "    vec4 worldPosition = getViewInverse(frag.side) * viewPosition;"
     "    vec4 cascadeShadowCoords[2];"
     "    ivec2 cascadeIndices;"
     "    float cascadeMix = determineShadowCascadesOnPixel(worldPosition, viewDepth, cascadeShadowCoords, cascadeIndices);"
@@ -231,7 +231,15 @@ static const std::string DEFAULT_AMBIENT_OCCLUSION_BLURRED_SHADER{
 
 static const std::string DEFAULT_VELOCITY_SHADER{
     "vec4 getFragmentColor() {"
-    "    return vec4(vec2(texture(debugTexture0, uv).xy), 0.0, 1.0);"
+    "    vec2 velocity = texture(debugTexture0, uv).xy * getWidthHeight(0);"
+    "    vec4 velColor = vec4(0.1f * velocity + 0.5f, 0.0f, 1.0f);"
+    "    return dot(velocity, velocity) > 1e-4 ? velColor : vec4(0.0f, 0.0f, 1.0f, 0.0f);"
+    "}"
+};
+
+static const std::string DEFAULT_ANTIALIASING_INTENSITY_SHADER{
+    "vec4 getFragmentColor() {"
+    "    return vec4(texture(debugTexture0, uv).rrr, 1.0);"
     " }"
 };
 
@@ -251,7 +259,7 @@ static std::string getFileContent(const std::string& fileName, const std::string
 }
 
 #include <QStandardPaths>  // TODO REMOVE: Temporary until UI
-DebugDeferredBuffer::DebugDeferredBuffer() {
+DebugDeferredBuffer::DebugDeferredBuffer(uint transformSlot) : _transformSlot(transformSlot) {
     // TODO REMOVE: Temporary until UI
     static const auto DESKTOP_PATH = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
     static const auto CUSTOM_FILE = DESKTOP_PATH.toStdString() + "/custom.slh";
@@ -325,6 +333,8 @@ std::string DebugDeferredBuffer::getShaderSourceCode(Mode mode, const std::strin
             return DEFAULT_HALF_NORMAL_SHADER;
         case VelocityMode:
             return DEFAULT_VELOCITY_SHADER;
+        case AntialiasingIntensityMode:
+            return DEFAULT_ANTIALIASING_INTENSITY_SHADER;
         case CustomMode:
             return getFileContent(customFile, DEFAULT_CUSTOM_SHADER);
         default:
@@ -401,9 +411,9 @@ void DebugDeferredBuffer::run(const RenderContextPointer& renderContext, const I
     auto& linearDepthTarget = inputs.get1();
     auto& surfaceGeometryFramebuffer = inputs.get2();
     auto& ambientOcclusionFramebuffer = inputs.get3();
-    auto& velocityFramebuffer = inputs.get4();
-    auto& frameTransform = inputs.get5();
-    auto& shadowFrame = inputs.get6();
+    auto& frameTransform = inputs.get4();
+    auto& shadowFrame = inputs.get5();
+    const auto& antialiasingIntensityTexture = inputs.get6();
 
     gpu::doInBatch("DebugDeferredBuffer::run", args->_context, [&](gpu::Batch& batch) {
         batch.enableStereo(false);
@@ -412,12 +422,7 @@ void DebugDeferredBuffer::run(const RenderContextPointer& renderContext, const I
         const auto geometryBuffer = DependencyManager::get<GeometryCache>();
         const auto textureCache = DependencyManager::get<TextureCache>();
 
-        glm::mat4 projMat;
-        Transform viewMat;
-        args->getViewFrustum().evalProjectionMatrix(projMat);
-        args->getViewFrustum().evalViewTransform(viewMat);
-        batch.setProjectionTransform(projMat);
-        batch.setViewTransform(viewMat, true);
+        batch.setSavedViewProjectionTransform(_transformSlot);
         batch.setModelTransform(Transform());
 
         using Textures = render_utils::slot::texture::Texture;
@@ -435,8 +440,8 @@ void DebugDeferredBuffer::run(const RenderContextPointer& renderContext, const I
             batch.setResourceTexture(Textures::DeferredDepth, deferredFramebuffer->getPrimaryDepthTexture());
             batch.setResourceTexture(Textures::DeferredLighting, deferredFramebuffer->getLightingTexture());
         }
-        if (velocityFramebuffer && _mode == VelocityMode) {
-            batch.setResourceTexture(Textures::DebugTexture0, velocityFramebuffer->getVelocityTexture());
+        if (_mode == VelocityMode) {
+            batch.setResourceTexture(Textures::DebugTexture0, deferredFramebuffer->getDeferredVelocityTexture());
         }
 
         if (!shadowFrame->_objects.empty()) {
@@ -472,6 +477,10 @@ void DebugDeferredBuffer::run(const RenderContextPointer& renderContext, const I
                 batch.setResourceTexture(Textures::DebugTexture0, ambientOcclusionFramebuffer->getNormalTexture());
             }
         }
+        if (antialiasingIntensityTexture && _mode == AntialiasingIntensityMode) {
+            batch.setResourceTexture(Textures::DebugTexture0, antialiasingIntensityTexture);
+        }
+
         const glm::vec4 color(1.0f, 1.0f, 1.0f, 1.0f);
         const glm::vec2 bottomLeft(_size.x, _size.y);
         const glm::vec2 topRight(_size.z, _size.w);

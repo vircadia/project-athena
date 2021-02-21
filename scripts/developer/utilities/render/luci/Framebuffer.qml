@@ -61,6 +61,7 @@ Column {
             "Ambient Occlusion Blurred",
             "Ambient Occlusion Normal",
             "Velocity",
+            "Antialiasing Intensity",
             "Custom",
                 ]
 

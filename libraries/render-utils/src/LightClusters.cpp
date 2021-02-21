@@ -575,7 +575,7 @@ void LightClusteringPass::run(const render::RenderContextPointer& renderContext,
     config->setNumClusteredLightReferences(clusteringStats.z);
 }
 
-DebugLightClusters::DebugLightClusters() {
+DebugLightClusters::DebugLightClusters(uint transformSlot) : _transformSlot(transformSlot) {
 
 }
 
@@ -650,13 +650,7 @@ void DebugLightClusters::run(const render::RenderContextPointer& renderContext, 
 
         // Assign the camera transform
         batch.setViewportTransform(args->_viewport);
-        glm::mat4 projMat;
-        Transform viewMat;
-        args->getViewFrustum().evalProjectionMatrix(projMat);
-        args->getViewFrustum().evalViewTransform(viewMat);
-        batch.setProjectionTransform(projMat);
-        batch.setViewTransform(viewMat, true);
-
+        batch.setSavedViewProjectionTransform(_transformSlot);
 
         // Then the actual ClusterGrid attributes
         batch.setModelTransform(Transform());
@@ -667,8 +661,6 @@ void DebugLightClusters::run(const render::RenderContextPointer& renderContext, 
         batch.setUniformBuffer(ru::Buffer::LightClusterFrustumGrid, lightClusters->_frustumGridBuffer);
         batch.setUniformBuffer(ru::Buffer::LightClusterGrid, lightClusters->_clusterGridBuffer);
         batch.setUniformBuffer(ru::Buffer::LightClusterContent, lightClusters->_clusterContentBuffer);
-
-
 
         if (doDrawClusterFromDepth) {
             batch.setPipeline(getDrawClusterFromDepthPipeline());

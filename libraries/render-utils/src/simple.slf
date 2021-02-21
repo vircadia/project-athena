@@ -5,6 +5,7 @@
 //
 //  Created by Andrzej Kapolka on 9/15/14.
 //  Copyright 2014 High Fidelity, Inc.
+//  Copyright 2020 Vircadia contributors.
 //
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
@@ -21,26 +22,21 @@
         <$declareStandardCameraTransform()$>
     <@else@>
         <@include LightingModel.slh@>
+    <@endif@>
 <@endif@>
 
+<@if HIFI_USE_FORWARD@>
     layout(location=0) out vec4 _fragColor0;
+<@else@>
+    <@include DeferredBufferWrite.slh@>
 <@endif@>
 
 <@if not HIFI_USE_UNLIT@>
+    <@include GlobalLight.slh@>
     <@if HIFI_USE_TRANSLUCENT@>
-        <@include GlobalLight.slh@>
         <$declareEvalGlobalLightingAlphaBlended()$>
     <@elif HIFI_USE_FORWARD@>
-        <@include GlobalLight.slh@>
         <$declareEvalSkyboxGlobalColor(_SCRIBE_NULL, HIFI_USE_FORWARD)$>
-    <@else@>
-        <@include DeferredBufferWrite.slh@>
-    <@endif@>
-<@else@>
-    <@if not HIFI_USE_FORWARD@>
-        <@if not HIFI_USE_TRANSLUCENT@>
-            <@include DeferredBufferWrite.slh@>
-        <@endif@>
     <@endif@>
 <@endif@>
 
@@ -49,10 +45,13 @@
     <$declareFadeFragmentInstanced()$>
 <@endif@>
 
-<@if not HIFI_USE_UNLIT@>
-    <@if HIFI_USE_FORWARD or HIFI_USE_TRANSLUCENT@>
+<@if HIFI_USE_FORWARD or HIFI_USE_TRANSLUCENT@>
+    <@if not HIFI_USE_UNLIT@>
         layout(location=RENDER_UTILS_ATTR_POSITION_ES) in vec4 _positionES;
     <@endif@>
+<@endif@>
+<@if not HIFI_USE_FORWARD@>
+    layout(location=RENDER_UTILS_ATTR_PREV_POSITION_CS) in vec4 _prevPositionCS;
 <@endif@>
 <@if HIFI_USE_FADE@>
     layout(location=RENDER_UTILS_ATTR_POSITION_WS) in vec4 _positionWS;
@@ -90,12 +89,13 @@ void main(void) {
 
 <@if not HIFI_USE_UNLIT@>
     <@if HIFI_USE_TRANSLUCENT@>
-        _fragColor0 = vec4(evalGlobalLightingAlphaBlended(
+        vec3 normal = evalFrontOrBackFaceNormal(normalize(_normalWS));
+        vec4 color = vec4(evalGlobalLightingAlphaBlended(
             cam._viewInverse,
             1.0,
             DEFAULT_OCCLUSION,
             fragPosition,
-            evalFrontOrBackFaceNormal(normalize(_normalWS)),
+            normal,
             texel.rgb,
             fresnel,
             metallic,
@@ -106,6 +106,12 @@ void main(void) {
             ,
             DEFAULT_ROUGHNESS, texel.a),
             texel.a);
+
+        <@if HIFI_USE_FORWARD@>
+            _fragColor0 = color;
+        <@else@>
+            packDeferredFragmentTranslucent(_prevPositionCS, normal, color.a, color.rgb, DEFAULT_ROUGHNESS);
+        <@endif@>
     <@elif HIFI_USE_FORWARD@>
         _fragColor0 = vec4(evalSkyboxGlobalColor(
             cam._viewInverse,
@@ -120,6 +126,7 @@ void main(void) {
             texel.a);
     <@else@>
         packDeferredFragment(
+            _prevPositionCS,
             evalFrontOrBackFaceNormal(normalize(_normalWS)),
             1.0,
             texel.rgb,
@@ -134,21 +141,25 @@ void main(void) {
             DEFAULT_SCATTERING);
     <@endif@>
 <@else@>
-    <@if HIFI_USE_FORWARD or HIFI_USE_TRANSLUCENT@>
-        _fragColor0 = isUnlitEnabled() * vec4(texel.rgb
+    vec3 color = isUnlitEnabled() * (texel.rgb
         <@if HIFI_USE_FADE@>
                 + fadeEmissive
         <@endif@>
-            , texel.a);
+        );
+    <@if HIFI_USE_FORWARD@>
+        _fragColor0 = vec4(color, texel.a);
+    <@elif HIFI_USE_TRANSLUCENT@>
+        packDeferredFragmentTranslucentUnlit(
+            _prevPositionCS,
+            evalFrontOrBackFaceNormal(normalize(_normalWS)),
+            texel.a,
+            color);
     <@else@>
         packDeferredFragmentUnlit(
+            _prevPositionCS,
             evalFrontOrBackFaceNormal(normalize(_normalWS)),
             1.0,
-            texel.rgb
-        <@if HIFI_USE_FADE@>
-                + fadeEmissive
-        <@endif@>
-            );
+            color);
     <@endif@>
 <@endif@>
 }

@@ -13,6 +13,7 @@
 #include "LightStage.h"
 #include "HazeStage.h"
 #include "LightingModel.h"
+#include "DeferredFrameTransform.h"
 
 class BeginGPURangeTimer {
 public:
@@ -61,11 +62,11 @@ protected:
 
 class DrawLayered3D {
 public:
-    using Inputs = render::VaryingSet4<render::ItemBounds, LightingModelPointer, HazeStage::FramePointer, glm::vec2>;
+    using Inputs = render::VaryingSet4<render::ItemBounds, DeferredFrameTransformPointer, LightingModelPointer, HazeStage::FramePointer>;
     using Config = DrawLayered3DConfig;
     using JobModel = render::Job::ModelI<DrawLayered3D, Inputs, Config>;
 
-    DrawLayered3D(bool opaque);
+    DrawLayered3D(const render::ShapePlumberPointer& shapePlumber, bool opaque, bool jitter, unsigned int transformSlot);
 
     void configure(const Config& config) { _maxDrawn = config.maxDrawn; }
     void run(const render::RenderContextPointer& renderContext, const Inputs& inputs);
@@ -73,7 +74,9 @@ public:
 protected:
     render::ShapePlumberPointer _shapePlumber;
     int _maxDrawn; // initialized by Config
+    uint _transformSlot;
     bool _opaquePass { true };
+    bool _isJitterEnabled { false };
 };
 
 class Blit {

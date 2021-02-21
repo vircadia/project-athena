@@ -1,6 +1,7 @@
 //
 //  Created by Bradley Austin Davis on 2018/10/14
 //  Copyright 2013-2018 High Fidelity, Inc.
+//  Copyright 2020 Vircadia contributors.
 //
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
@@ -740,7 +741,7 @@ BatchPointer Deserializer::readBatch(const json& node) {
     auto& batch = *result;
     readOptional(batch._enableStereo, node, keys::stereo);
     readOptional(batch._enableSkybox, node, keys::skybox);
-    readOptionalTransformed<glm::vec2>(batch._projectionJitter, node, keys::projectionJitter, &readVec2);
+    readOptional(batch._isJitterOnProjectionEnabled, node, keys::isJitterOnProjectionEnabled);
     readOptional(batch._drawcallUniform, node, keys::drawcallUniform);
     readOptional(batch._drawcallUniformReset, node, keys::drawcallUniformReset);
     readPointerCache(batch._textures, node, keys::textures, textures);

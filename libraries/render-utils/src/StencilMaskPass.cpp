@@ -122,6 +122,12 @@ void PrepareStencil::testMask(gpu::State& state) {
         gpu::State::STENCIL_OP_KEEP, gpu::State::STENCIL_OP_KEEP, gpu::State::STENCIL_OP_KEEP));
 }
 
+// Pass if this area has NOT been marked as MASK or anything containing MASK and reset NO_AA if it passes
+void PrepareStencil::testMaskResetNoAA(gpu::State& state) {
+    state.setStencilTest(true, STENCIL_NO_AA, gpu::State::StencilTest(STENCIL_MASK, STENCIL_MASK, gpu::NOT_EQUAL,
+        gpu::State::STENCIL_OP_KEEP, gpu::State::STENCIL_OP_KEEP, gpu::State::STENCIL_OP_REPLACE));
+}
+
 // Pass if this area has NOT been marked as NO_AA or anything containing NO_AA
 void PrepareStencil::testNoAA(gpu::State& state) {
     state.setStencilTest(true, 0x00, gpu::State::StencilTest(STENCIL_NO_AA, STENCIL_NO_AA, gpu::NOT_EQUAL,

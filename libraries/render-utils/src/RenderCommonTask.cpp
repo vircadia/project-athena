@@ -1,6 +1,7 @@
 //
 //  Created by Bradley Austin Davis on 2018/01/09
 //  Copyright 2013-2018 High Fidelity, Inc.
+//  Copyright 2020 Vircadia contributors.
 //
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
@@ -27,17 +28,18 @@ namespace gr {
 
 
 using namespace render;
-extern void initForwardPipelines(ShapePlumber& plumber);
 
 void BeginGPURangeTimer::run(const render::RenderContextPointer& renderContext, gpu::RangeTimerPointer& timer) {
     timer = _gpuTimer;
     gpu::doInBatch("BeginGPURangeTimer", renderContext->args->_context, [&](gpu::Batch& batch) {
         _gpuTimer->begin(batch);
+        batch.pushProfileRange(timer->name().c_str());
     });
 }
 
 void EndGPURangeTimer::run(const render::RenderContextPointer& renderContext, const gpu::RangeTimerPointer& timer) {
     gpu::doInBatch("EndGPURangeTimer", renderContext->args->_context, [&](gpu::Batch& batch) {
+        batch.popProfileRange();
         timer->end(batch);
     });
     
@@ -45,10 +47,11 @@ void EndGPURangeTimer::run(const render::RenderContextPointer& renderContext, co
     config->setGPUBatchRunTime(timer->getGPUAverage(), timer->getBatchAverage());
 }
 
-DrawLayered3D::DrawLayered3D(bool opaque) :
-    _shapePlumber(std::make_shared<ShapePlumber>()),
-    _opaquePass(opaque) {
-    initForwardPipelines(*_shapePlumber);
+DrawLayered3D::DrawLayered3D(const render::ShapePlumberPointer& shapePlumber, bool opaque, bool jitter, unsigned int transformSlot) :
+    _shapePlumber(shapePlumber),
+    _transformSlot(transformSlot),
+    _opaquePass(opaque),
+    _isJitterEnabled(jitter) {
 }
 
 void DrawLayered3D::run(const RenderContextPointer& renderContext, const Inputs& inputs) {
@@ -58,9 +61,9 @@ void DrawLayered3D::run(const RenderContextPointer& renderContext, const Inputs&
     auto config = std::static_pointer_cast<Config>(renderContext->jobConfig);
 
     const auto& inItems = inputs.get0();
-    const auto& lightingModel = inputs.get1();
-    const auto& hazeFrame = inputs.get2();
-    const auto jitter = inputs.get3();
+    const auto& frameTransform = inputs.get1();
+    const auto& lightingModel = inputs.get2();
+    const auto& hazeFrame = inputs.get3();
     
     config->setNumDrawn((int)inItems.size());
     emit config->numDrawnChanged();
@@ -80,29 +83,25 @@ void DrawLayered3D::run(const RenderContextPointer& renderContext, const Inputs&
     if (_opaquePass) {
         gpu::doInBatch("DrawLayered3D::run::clear", args->_context, [&](gpu::Batch& batch) {
             batch.enableStereo(false);
-            batch.clearFramebuffer(gpu::Framebuffer::BUFFER_DEPTH, glm::vec4(), 1.f, 0, false);
+            batch.clearDepthFramebuffer(true, false);
         });
     }
 
     if (!inItems.empty()) {
         // Render the items
         gpu::doInBatch("DrawLayered3D::main", args->_context, [&](gpu::Batch& batch) {
+            PROFILE_RANGE_BATCH(batch, "DrawLayered3D::main");
             args->_batch = &batch;
             batch.setViewportTransform(args->_viewport);
             batch.setStateScissorRect(args->_viewport);
 
-            glm::mat4 projMat;
-            Transform viewMat;
-            args->getViewFrustum().evalProjectionMatrix(projMat);
-            args->getViewFrustum().evalViewTransform(viewMat);
-
-            batch.setProjectionTransform(projMat);
-            batch.setProjectionJitter(jitter.x, jitter.y);
-            batch.setViewTransform(viewMat);
+            batch.setProjectionJitterEnabled(_isJitterEnabled);
+            batch.setSavedViewProjectionTransform(_transformSlot);
 
             // Setup lighting model for all items;
             batch.setUniformBuffer(ru::Buffer::LightModel, lightingModel->getParametersBuffer());
             batch.setResourceTexture(ru::Texture::AmbientFresnel, lightingModel->getAmbientFresnelLUT());
+            batch.setUniformBuffer(ru::Buffer::DeferredFrameTransform, frameTransform->getFrameTransformBuffer());
 
             if (haze) {
                 batch.setUniformBuffer(graphics::slot::buffer::Buffer::HazeParams, haze->getHazeParametersBuffer());

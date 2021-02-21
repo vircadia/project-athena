@@ -7,6 +7,7 @@
 //
 //  Created by Sam Gateau on 6/30/2015.
 //  Copyright 2015 High Fidelity, Inc.
+//  Copyright 2020 Vircadia contributors.
 //
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
@@ -128,8 +129,7 @@ void main(void) {
     // Final position in pixel space
     vec2 quadPixelPos = offset.xy + quadPos.xy * 0.5 * iconScale;
 
-    vec4 viewport;
-    <$transformCameraViewport(cam, viewport)$>;
+    vec4 viewport = cam._viewport;
     vec2 pixelToClip = vec2(2.0 / viewport.z, 2.0 / viewport.w);
     gl_Position = anchorPoint + (anchorPoint.w * vec4(quadPixelPos * pixelToClip, 0.0, 0.0));
 

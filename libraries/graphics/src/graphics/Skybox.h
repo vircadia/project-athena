@@ -44,9 +44,9 @@ public:
     virtual void clear();
 
     void prepare(gpu::Batch& batch) const;
-    virtual void render(gpu::Batch& batch, const ViewFrustum& frustum, bool forward) const;
+    virtual void render(gpu::Batch& batch, const ViewFrustum& frustum, bool forward, uint transformSlot) const;
 
-    static void render(gpu::Batch& batch, const ViewFrustum& frustum, const Skybox& skybox, bool forward);
+    static void render(gpu::Batch& batch, const ViewFrustum& frustum, const Skybox& skybox, bool forward, uint transformSlot);
 
     const UniformBufferView& getSchemaBuffer() const { return _schemaBuffer; }
 

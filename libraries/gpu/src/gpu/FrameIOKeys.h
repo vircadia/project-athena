@@ -1,6 +1,7 @@
 //
 //  Created by Bradley Austin Davis on 2018/10/14
 //  Copyright 2013-2018 High Fidelity, Inc.
+//  Copyright 2020 Vircadia contributors.
 //
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
@@ -80,7 +81,7 @@ constexpr const char*  pose = "pose";
 constexpr const char*  profileRanges = "profileRanges";
 constexpr const char*  program = "program";
 constexpr const char*  programs = "programs";
-constexpr const char*  projectionJitter = "projectionJitter";
+constexpr const char*  isJitterOnProjectionEnabled = "isJitterOnProjectionEnabled";
 constexpr const char*  queries = "queries";
 constexpr const char*  sampleCount = "sampleCount";
 constexpr const char*  sampleMask = "sampleMask";
@@ -150,9 +151,15 @@ constexpr const char*  COMMAND_NAMES[] = {
     "setModelTransform",
     "setViewTransform",
     "setProjectionTransform",
-    "setProjectionJitter",
+    "setProjectionJitterEnabled",
+    "setProjectionJitterSequence",
+    "setProjectionJitterScale",
     "setViewportTransform",
     "setDepthRangeTransform",
+
+    "saveViewProjectionTransform",
+    "setSavedViewProjectionTransform",
+    "copySavedViewProjectionTransformToBuffer",
 
     "setPipeline",
     "setStateBlendFactor",

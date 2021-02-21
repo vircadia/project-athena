@@ -35,6 +35,7 @@ LAYOUT(binding=0) uniform sampler2D webTexture;
     layout(location=RENDER_UTILS_ATTR_POSITION_ES) in vec4 _positionES;
 <@else@>
     layout(location=RENDER_UTILS_ATTR_NORMAL_WS) in vec3 _normalWS;
+    layout(location=RENDER_UTILS_ATTR_PREV_POSITION_CS) in vec4 _prevPositionCS;
 <@endif@>
 layout(location=RENDER_UTILS_ATTR_COLOR) in vec4 _color;
 layout(location=RENDER_UTILS_ATTR_TEXCOORD01) in vec4 _texCoord01;
@@ -69,6 +70,6 @@ void main(void) {
         }
     }
 <@else@>
-    packDeferredFragmentUnlit(normalize(_normalWS), 1.0, texel.rgb);
+    packDeferredFragmentUnlit(_prevPositionCS, normalize(_normalWS), 1.0, texel.rgb);
 <@endif@>
 }

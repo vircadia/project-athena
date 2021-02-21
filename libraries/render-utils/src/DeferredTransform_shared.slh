@@ -1,0 +1,33 @@
+// glsl / C++ compatible source as interface for DeferredFrameTransform layout
+#ifdef __cplusplus
+#   define DFT_VEC4 glm::vec4
+#   define DFT_MAT4 glm::mat4
+#include "gpu/TransformCamera_shared.slh"
+#else
+#   define DFT_VEC4 vec4
+#   define DFT_MAT4 mat4
+<@include gpu/TransformCamera_shared.slh@>
+#endif
+
+struct DeferredFrameInfo {
+    // Pixel info is { viewport width height}
+    DFT_VEC4 pixelInfo;
+    DFT_VEC4 invPixelInfo;
+    // Depth info is { n.f, f - n, -f}
+    DFT_VEC4 depthInfo;
+    // Stereo info is { isStereoFrame, halfWidth }
+    DFT_VEC4 stereoInfo;
+	// The mono projection for sure
+    DFT_MAT4 projectionMono;
+};
+
+struct _DeferredFrameTransform {
+    DeferredFrameInfo infos;
+    // The camera transforms for the two eyes (or only first one if mono, of course)
+    _TransformCamera cameras[2];
+};
+
+    // <@if 1@>
+    // Trigger Scribe include 
+    // <@endif@> <!def that !> 
+//

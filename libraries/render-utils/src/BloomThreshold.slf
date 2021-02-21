@@ -17,11 +17,10 @@ LAYOUT_STD140(binding=RENDER_UTILS_BUFFER_BLOOM_PARAMS) uniform parametersBuffer
     Parameters parameters;
 };
 
-layout(location=0) in vec2 varTexCoord0;
 layout(location=0) out vec4 outFragColor;
 
 void main(void) {
-    vec2 startUv = varTexCoord0;
+    vec2 startUv = (vec2(gl_FragCoord.xy) + vec2(parameters._offset)) * parameters._deltaUV;
     vec4 maskedColor = vec4(0,0,0,0);
 
     for (int y=0 ; y<parameters._sampleCount ; y++) {

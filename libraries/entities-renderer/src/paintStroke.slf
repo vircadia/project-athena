@@ -5,6 +5,7 @@
 //
 //  Created by Eric Levin on 8/10/2015
 //  Copyright 2015 High Fidelity, Inc.
+//  Copyright 2020 Vircadia contributors.
 //
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
@@ -23,12 +24,15 @@
 
 LAYOUT(binding=0) uniform sampler2D _texture;
 
+<@include render-utils/ShaderConstants.h@>
+
 <@if not HIFI_USE_FORWARD@>
-    layout(location=0) in vec3 _normalWS;
+    layout(location=RENDER_UTILS_ATTR_NORMAL_WS) in vec3 _normalWS;
+    layout(location=RENDER_UTILS_ATTR_PREV_POSITION_CS) in vec4 _prevPositionCS;
 <@endif@>
-layout(location=1) in vec2 _texCoord;
-layout(location=2) in vec4 _color;
-layout(location=3) in float _distanceFromCenter;
+layout(location=RENDER_UTILS_ATTR_TEXCOORD01) in vec2 _texCoord;
+layout(location=RENDER_UTILS_ATTR_COLOR) in vec4 _color;
+layout(location=2) in float _distanceFromCenter;
 
 void main(void) {
     vec4 texel = texture(_texture, _texCoord);
@@ -37,9 +41,9 @@ void main(void) {
 
 <@if not HIFI_USE_FORWARD@>
     <@if HIFI_USE_TRANSLUCENT@>
-        packDeferredFragmentTranslucent(evalFrontOrBackFaceNormal(_normalWS), texel.a, texel.rgb, DEFAULT_ROUGHNESS);
+        packDeferredFragmentTranslucentUnlit(_prevPositionCS, evalFrontOrBackFaceNormal(_normalWS), texel.a, texel.rgb);
     <@else@>
-        packDeferredFragmentUnlit(evalFrontOrBackFaceNormal(_normalWS), texel.a, texel.rgb);
+        packDeferredFragmentUnlit(_prevPositionCS, evalFrontOrBackFaceNormal(_normalWS), texel.a, texel.rgb);
     <@endif@>
 <@else@>
     _fragColor0 = texel;

@@ -33,7 +33,7 @@ void main(void) {
     vec2 texCoord = varTexCoord0.st;
 
     vec4 fragEyePos = unpackDeferredPositionFromZdb(texCoord);
-    vec4 fragWorldPos = getViewInverse() * fragEyePos;
+    vec4 fragWorldPos = getViewInverse(getStereoSideFromUV(texCoord.x)) * fragEyePos;
     
     // From frag world pos find the cluster
     vec4 clusterEyePos = frustumGrid_worldToEye(fragWorldPos);

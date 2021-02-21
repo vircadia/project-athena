@@ -10,13 +10,27 @@
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
 //
 
+<@if not HIFI_USE_FORWARD@>
+    <@include DeferredBufferWrite.slh@>
+    <@include CullFace.slh@>
+
+    layout(location=RENDER_UTILS_ATTR_NORMAL_WS) in vec3 _normalWS;
+    layout(location=RENDER_UTILS_ATTR_PREV_POSITION_CS) in vec4 _prevPositionCS;
+<@else@>
+    layout(location=0) out vec4 _fragColor0;
+<@endif@>
+
 LAYOUT(binding=0) uniform sampler2D colorMap;
 
 layout(location=0) in vec4 varColor;
 layout(location=1) in vec2 varTexcoord;
 
-layout(location=0) out vec4 outFragColor;
-
 void main(void) {
-    outFragColor = texture(colorMap, varTexcoord.xy) * varColor;
+    vec4 color = texture(colorMap, varTexcoord.xy) * varColor;
+
+<@if not HIFI_USE_FORWARD@>
+    packDeferredFragmentTranslucentUnlit(_prevPositionCS, evalFrontOrBackFaceNormal(_normalWS), color.a, color.rgb);
+<@else@>
+    _fragColor0 = color;
+<@endif@>
 }

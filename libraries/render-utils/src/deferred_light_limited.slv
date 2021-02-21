@@ -54,8 +54,7 @@ void main(void) {
 
 #ifdef GPU_TRANSFORM_IS_STEREO
 #ifdef GPU_TRANSFORM_STEREO_SPLIT_SCREEN
-        TransformCamera cam = getTransformCamera();
-        <$transformStereoClipsSpace(cam, pos)$>
+        <$transformStereoClipSpace(pos)$>
 #endif
 #endif
 

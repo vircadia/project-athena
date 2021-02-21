@@ -33,8 +33,9 @@ void main(void) {
     const float INOUT_RATIO = 0.4;
     const float SUN_THRESHOLD = 0.99;
 
+    mat4 viewInverse = getViewInverse(getStereoSideFromFragCoord());
     vec3 outSpherePos = normalize(vec3(sphereUV, -sqrt(1.0 - sphereR2)));
-    vec3 outNormal = vec3(getViewInverse() * vec4(outSpherePos, 0.0));
+    vec3 outNormal = vec3(viewInverse * vec4(outSpherePos, 0.0));
 
     float val = step(SUN_THRESHOLD, dot(-lightDirection, outNormal));
 
@@ -43,7 +44,7 @@ void main(void) {
     if (sphereR2 < INOUT_RATIO * INOUT_RATIO * SCOPE_RADIUS2) {
         vec2 inSphereUV = sphereUV / INOUT_RATIO;
         vec3 inSpherePos = normalize(vec3(inSphereUV, sqrt(1.0 - dot(inSphereUV.xy, inSphereUV.xy))));
-        vec3 inNormal = vec3(getViewInverse() * vec4(inSpherePos, 0.0));
+        vec3 inNormal = vec3(viewInverse * vec4(inSpherePos, 0.0));
 
         vec3 marbleColor = max(lightIrradiance * vec3(dot(-lightDirection, inNormal)), vec3(0.01));
         color += marbleColor;

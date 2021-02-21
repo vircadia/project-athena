@@ -10,20 +10,21 @@
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
 //
 
+layout(location=0) in vec4 _color;
+
 <@if not HIFI_USE_FORWARD@>
     <@include DeferredBufferWrite.slh@>
+    layout(location=1) in vec4 _prevPositionCS;
 <@else@>
     layout(location=0) out vec4 _fragColor0;
 <@endif@>
 
-layout(location=0) in vec4 _color;
-
 void main(void) {
 <@if not HIFI_USE_FORWARD@>
     <@if not HIFI_USE_TRANSLUCENT@>
-        packDeferredFragmentUnlit(vec3(1.0, 0.0, 0.0), 1.0, _color.rgb);
+        packDeferredFragmentUnlit(_prevPositionCS, vec3(1.0, 0.0, 0.0), 1.0, _color.rgb);
     <@else@>
-        packDeferredFragmentTranslucent(vec3(1.0, 0.0, 0.0), _color.a, _color.rgb, DEFAULT_ROUGHNESS);
+        packDeferredFragmentTranslucent(_prevPositionCS, vec3(1.0, 0.0, 0.0), _color.a, _color.rgb, DEFAULT_ROUGHNESS);
     <@endif@>
 <@else@>
     _fragColor0 = _color;

@@ -1,0 +1,36 @@
+<@include gpu/Config.slh@>
+<$VERSION_HEADER$>
+//  <$_SCRIBE_FILENAME$>
+//  Generated on <$_SCRIBE_DATE$>
+//
+//  Created by HifiExperiments on 7/24/2020
+//  Copyright 2020 Vircadia contributors.
+//
+//  Distributed under the Apache License, Version 2.0.
+//  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
+//
+
+<@include gpu/Inputs.slh@>
+<@include gpu/Color.slh@>
+<@include render-utils/ShaderConstants.h@>
+
+<@include gpu/Transform.slh@>
+<$declareStandardTransform()$>
+
+layout(location=GPU_ATTR_POSITION) out vec3 varPosition;
+layout(location=RENDER_UTILS_ATTR_PREV_POSITION_CS) out vec4 _prevPositionCS;
+layout(location=GPU_ATTR_NORMAL) out vec3 varNormal;
+layout(location=GPU_ATTR_TEXCOORD0) out vec2 varTexCoord0;
+layout(location=GPU_ATTR_COLOR) out vec4 varColor;
+
+void main(void) {
+    varTexCoord0 = inTexCoord0.st;
+    varColor = color_sRGBAToLinear(inColor);
+    
+    // standard transform
+    TransformCamera cam = getTransformCamera();
+    TransformObject obj = getTransformObject();
+    <$transformModelToClipPosAndPrevClipPos(cam, obj, inPosition, gl_Position, _prevPositionCS)$>
+    <$transformModelToWorldDir(cam, obj, inNormal.xyz, varNormal)$>
+    varPosition = inPosition.xyz;
+}

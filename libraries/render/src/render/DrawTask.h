@@ -58,6 +58,8 @@ public:
     using Inputs = render::ItemBounds;
     using JobModel = render::Job::ModelI<DrawBounds, Inputs, Config>;
 
+    DrawBounds(uint transformSlot) : _transformSlot(transformSlot) {}
+
     void configure(const Config& configuration) {}
     void run(const render::RenderContextPointer& renderContext,
         const Inputs& items);
@@ -67,6 +69,7 @@ private:
     gpu::PipelinePointer _boundsPipeline;
     gpu::BufferPointer _drawBuffer;
     gpu::BufferPointer _paramsBuffer;
+    uint _transformSlot;
 };
 
 class DrawQuadVolumeConfig : public render::JobConfig {

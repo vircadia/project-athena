@@ -1,6 +1,7 @@
 //
 //  Created by Sam Gondelman 7/17/2018
 //  Copyright 2018 High Fidelity, Inc.
+//  Copyright 2020 Vircadia contributors.
 //
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
@@ -60,6 +61,7 @@ public:
             render::ItemKey _key;
 
             glm::vec3 _origin { 0.0f };
+            Transform _prevRenderTransform;
             bool _isVisibleInSecondaryCamera { DEFAULT_PARABOLA_ISVISIBLEINSECONDARYCAMERA };
             bool _drawInFront { DEFAULT_PARABOLA_DRAWINFRONT };
             bool _visible { false };

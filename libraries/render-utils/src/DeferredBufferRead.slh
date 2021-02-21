@@ -45,6 +45,7 @@ struct DeferredFragment {
     vec3 fresnel;
     float roughness;
     int mode;
+    int side;
     float scattering;
     float depthVal;
 };
@@ -57,6 +58,9 @@ vec3 getFresnelF0(float metallic, vec3 metalF0) {
     return mix(vec3(0.03), metalF0, metallic);
 }
 <@endif@>
+
+<@include DeferredTransform.slh@>
+<$declareDeferredFrameTransform()$>
 
 DeferredFragment unpackDeferredFragmentNoPosition(vec2 texcoord) {
     vec4 normalVal;
@@ -81,6 +85,8 @@ DeferredFragment unpackDeferredFragmentNoPosition(vec2 texcoord) {
     frag.obscurance = min(specularVal.w, frag.obscurance);
     frag.scattering = float(frag.mode == FRAG_MODE_SCATTERING) * specularVal.x;
     frag.fresnel = getFresnelF0(frag.metallic, diffuseVal.xyz);
+
+    frag.side = getStereoSideFromUV(texcoord.x);
 
     return frag;
 }
@@ -109,18 +115,14 @@ DeferredFragment unpackDeferredFragmentNoPositionNoAmbient(vec2 texcoord) {
 
     frag.fresnel = getFresnelF0(frag.metallic, diffuseVal.xyz);
 
+    frag.side = getStereoSideFromUV(texcoord.x);
+
     return frag;
 }
 
-
-<@include DeferredTransform.slh@>
-<$declareDeferredFrameTransform()$>
-
-vec4 unpackDeferredPosition(float depthValue, vec2 texcoord) {
+vec4 unpackDeferredPosition(int side, float depthValue, vec2 texcoord) {
     float check = float(isStereo());
-    float check2 = check * float(texcoord.x > 0.5);
-    texcoord.x -= check2 * 0.5;
-    int side = int(check2);
+    texcoord.x -= check * 0.5 * float(side);
     texcoord.x *= 1.0 + check;
 
     return vec4(evalEyePositionFromZdb(side, depthValue, texcoord), 1.0);
@@ -129,7 +131,7 @@ vec4 unpackDeferredPosition(float depthValue, vec2 texcoord) {
 // This method to unpack position is fastesst
 vec4 unpackDeferredPositionFromZdb(vec2 texcoord) {
     float Zdb = texture(depthMap, texcoord).x;
-    return unpackDeferredPosition(Zdb, texcoord);
+    return unpackDeferredPosition(getStereoSideFromUV(texcoord.x), Zdb, texcoord);
 }
 
 vec4 unpackDeferredPositionFromZeye(vec2 texcoord) {
@@ -144,13 +146,13 @@ vec4 unpackDeferredPositionFromZeye(vec2 texcoord) {
     return vec4(evalEyePositionFromZeye(side, Zeye, texcoord), 1.0);
 }
 
-DeferredFragment unpackDeferredFragment(DeferredFrameTransform deferredTransform, vec2 texcoord) {
+DeferredFragment unpackDeferredFragment(vec2 texcoord) {
     float depthValue = texture(depthMap, texcoord).r;
 
     DeferredFragment frag = unpackDeferredFragmentNoPosition(texcoord);
 
     frag.depthVal = depthValue;
-    frag.position = unpackDeferredPosition(frag.depthVal, texcoord);
+    frag.position = unpackDeferredPosition(frag.side, frag.depthVal, texcoord);
 
     return frag;
 }

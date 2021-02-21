@@ -5,6 +5,7 @@
 //
 //  Created by Andrzej Kapolka on 5/6/14.
 //  Copyright 2014 High Fidelity, Inc.
+//  Copyright 2020 Vircadia contributors.
 //
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
@@ -16,6 +17,12 @@
 <@include CullFace.slh@>
 
 <@if not HIFI_USE_SHADOW@>
+    <@if HIFI_USE_FORWARD@>
+        layout(location=0) out vec4 _fragColor0;
+    <@else@>
+        <@include DeferredBufferWrite.slh@>
+    <@endif@>
+
     <@if HIFI_USE_FORWARD or HIFI_USE_TRANSLUCENT@>
         <@include DefaultMaterials.slh@>
         <@include GlobalLight.slh@>
@@ -31,9 +38,6 @@
         <@endif@>
         <@include gpu/Transform.slh@>
         <$declareStandardCameraTransform()$>
-        layout(location=0) out vec4 _fragColor0;
-    <@else@>
-        <@include DeferredBufferWrite.slh@>
     <@endif@>
 <@else@>
     layout(location=0) out vec4 _fragColor0;
@@ -79,6 +83,7 @@ layout(location=RENDER_UTILS_ATTR_TEXCOORD01) in vec4 _texCoord01;
     layout(location=RENDER_UTILS_ATTR_POSITION_ES) in vec4 _positionES;
     layout(location=RENDER_UTILS_ATTR_NORMAL_WS) in vec3 _normalWS;
     layout(location=RENDER_UTILS_ATTR_COLOR) in vec4 _color;
+    layout(location=RENDER_UTILS_ATTR_PREV_POSITION_CS) in vec4 _prevPositionCS;
     <@if HIFI_USE_NORMALMAP@>
         layout(location=RENDER_UTILS_ATTR_TANGENT_WS) in vec3 _tangentWS;
     <@endif@>
@@ -126,10 +131,17 @@ void main(void) {
 
     <@if HIFI_USE_SHADOW@>
             _fragColor0 = vec4(1.0);
-    <@elif HIFI_USE_TRANSLUCENT or HIFI_USE_FORWARD@>
+    <@elif HIFI_USE_FORWARD@>
             _fragColor0 = vec4(albedo * isUnlitEnabled(), opacity);
+    <@elif HIFI_USE_TRANSLUCENT@>
+            packDeferredFragmentTranslucentUnlit(
+                _prevPositionCS,
+                evalFrontOrBackFaceNormal(normalize(_normalWS)),
+                opacity,
+                albedo * isUnlitEnabled());
     <@else@>
             packDeferredFragmentUnlit(
+                _prevPositionCS,
                 evalFrontOrBackFaceNormal(normalize(_normalWS)),
                 opacity,
                 albedo * isUnlitEnabled());
@@ -255,6 +267,7 @@ void main(void) {
         <@if not HIFI_USE_TRANSLUCENT@>
             <@if not HIFI_USE_LIGHTMAP@>
                 packDeferredFragment(
+                    _prevPositionCS,
                     fragNormalWS,
                     opacity,
                     albedo,
@@ -269,6 +282,7 @@ void main(void) {
                     scattering);
             <@else@>
                 packDeferredFragmentLightmap(
+                    _prevPositionCS,
                     fragNormalWS,
                     evalOpaqueFinalAlpha(getMaterialOpacity(mat), opacity),
                     albedo,
@@ -298,7 +312,7 @@ void main(void) {
                                                       vec4(0), vec4(0), opacity);
                 }
 
-                _fragColor0 = vec4(evalGlobalLightingAlphaBlended(
+                vec4 outColor = vec4(evalGlobalLightingAlphaBlended(
                     cam._viewInverse,
                     1.0,
                     occlusion,
@@ -314,8 +328,9 @@ void main(void) {
                     ,
                     surfaceWS, opacity, localLighting.rgb),
                     opacity);
+                packDeferredFragmentTranslucent(_prevPositionCS, fragNormalWS, outColor.a, outColor.rgb, roughness);
             <@else@>
-                _fragColor0 = vec4(evalLightmappedColor(
+                vec4 outColor = vec4(evalLightmappedColor(
                     cam._viewInverse,
                     1.0,
                     DEFAULT_OCCLUSION,
@@ -323,6 +338,7 @@ void main(void) {
                     albedo,
                     lightmap),
                     opacity);
+                packDeferredFragmentLightmap(_prevPositionCS, fragNormalWS, outColor.a, outColor.rgb, roughness, metallic, outColor.rgb);
             <@endif@>
         <@endif@>
     <@endif@>

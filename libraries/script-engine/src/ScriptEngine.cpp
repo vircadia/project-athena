@@ -1548,8 +1548,10 @@ void ScriptEngine::timerFired() {
         auto postTimer = p_high_resolution_clock::now();
         auto elapsed = (postTimer - preTimer);
         _totalTimerExecution += std::chrono::duration_cast<std::chrono::microseconds>(elapsed);
-    } else {
+    } else if (!timerData.function.toVariant().isNull()) {
         qCWarning(scriptengine) << "timerFired -- invalid function" << timerData.function.toVariant().toString();
+    } else {
+        qCWarning(scriptengine) << "timerFired -- invalid function";
     }
 }
 

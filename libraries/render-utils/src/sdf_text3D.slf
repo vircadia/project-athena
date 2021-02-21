@@ -21,7 +21,9 @@
 
     <@include gpu/Transform.slh@>
     <$declareStandardCameraTransform()$>
+<@endif@>
 
+<@if HIFI_USE_FORWARD@>
     layout(location=0) out vec4 _fragColor0;
 <@else@>
     <@include DeferredBufferWrite.slh@>
@@ -34,6 +36,9 @@
 
 <@if HIFI_USE_TRANSLUCENT or HIFI_USE_FORWARD@>
     layout(location=RENDER_UTILS_ATTR_POSITION_ES) in vec4 _positionES;
+<@endif@>
+<@if not HIFI_USE_FORWARD@>
+    layout(location=RENDER_UTILS_ATTR_PREV_POSITION_CS) in vec4 _prevPositionCS;
 <@endif@>
 layout(location=RENDER_UTILS_ATTR_NORMAL_WS) in vec3 _normalWS;
 layout(location=RENDER_UTILS_ATTR_TEXCOORD01) in vec4 _texCoord01;
@@ -51,27 +56,35 @@ void main() {
     }
 <@endif@>
 
+    vec3 normal = normalize(_normalWS);
+
 <@if HIFI_USE_UNLIT@>
-    <@if HIFI_USE_TRANSLUCENT or HIFI_USE_FORWARD@>
-        _fragColor0 = vec4(color.rgb * isUnlitEnabled(), color.a);
+    vec4 outColor = vec4(color.rgb * isUnlitEnabled(), color.a);
+
+    <@if HIFI_USE_FORWARD@>
+        _fragColor0 = outColor;
+    <@elif HIFI_USE_TRANSLUCENT@>
+        packDeferredFragmentTranslucent(_prevPositionCS, normal, outColor.a, outColor.rgb, DEFAULT_ROUGHNESS);
     <@else@>
         packDeferredFragmentUnlit(
-            normalize(_normalWS),
-            color.a,
-            color.rgb);
+            _prevPositionCS,
+            normal,
+            outColor.a,
+            outColor.rgb);
     <@endif@>
 <@else@>
     <@if HIFI_USE_TRANSLUCENT or HIFI_USE_FORWARD@>
         TransformCamera cam = getTransformCamera();
         vec3 fragPosition = _positionES.xyz;
 
+        vec4 outColor;
         <@if HIFI_USE_TRANSLUCENT@>
-            _fragColor0 = vec4(evalGlobalLightingAlphaBlended(
+            outColor = vec4(evalGlobalLightingAlphaBlended(
                 cam._viewInverse,
                 1.0,
                 DEFAULT_OCCLUSION,
                 fragPosition,
-                normalize(_normalWS),
+                normal,
                 color.rgb,
                 DEFAULT_FRESNEL,
                 DEFAULT_METALLIC,
@@ -79,21 +92,28 @@ void main() {
                 DEFAULT_ROUGHNESS, color.a),
                 color.a);
         <@else@>
-            _fragColor0 = vec4(evalSkyboxGlobalColor(
+            outColor = vec4(evalSkyboxGlobalColor(
                 cam._viewInverse,
                 1.0,
                 DEFAULT_OCCLUSION,
                 fragPosition,
-                normalize(_normalWS),
+                normal,
                 color.rgb,
                 DEFAULT_FRESNEL,
                 DEFAULT_METALLIC,
                 DEFAULT_ROUGHNESS),
                 color.a);
         <@endif@>
+
+        <@if HIFI_USE_FORWARD@>
+            _fragColor0 = outColor;
+        <@else@>
+            packDeferredFragmentTranslucent(_prevPositionCS, normal, outColor.a, outColor.rgb, DEFAULT_ROUGHNESS);
+        <@endif@>
     <@else@>
         packDeferredFragment(
-            normalize(_normalWS),
+            _prevPositionCS,
+            normal,
             color.a,
             color.rgb,
             DEFAULT_ROUGHNESS,

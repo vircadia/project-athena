@@ -150,7 +150,6 @@ protected:
 
     gpu::FramePointer _currentFrame;
     gpu::Frame* _lastFrame{ nullptr };
-    mat4 _prevRenderView;
     gpu::FramebufferPointer _compositeFramebuffer;
     gpu::PipelinePointer _hudPipeline;
     gpu::PipelinePointer _mirrorHUDPipeline;

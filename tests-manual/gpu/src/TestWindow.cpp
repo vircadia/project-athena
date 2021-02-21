@@ -28,7 +28,7 @@ extern void initDeferredPipelines(render::ShapePlumber& plumber, const render::S
 extern void initStencilPipeline(gpu::PipelinePointer& pipeline);
 #endif
 
-TestWindow::TestWindow() {
+TestWindow::TestWindow() : _generateDeferredFrameTransform(render::RenderEngine::TS_MAIN_VIEW) {
     setSurfaceType(QSurface::OpenGLSurface);
 
 
@@ -98,7 +98,7 @@ void TestWindow::beginFrame() {
     _preparePrimaryFramebuffer.run(_renderContext, primaryFramebuffer);
 
     DeferredFrameTransformPointer frameTransform;
-    _generateDeferredFrameTransform.run(_renderContext, glm::vec2(0.0f, 0.0f), frameTransform);
+    _generateDeferredFrameTransform.run(_renderContext, frameTransform);
 
     LightingModelPointer lightingModel;
     _generateLightingModel.run(_renderContext, lightingModel);

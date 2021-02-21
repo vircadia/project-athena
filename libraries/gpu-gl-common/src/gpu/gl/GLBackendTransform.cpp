@@ -18,20 +18,48 @@ void GLBackend::do_setModelTransform(const Batch& batch, size_t paramOffset) {
 }
 
 void GLBackend::do_setViewTransform(const Batch& batch, size_t paramOffset) {
-    _transform._view = batch._transforms.get(batch._params[paramOffset]._uint);
-    _transform._viewIsCamera = batch._params[paramOffset + 1]._uint != 0;
+    _transform._viewProjectionState._view = batch._transforms.get(batch._params[paramOffset]._uint); 
+    // View history is only supported with saved transforms and if setViewTransform is called (and not setSavedViewProjectionTransform)
+    // then, in consequence, the view will NOT be corrected in the present thread. In which case
+    // the previousCorrectedView should be the same as the view.
+    _transform._viewProjectionState._previousCorrectedView = _transform._viewProjectionState._view;
+    _transform._viewProjectionState._previousProjection = _transform._viewProjectionState._projection;
+    _transform._viewProjectionState._viewIsCamera = batch._params[paramOffset + 1]._uint != 0;
     _transform._invalidView = true;
+    // The current view / proj doesn't correspond to a saved camera slot
+    _transform._currentSavedTransformSlot = INVALID_SAVED_CAMERA_SLOT;
 }
 
 void GLBackend::do_setProjectionTransform(const Batch& batch, size_t paramOffset) {
-    memcpy(glm::value_ptr(_transform._projection), batch.readData(batch._params[paramOffset]._uint), sizeof(Mat4));
-    _transform._invalidProj = true;
+     memcpy(glm::value_ptr(_transform._viewProjectionState._projection), batch.readData(batch._params[paramOffset]._uint), sizeof(Mat4)); 
+     _transform._invalidProj = true;
+    // The current view / proj doesn't correspond to a saved camera slot
+    _transform._currentSavedTransformSlot = INVALID_SAVED_CAMERA_SLOT;
 }
 
-void GLBackend::do_setProjectionJitter(const Batch& batch, size_t paramOffset) {
-    _transform._projectionJitter.x = batch._params[paramOffset]._float;
-    _transform._projectionJitter.y = batch._params[paramOffset+1]._float;
+void GLBackend::do_setProjectionJitterEnabled(const Batch& batch, size_t paramOffset) {
+    _transform._projectionJitter._isEnabled = (batch._params[paramOffset]._int & 1) != 0;
     _transform._invalidProj = true;
+    // The current view / proj doesn't correspond to a saved camera slot
+    _transform._currentSavedTransformSlot = INVALID_SAVED_CAMERA_SLOT;
+}
+
+void GLBackend::do_setProjectionJitterSequence(const Batch& batch, size_t paramOffset) {
+    auto count = batch._params[paramOffset + 0]._uint;
+    auto& projectionJitter = _transform._projectionJitter;
+    projectionJitter._offsetSequence.resize(count);
+    if (count) {
+        memcpy(projectionJitter._offsetSequence.data(), batch.readData(batch._params[paramOffset + 1]._uint), sizeof(Vec2) * count);
+        projectionJitter._offset = projectionJitter._offsetSequence[projectionJitter._currentSampleIndex  % count];
+    } else {
+        projectionJitter._offset = Vec2(0.0f);
+    }
+}
+
+void GLBackend::do_setProjectionJitterScale(const Batch& batch, size_t paramOffset) {
+    // Should be 2 for one pixel amplitude as clip space is between -1 and 1, but lower values give less blur
+    // but more aliasing...
+    _transform._projectionJitter._scale = 2.0f * batch._params[paramOffset + 0]._float;
 }
 
 void GLBackend::do_setViewportTransform(const Batch& batch, size_t paramOffset) {
@@ -90,55 +118,80 @@ void GLBackend::syncTransformStateCache() {
 
     Mat4 modelView;
     auto modelViewInv = glm::inverse(modelView);
-    _transform._view.evalFromRawMatrix(modelViewInv);
+    _transform._viewProjectionState._view.evalFromRawMatrix(modelViewInv);
 
     glDisableVertexAttribArray(gpu::Stream::DRAW_CALL_INFO);
     _transform._enabledDrawcallInfoBuffer = false;
 }
 
-void GLBackend::TransformStageState::preUpdate(size_t commandIndex, const StereoState& stereo, Vec2u framebufferSize) {
+void GLBackend::TransformStageState::pushCameraBufferElement(const StereoState& stereo, const StereoState& prevStereo, TransformCameras& cameras) const {
+    const float jitterAmplitude = _projectionJitter._scale;
+    const Vec2 jitterScale = Vec2(jitterAmplitude * float(_projectionJitter._isEnabled & 1)) / Vec2(_viewport.z, _viewport.w);
+    const Vec2 jitter = jitterScale * _projectionJitter._offset;
+
+    if (stereo.isStereo()) {
+#ifdef GPU_STEREO_CAMERA_BUFFER
+        cameras.push_back(CameraBufferElement(_camera.getEyeCamera(0, stereo, prevStereo, _viewProjectionState._correctedView,
+                                                                   _viewProjectionState._previousCorrectedView, jitter),
+                                              _camera.getEyeCamera(1, stereo, prevStereo, _viewProjectionState._correctedView,
+                                                                   _viewProjectionState._previousCorrectedView, jitter)));
+#else
+        cameras.push_back((_camera.getEyeCamera(0, stereo, prevStereo, _viewProjectionState._correctedView,
+                                                _viewProjectionState._previousCorrectedView, jitter)));
+        cameras.push_back((_camera.getEyeCamera(1, stereo, prevStereo, _viewProjectionState._correctedView,
+                                                _viewProjectionState._previousCorrectedView, jitter)));
+#endif
+    } else {
+#ifdef GPU_STEREO_CAMERA_BUFFER
+        cameras.push_back(CameraBufferElement(
+            _camera.getMonoCamera(_skybox, _viewProjectionState._correctedView, _viewProjectionState._previousCorrectedView,
+                                  _viewProjectionState._previousProjection, jitter)));
+#else
+        cameras.push_back((_camera.getMonoCamera(_skybox, _viewProjectionState._correctedView,
+                                                 _viewProjectionState._previousCorrectedView, _viewProjectionState._previousProjection,
+                                                 jitter)));
+#endif
+    }
+}
+
+void GLBackend::preUpdateTransform() {
+    _transform.preUpdate(_commandIndex, _stereo, _prevStereo);
+}
+
+void GLBackend::TransformStageState::preUpdate(size_t commandIndex, const StereoState& stereo, const StereoState& prevStereo) {
     // Check all the dirty flags and update the state accordingly
     if (_invalidViewport) {
         _camera._viewport = glm::vec4(_viewport);
     }
 
     if (_invalidProj) {
-        _camera._projection = _projection;
+        _camera._projection = _viewProjectionState._projection;
     }
 
     if (_invalidView) {
         // Apply the correction
-        if (_viewIsCamera && (_viewCorrectionEnabled && _correction.correction != glm::mat4())) {
-            // FIXME should I switch to using the camera correction buffer in Transform.slf and leave this out?
-            Transform result;
-            _view.mult(result, _view, _correction.correctionInverse);
-            if (_skybox) {
-                result.setTranslation(vec3());
-            }
-            _view = result;
+        if (_viewProjectionState._viewIsCamera && (_viewCorrectionEnabled && _presentFrame.correction != glm::mat4())) {
+            Transform::mult(_viewProjectionState._correctedView, _viewProjectionState._view, _presentFrame.correctionInverse);
+        } else {
+            _viewProjectionState._correctedView = _viewProjectionState._view;
+        }
+
+        if (_skybox) {
+            _viewProjectionState._correctedView.setTranslation(vec3());
         }
         // This is when the _view matrix gets assigned
-        _view.getInverseMatrix(_camera._view);
+        _viewProjectionState._correctedView.getInverseMatrix(_camera._view);
     }
 
     if (_invalidView || _invalidProj || _invalidViewport) {
         size_t offset = _cameraUboSize * _cameras.size();
-		Vec2 finalJitter = _projectionJitter / Vec2(framebufferSize);
         _cameraOffsets.push_back(TransformStageState::Pair(commandIndex, offset));
 
-        if (stereo.isStereo()) {
-#ifdef GPU_STEREO_CAMERA_BUFFER
-        _cameras.push_back(CameraBufferElement(_camera.getEyeCamera(0, stereo, _view, finalJitter), _camera.getEyeCamera(1, stereo, _view, finalJitter)));
-#else
-        _cameras.push_back((_camera.getEyeCamera(0, stereo, _view, finalJitter)));
-        _cameras.push_back((_camera.getEyeCamera(1, stereo, _view, finalJitter)));
-#endif
-        } else {
-#ifdef GPU_STEREO_CAMERA_BUFFER
-            _cameras.push_back(CameraBufferElement(_camera.getMonoCamera(_view, finalJitter)));
-#else
-            _cameras.push_back((_camera.getMonoCamera(_view, finalJitter)));
-#endif
+        pushCameraBufferElement(stereo, prevStereo, _cameras);
+        if (_currentSavedTransformSlot != INVALID_SAVED_CAMERA_SLOT) {
+            // Save the offset of the saved camera slot in the camera buffer. Can be used to copy
+            // that data, or (in the future) to reuse the offset.
+            _savedTransforms[_currentSavedTransformSlot]._cameraOffset = offset;
         }
     }
 
@@ -176,4 +229,29 @@ void GLBackend::TransformStageState::bindCurrentCamera(int eye) const {
 void GLBackend::resetTransformStage() {
     glDisableVertexAttribArray(gpu::Stream::DRAW_CALL_INFO);
     _transform._enabledDrawcallInfoBuffer = false;
+}
+
+void GLBackend::do_saveViewProjectionTransform(const Batch& batch, size_t paramOffset) {
+    auto slotId = batch._params[paramOffset + 0]._uint;
+    slotId = std::min<gpu::uint32>(slotId, gpu::Batch::MAX_TRANSFORM_SAVE_SLOT_COUNT);
+
+    auto& savedTransform = _transform._savedTransforms[slotId];
+    savedTransform._cameraOffset = INVALID_OFFSET;
+    _transform._currentSavedTransformSlot = slotId;
+    // If we are saving this transform to a save slot, then it means we are tracking the history of the view
+    // so copy the previous corrected view to the transform state.
+    _transform._viewProjectionState._previousCorrectedView = savedTransform._state._previousCorrectedView;
+    _transform._viewProjectionState._previousProjection = savedTransform._state._previousProjection;
+    preUpdateTransform();
+    savedTransform._state.copyExceptPrevious(_transform._viewProjectionState);
+}
+
+void GLBackend::do_setSavedViewProjectionTransform(const Batch& batch, size_t paramOffset) {
+    auto slotId = batch._params[paramOffset + 0]._uint;
+    slotId = std::min<gpu::uint32>(slotId, gpu::Batch::MAX_TRANSFORM_SAVE_SLOT_COUNT);
+
+    _transform._viewProjectionState = _transform._savedTransforms[slotId]._state;
+    _transform._invalidView = true;
+    _transform._invalidProj = true;
+    _transform._currentSavedTransformSlot = slotId;
 }

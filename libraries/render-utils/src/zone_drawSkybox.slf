@@ -30,7 +30,7 @@ void main(void) {
 
     vec3 spherePos = normalize(vec3(sphereUV, -sqrt(1.0 - sphereR2)));
 
-    vec3 direction = vec3(getViewInverse() * vec4(spherePos, 0.0));
+    vec3 direction = vec3(getViewInverse(getStereoSideFromFragCoord()) * vec4(spherePos, 0.0));
 
     vec3 color = skybox.color.rgb;
 

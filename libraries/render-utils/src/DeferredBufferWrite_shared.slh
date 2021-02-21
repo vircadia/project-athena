@@ -1,0 +1,12 @@
+// glsl / C++ compatible source as interface for DeferredBuffer layout
+
+#define DEFERRED_COLOR_SLOT     0
+#define DEFERRED_NORMAL_SLOT    1
+#define DEFERRED_SPECULAR_SLOT  2
+#define DEFERRED_VELOCITY_SLOT  3
+#define DEFERRED_LIGHTING_SLOT  4
+
+    // <@if 1@>
+    // Trigger Scribe include 
+    // <@endif@> <!def that !> 
+//

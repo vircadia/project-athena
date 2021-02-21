@@ -54,7 +54,7 @@ void main(void) {
 
 
     // Frag pos in world
-    mat4 invViewMat = getViewInverse();
+    mat4 invViewMat = getViewInverse(frag.side);
     vec4 fragPos = invViewMat * fragPosition;
     
     <$fetchClusterInfo(fragPos)$>;

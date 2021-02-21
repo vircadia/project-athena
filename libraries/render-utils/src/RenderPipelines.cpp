@@ -264,7 +264,7 @@ void addPlumberPipeline(ShapePlumber& plumber,
         bool isWireframed = (i & 2);
         for (int cullFaceMode = graphics::MaterialKey::CullFaceMode::CULL_NONE; cullFaceMode < graphics::MaterialKey::CullFaceMode::NUM_CULL_FACE_MODES; cullFaceMode++) {
             auto state = std::make_shared<gpu::State>();
-            key.isTranslucent() ? PrepareStencil::testMask(*state) : PrepareStencil::testMaskDrawShape(*state);
+            key.isTranslucent() ? PrepareStencil::testMaskResetNoAA(*state) : PrepareStencil::testMaskDrawShape(*state);
 
             // Depth test depends on transparency
             state->setDepthTest(true, !key.isTranslucent(), gpu::LESS_EQUAL);

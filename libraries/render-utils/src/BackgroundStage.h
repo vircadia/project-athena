@@ -85,9 +85,12 @@ public:
     using Inputs = render::VaryingSet3<LightingModelPointer, BackgroundStage::FramePointer, HazeStage::FramePointer>;
     using JobModel = render::Job::ModelI<DrawBackgroundStage, Inputs>;
 
-    DrawBackgroundStage() {}
+    DrawBackgroundStage(uint transformSlot) : _transformSlot(transformSlot) {}
 
     void run(const render::RenderContextPointer& renderContext, const Inputs& inputs);
+
+private:
+    uint _transformSlot;
 };
 
 #endif

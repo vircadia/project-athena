@@ -23,13 +23,13 @@
 
 LAYOUT(binding=RENDER_UTILS_TEXTURE_HAZE_LINEAR_DEPTH) uniform sampler2D linearDepthMap;
 
-vec4 unpackPositionFromZeye(vec2 texcoord) {
+vec4 unpackPositionFromZeyeAndGetSide(vec2 texcoord, out int side) {
     float Zeye = -texture(linearDepthMap, texcoord).x;
 
     float check = float(isStereo());
     float check2 = check * float(texcoord.x > 0.5);
     texcoord.x -= check2 * 0.5;
-    int side = int(check2);
+    side = int(check2);
     texcoord.x *= 1.0 + check;
 
     return vec4(evalEyePositionFromZeye(side, Zeye, texcoord), 1.0);
@@ -43,9 +43,10 @@ void main(void) {
         discard;
     }
 
-    vec4 fragPositionES = unpackPositionFromZeye(varTexCoord0);
+    int side;
+    vec4 fragPositionES = unpackPositionFromZeyeAndGetSide(varTexCoord0, side);
 
-    mat4 viewInverse = getViewInverse();
+    mat4 viewInverse = getViewInverse(side);
     vec4 fragPositionWS = viewInverse * fragPositionES;
     vec4 eyePositionWS = viewInverse[3];
 

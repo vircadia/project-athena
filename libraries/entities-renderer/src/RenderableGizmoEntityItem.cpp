@@ -1,6 +1,7 @@
 //
 //  Created by Sam Gondelman on 1/22/19
 //  Copyright 2019 High Fidelity, Inc.
+//  Copyright 2020 Vircadia contributors.
 //
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
@@ -256,7 +257,10 @@ void GizmoEntityRenderer::doRender(RenderArgs* args) {
 
         transform.setRotation(BillboardModeHelpers::getBillboardRotation(transform.getTranslation(), transform.getRotation(), _billboardMode,
             args->_renderMode == RenderArgs::RenderMode::SHADOW_RENDER_MODE ? BillboardModeHelpers::getPrimaryViewFrustumPosition() : args->getViewFrustum().getPosition(), true));
-        batch.setModelTransform(transform);
+        batch.setModelTransform(transform, _prevRenderTransform);
+        if (args->_renderMode == Args::RenderMode::DEFAULT_RENDER_MODE || args->_renderMode == Args::RenderMode::MIRROR_RENDER_MODE) {
+            _prevRenderTransform = transform;
+        }
 
         // Background circle
         geometryCache->renderVertices(batch, wireframe ? gpu::LINE_STRIP : _solidPrimitive, _ringGeometryID);

@@ -1,0 +1,27 @@
+<@include gpu/Config.slh@>
+<$VERSION_HEADER$>
+// <$_SCRIBE_FILENAME$> 
+// Generated on <$_SCRIBE_DATE$>
+//  Draw the unit quad [-1,-1 -> 1,1]. 
+//  Not transform used.
+//  Simply draw a Triangle_strip of 2 triangles, no input buffers or index buffer needed
+//
+//  Created by Olivier Prat on 10/22/2018
+//  Copyright 2018 High Fidelity, Inc.
+//
+//  Distributed under the Apache License, Version 2.0.
+//  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
+//
+
+void main(void) {
+    const float depth = 1.0;
+    const vec4 UNIT_QUAD[4] = vec4[4](
+        vec4(-1.0, -1.0, depth, 1.0),
+        vec4(1.0, -1.0, depth, 1.0),
+        vec4(-1.0, 1.0, depth, 1.0),
+        vec4(1.0, 1.0, depth, 1.0)
+    );
+    vec4 pos = UNIT_QUAD[gl_VertexID];
+
+    gl_Position = pos;
+}

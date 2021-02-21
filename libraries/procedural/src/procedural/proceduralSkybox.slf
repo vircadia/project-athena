@@ -6,26 +6,20 @@
 //
 //  Created by Sam Gateau on 5/5/2015.
 //  Copyright 2015 High Fidelity, Inc.
+//  Copyright 2020 Vircadia contributors.
 //
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
 //
 <@include graphics/ShaderConstants.h@>
 
-LAYOUT(binding=GRAPHICS_TEXTURE_SKYBOX) uniform samplerCube cubeMap;
-
-struct Skybox {
-    vec4 color;
-};
-
-LAYOUT(binding=GRAPHICS_BUFFER_SKYBOX_PARAMS) uniform skyboxBuffer {
-    Skybox skybox;
-};
-
-layout(location=0) in vec3  _normal;
-layout(location=0) out vec4 _fragColor;
+<@include graphics/skybox.slh@>
+<$declarePackDeferredFragmentSky()$>
 
 <@include procedural/ProceduralCommon.slh@>
+
+layout(location=0) in vec3 _normal;
+layout(location=1) in vec4 _prevPositionCS;
 
 #line 1001
 //PROCEDURAL_BLOCK_BEGIN
@@ -42,5 +36,6 @@ void main(void) {
     color = max(color, vec3(0));
     // Procedural Shaders are expected to be Gamma corrected so let's bring back the RGB in linear space for the rest of the pipeline
     color = pow(color, vec3(2.2));
-    _fragColor = vec4(color, 1.0);
+
+    packDeferredFragmentSky(_prevPositionCS, color, _normal);
 }

@@ -66,6 +66,8 @@ namespace gpu {
         double getGPUAverage() const;
         double getBatchAverage() const;
 
+        const std::string& name() const { return _name; }
+
     protected:
         
         static const int QUERY_QUEUE_SIZE { 4 };

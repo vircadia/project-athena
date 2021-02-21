@@ -5,6 +5,7 @@
 //
 //  Created by Eric Levin on 7/20/15.
 //  Copyright 2014 High Fidelity, Inc.
+//  Copyright 2020 Vircadia contributors.
 //
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
@@ -12,18 +13,22 @@
 
 <@include gpu/Inputs.slh@>
 <@include gpu/Color.slh@>
+
 <@include gpu/Transform.slh@>
 <$declareStandardTransform()$>
 
 <@include paintStroke.slh@>
 <$declarePolyLineBuffers()$>
 
+<@include render-utils/ShaderConstants.h@>
+
 <@if not HIFI_USE_FORWARD@>
-    layout(location=0) out vec3 _normalWS;
+    layout(location=RENDER_UTILS_ATTR_NORMAL_WS) out vec3 _normalWS;
+    layout(location=RENDER_UTILS_ATTR_PREV_POSITION_CS) out vec4 _prevPositionCS;
 <@endif@>
-layout(location=1) out vec2 _texCoord;
-layout(location=2) out vec4 _color;
-layout(location=3) out float _distanceFromCenter;
+layout(location=RENDER_UTILS_ATTR_TEXCOORD01) out vec2 _texCoord;
+layout(location=RENDER_UTILS_ATTR_COLOR) out vec4 _color;
+layout(location=2) out float _distanceFromCenter;
 
 void main(void) {
     PolylineVertex vertex = getPolylineVertex(gl_VertexID / 2);
@@ -51,13 +56,16 @@ void main(void) {
         posEye.xyz += _distanceFromCenter * vertex.binormalAndHalfWidth.w * binormalEye;
         <$transformEyeToClipPos(cam, posEye, gl_Position)$>
 <@if not HIFI_USE_FORWARD@>
+        <$transformEyeToPrevClipPos(cam, posEye, _prevPositionCS)$>
         <$transformEyeToWorldDir(cam, normalEye, _normalWS)$>
 <@endif@>
     } else {
         vec3 normal = vertex.normal.xyz;
         position.xyz += _distanceFromCenter * vertex.binormalAndHalfWidth.w * binormal;
+<@if HIFI_USE_FORWARD@>
         <$transformModelToClipPos(cam, obj, position, gl_Position)$>
-<@if not HIFI_USE_FORWARD@>
+<@else@>
+        <$transformModelToClipPosAndPrevClipPos(cam, obj, position, gl_Position, _prevPositionCS)$>
         <$transformModelToWorldDir(cam, obj, normal, _normalWS)$>
 <@endif@>
     }

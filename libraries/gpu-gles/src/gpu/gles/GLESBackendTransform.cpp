@@ -10,6 +10,8 @@
 //
 #include "GLESBackend.h"
 
+#include "gpu/gl/GLBuffer.h"
+
 using namespace gpu;
 using namespace gpu::gles;
 
@@ -99,4 +101,34 @@ void GLESBackend::updateTransform(const Batch& batch) {
     }
 
     (void)CHECK_GL_ERROR();
+}
+
+void GLESBackend::do_copySavedViewProjectionTransformToBuffer(const Batch& batch, size_t paramOffset) {
+    auto slotId = batch._params[paramOffset + 0]._uint;
+    BufferPointer buffer = batch._buffers.get(batch._params[paramOffset + 1]._uint);
+    auto dstOffset = batch._params[paramOffset + 2]._uint;
+    size_t size = _transform._cameraUboSize;
+
+    slotId = std::min<gpu::uint32>(slotId, gpu::Batch::MAX_TRANSFORM_SAVE_SLOT_COUNT);
+    const auto& savedTransform = _transform._savedTransforms[slotId];
+
+    if ((dstOffset + size) > buffer->getBufferCPUMemSize()) {
+        qCWarning(gpugllogging) << "Copying saved TransformCamera data out of bounds of uniform buffer";
+        size = (size_t)std::max<ptrdiff_t>((ptrdiff_t)buffer->getBufferCPUMemSize() - (ptrdiff_t)dstOffset, 0);
+    }
+    if (savedTransform._cameraOffset == INVALID_OFFSET) {
+        qCWarning(gpugllogging) << "Saved TransformCamera data has an invalid transform offset. Copy aborted.";
+        return;
+    }
+
+    // Sync BufferObject
+    auto* object = syncGPUObject(*buffer);
+    if (object) {
+        glBindBuffer(GL_COPY_READ_BUFFER, _transform._cameraBuffer);
+        glBindBuffer(GL_COPY_WRITE_BUFFER, object->_buffer);
+        glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, savedTransform._cameraOffset, dstOffset, size);
+        glBindBuffer(GL_COPY_READ_BUFFER, 0);
+        glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
+        (void)CHECK_GL_ERROR();
+    }
 }

@@ -15,7 +15,7 @@
 #include "RenderDeferredTask.h"
 #include "RenderForwardTask.h"
 
-void RenderShadowsAndDeferredTask::build(JobModel& task, const render::Varying& input, render::Varying& output, render::CullFunctor cullFunctor, uint8_t tagBits, uint8_t tagMask) {
+void RenderShadowsAndDeferredTask::build(JobModel& task, const render::Varying& input, render::Varying& output, render::CullFunctor cullFunctor, uint8_t tagBits, uint8_t tagMask, uint8_t transformOffset) {
     task.addJob<SetRenderMethod>("SetRenderMethodTask", render::Args::DEFERRED);
 
     const auto items = input.getN<DeferredForwardSwitchJob::Input>(0);
@@ -28,16 +28,16 @@ void RenderShadowsAndDeferredTask::build(JobModel& task, const render::Varying& 
     const auto shadowTaskOut = task.addJob<RenderShadowTask>("RenderShadowTask", shadowTaskIn, cullFunctor, tagBits, tagMask);
 
     const auto renderDeferredInput = RenderDeferredTask::Input(items, lightingModel, lightingStageFramesAndZones, shadowTaskOut).asVarying();
-    task.addJob<RenderDeferredTask>("RenderDeferredTask", renderDeferredInput);
+    task.addJob<RenderDeferredTask>("RenderDeferredTask", renderDeferredInput, transformOffset);
 }
 
-void DeferredForwardSwitchJob::build(JobModel& task, const render::Varying& input, render::Varying& output, render::CullFunctor cullFunctor, uint8_t tagBits, uint8_t tagMask) {
-    task.addBranch<RenderShadowsAndDeferredTask>("RenderShadowsAndDeferredTask", 0, input, cullFunctor, tagBits, tagMask);
+void DeferredForwardSwitchJob::build(JobModel& task, const render::Varying& input, render::Varying& output, render::CullFunctor cullFunctor, uint8_t tagBits, uint8_t tagMask, uint8_t transformOffset) {
+    task.addBranch<RenderShadowsAndDeferredTask>("RenderShadowsAndDeferredTask", 0, input, cullFunctor, tagBits, tagMask, transformOffset);
 
-    task.addBranch<RenderForwardTask>("RenderForwardTask", 1, input);
+    task.addBranch<RenderForwardTask>("RenderForwardTask", 1, input, transformOffset);
 }
 
-void RenderViewTask::build(JobModel& task, const render::Varying& input, render::Varying& output, render::CullFunctor cullFunctor, uint8_t tagBits, uint8_t tagMask) {
+void RenderViewTask::build(JobModel& task, const render::Varying& input, render::Varying& output, render::CullFunctor cullFunctor, uint8_t tagBits, uint8_t tagMask, TransformOffset transformOffset) {
     const auto items = task.addJob<RenderFetchCullSortTask>("FetchCullSort", cullFunctor, tagBits, tagMask);
 
     // Issue the lighting model, aka the big global settings for the view 
@@ -48,9 +48,9 @@ void RenderViewTask::build(JobModel& task, const render::Varying& input, render:
 
 #ifndef Q_OS_ANDROID
         const auto deferredForwardIn = DeferredForwardSwitchJob::Input(items, lightingModel, lightingStageFramesAndZones).asVarying();
-        task.addJob<DeferredForwardSwitchJob>("DeferredForwardSwitch", deferredForwardIn, cullFunctor, tagBits, tagMask);
+        task.addJob<DeferredForwardSwitchJob>("DeferredForwardSwitch", deferredForwardIn, cullFunctor, tagBits, tagMask, transformOffset);
 #else
         const auto renderInput = RenderForwardTask::Input(items, lightingModel, lightingStageFramesAndZones).asVarying();
-        task.addJob<RenderForwardTask>("RenderForwardTask", renderInput);
+        task.addJob<RenderForwardTask>("RenderForwardTask", renderInput, transformOffset);
 #endif
 }

@@ -1,0 +1,65 @@
+<!
+//  skybox.slh
+//  libraries/graphics/src
+//
+//  Created by HifiExperiments on 8/5/2020.
+//  Copyright 2020 Vircadia contributors.
+//
+//  Distributed under the Apache License, Version 2.0.
+//  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
+!>
+<@if not SKYBOX_SLH@>
+<@def SKYBOX_SLH@>
+
+<@include gpu/Transform.slh@>
+<$declareStandardCameraTransform()$>
+
+<@include gpu/PackedNormal.slh@>
+
+LAYOUT(binding=GRAPHICS_TEXTURE_SKYBOX) uniform samplerCube cubeMap;
+
+struct Skybox {
+    vec4 color;
+};
+
+LAYOUT(binding=GRAPHICS_BUFFER_SKYBOX_PARAMS) uniform skyboxBuffer {
+    Skybox skybox;
+};
+
+<@func declarePackDeferredFragmentSky()@>
+// This code belongs in render-utils/VelocityWrite.slh but because graphics can't include render-utils, we have to have it here
+
+vec2 getEyeTexcoordPos() {
+    // No need to add 0.5 as, by default, frag coords are pixel centered at (0.5, 0.5)
+    vec2 texCoordPos = gl_FragCoord.xy;
+    texCoordPos *= cam_getInvWidthHeight();
+    texCoordPos.x -= cam_getStereoSide();
+    return texCoordPos;
+}
+
+vec2 packVelocity(vec4 prevPositionCS) {
+    vec2 uv = getEyeTexcoordPos();
+    vec2 prevUV =  (prevPositionCS.xy / prevPositionCS.w) * 0.5 + 0.5;
+    vec2 deltaUV = uv - prevUV;
+    // Velocity should be computed without any jitter inside.
+    return deltaUV;
+}
+
+// Must match layout in DeferredBufferWrite.slh, but only velocity and lighting are used
+layout(location = 0) out vec4 _albedoMetallic; // albedo / metallic
+layout(location = 1) out vec4 _normalRoughness; // normal / roughness
+layout(location = 2) out vec4 _scatteringEmissiveOcclusion; // scattering / emissive / occlusion
+layout(location = 3) out vec4 _velocity;   // velocity
+layout(location = 4) out vec4 _lighting;   // emissive
+
+void packDeferredFragmentSky(vec4 prevPositionCS, vec3 color, vec3 normal) {
+    _albedoMetallic = vec4(color, 0.6f);
+    _normalRoughness = vec4(packNormal(normal), 1.0f);
+    _scatteringEmissiveOcclusion = vec4(0.0f);
+    _velocity = vec4(packVelocity(prevPositionCS), 0.0f, 0.0f);
+    _lighting = vec4(color, 1.0f);
+}
+
+<@endfunc@>
+
+<@endif@>

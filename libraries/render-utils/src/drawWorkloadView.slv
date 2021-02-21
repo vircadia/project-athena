@@ -21,6 +21,7 @@
 layout(location=0) out vec4 varColor;
 layout(location=1) out vec3 varTexcoord;
 layout(location=2) out vec3 varEyePos;
+layout(location=3) out vec4 _prevPositionCS;
 
 const int NUM_VERTICES_PER_SEGMENT = 2;
 const int NUM_SEGMENT_PER_VIEW_REGION = 65;
@@ -36,6 +37,12 @@ LAYOUT_STD140(binding=0) uniform DrawMeshBuffer {
     DrawMesh _drawMeshBuffer;
 };
 
+vec4 getPosition(int regionID, int segmentVertexID, vec4 posEye, vec3 tanEye) {
+    vec3 lateralDir = normalize(cross(vec3(0.0, 0.0, 1.0), normalize(tanEye)));
+    posEye.xyz += (0.005 * abs(posEye.z) * float(regionID + 1)) * (-1.0 + 2.0 * float(segmentVertexID)) * lateralDir;
+    return posEye;
+}
+
 void main(void) {
     int viewID = gl_VertexID / NUM_VERTICES_PER_VIEW;
     int viewVertexID = gl_VertexID - viewID * NUM_VERTICES_PER_VIEW;
@@ -50,8 +57,6 @@ void main(void) {
 
     vec4 spriteVert = vec4(segment.y, 0.0, segment.x, 1.0);
     vec3 spriteTan = vec3(segment.x, 0.0, -segment.y);
-
-    vec3 lateralDir = vec3(0.0,  -1.0 + 2.0 * float(segmentVertexID), 0.0);
 
     WorkloadView view = getWorkloadView(viewID);
     vec4 region = view.regions[regionID];
@@ -74,15 +79,19 @@ void main(void) {
     TransformCamera cam = getTransformCamera();
     TransformObject obj = getTransformObject();
     vec4 posEye;
-    <$transformModelToEyePos(cam, obj, pos, posEye)$>
+    vec4 prevPosEye;
+    <$transformModelToEyePosAndPrevEyePos(cam, obj, pos, posEye, prevPosEye)$>
     vec3 tanEye;
+    vec3 prevTanEye;
     <$transformModelToEyeDir(cam, obj, originSpaceTan, tanEye)$>
+    <$transformModelToPrevEyeDir(cam, obj, originSpaceTan, prevTanEye)$>
 
-    lateralDir = normalize(cross(vec3(0.0, 0.0, 1.0), normalize(tanEye)));
-    posEye.xyz += (0.005 * abs(posEye.z) * float(regionID + 1)) * (-1.0 + 2.0 * float(segmentVertexID)) * lateralDir;
+    posEye = getPosition(regionID, segmentVertexID, posEye, tanEye);
+    prevPosEye = getPosition(regionID, segmentVertexID, prevPosEye, prevTanEye);
     varEyePos = posEye.xyz;
 
     <$transformEyeToClipPos(cam, posEye, gl_Position)$>
+    <$transformPrevEyeToPrevClipPos(cam, prevPosEye, _prevPositionCS)$>;
 
     varTexcoord = spriteVert.xyz;
 

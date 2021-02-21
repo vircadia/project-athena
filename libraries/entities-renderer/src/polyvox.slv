@@ -23,6 +23,7 @@
         layout(location=RENDER_UTILS_ATTR_POSITION_ES) out vec4 _positionES;
     <@endif@>
     layout(location=RENDER_UTILS_ATTR_POSITION_MS) out vec3 _positionMS;
+    layout(location=RENDER_UTILS_ATTR_PREV_POSITION_CS) out vec4 _prevPositionCS;
     layout(location=RENDER_UTILS_ATTR_NORMAL_WS) out vec3 _normalWS;
 <@endif@>
 
@@ -34,7 +35,7 @@ void main(void) {
     <$transformModelToClipPos(cam, obj, inPosition, gl_Position)$>
 <@else@>
     <@if not HIFI_USE_FORWARD@>
-        <$transformModelToClipPos(cam, obj, inPosition, gl_Position)$>
+        <$transformModelToClipPosAndPrevClipPos(cam, obj, inPosition, gl_Position, _prevPositionCS)$>
     <@else@>
         <$transformModelToEyeAndClipPos(cam, obj, inPosition, _positionES, gl_Position)$>
     <@endif@>

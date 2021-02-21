@@ -4,6 +4,7 @@
 //
 //  Created by Sam Gateau on 10/3/15.
 //  Copyright 2015 High Fidelity, Inc.
+//  Copyright 2020 Vircadia contributors.
 //
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
@@ -192,7 +193,10 @@ void ModelMeshPartPayload::bindTransform(gpu::Batch& batch, const Transform& tra
     if (_clusterBuffer) {
         batch.setUniformBuffer(graphics::slot::buffer::Skinning, _clusterBuffer);
     }
-    batch.setModelTransform(transform);
+    batch.setModelTransform(transform, _prevRenderTransform);
+    if (renderMode == Args::RenderMode::DEFAULT_RENDER_MODE || renderMode == Args::RenderMode::MIRROR_RENDER_MODE) {
+        _prevRenderTransform = transform;
+    }
 }
 
 void ModelMeshPartPayload::drawCall(gpu::Batch& batch) const {
@@ -302,6 +306,7 @@ Item::Bound ModelMeshPartPayload::getBound(RenderArgs* args) const {
         parentTransform.setRotation(BillboardModeHelpers::getBillboardRotation(parentTransform.getTranslation(), parentTransform.getRotation(), _billboardMode,
             args->_renderMode == RenderArgs::RenderMode::SHADOW_RENDER_MODE ? BillboardModeHelpers::getPrimaryViewFrustumPosition() : args->getViewFrustum().getPosition()));
     }
+
     worldBound.transform(parentTransform);
     return worldBound;
 }

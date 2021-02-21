@@ -29,6 +29,7 @@
 
 layout(location=RENDER_UTILS_ATTR_POSITION_MS) out vec4 _positionMS;
 layout(location=RENDER_UTILS_ATTR_POSITION_ES) out vec4 _positionES;
+layout(location=RENDER_UTILS_ATTR_PREV_POSITION_CS) out vec4 _prevPositionCS;
 layout(location=RENDER_UTILS_ATTR_NORMAL_MS) out vec3 _normalMS;
 layout(location=RENDER_UTILS_ATTR_NORMAL_WS) out vec3 _normalWS;
 layout(location=RENDER_UTILS_ATTR_COLOR) out vec4 _color;
@@ -84,6 +85,6 @@ void main(void) {
 
     TransformCamera cam = getTransformCamera();
     TransformObject obj = getTransformObject();
-    <$transformModelToEyeAndClipPos(cam, obj, positionMS, _positionES, gl_Position)$>
+    <$transformModelToEyeClipPosAndPrevClipPos(cam, obj, positionMS, _positionES, gl_Position, _prevPositionCS)$>
     <$transformModelToWorldDir(cam, obj, normalMS, _normalWS)$>
 }

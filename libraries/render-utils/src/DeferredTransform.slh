@@ -4,6 +4,7 @@
 //
 //  Created by Sam Gateau on 6/2/16.
 //  Copyright 2016 High Fidelity, Inc.
+//  Copyright 2020 Vircadia contributors.
 //
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
@@ -16,109 +17,103 @@
 
 <@func declareDeferredFrameTransform()@>
 
-struct CameraCorrection {
-    mat4 _correction;
-    mat4 _correctionInverse;
-    
-    mat4 _prevView;
-    mat4 _prevViewInverse;
-};
- 
-LAYOUT(binding=GPU_BUFFER_CAMERA_CORRECTION) uniform cameraCorrectionBuffer {
-    CameraCorrection cameraCorrection;
-};
+<@include DeferredTransform_shared.slh@>
 
-struct DeferredFrameTransform {
-    vec4 _pixelInfo;
-    vec4 _invPixelInfo;
-    vec4 _depthInfo;
-    vec4 _stereoInfo;
-    mat4 _projection[2];
-    mat4 _invProjection[2];
-    mat4 _projectionMono;
-    mat4 _viewInverse;
-    mat4 _view;
-    mat4 _projectionUnJittered[2];
-    mat4 _invProjectionUnJittered[2];
-};
+#define DeferredFrameTransform _DeferredFrameTransform
+#define TransformCamera _TransformCamera
 
-LAYOUT(binding=RENDER_UTILS_BUFFER_DEFERRED_FRAME_TRANSFORM) uniform deferredFrameTransformBuffer {
+LAYOUT_STD140(binding=RENDER_UTILS_BUFFER_DEFERRED_FRAME_TRANSFORM) uniform deferredFrameTransformBuffer {
     DeferredFrameTransform frameTransform;
 };
 
 vec2 getWidthHeight(int resolutionLevel) {
-    return vec2(ivec2(frameTransform._pixelInfo.zw) >> resolutionLevel);
+    return vec2(ivec2(frameTransform.infos.pixelInfo.zw) >> resolutionLevel);
 }
 
 vec2 getInvWidthHeight() {
-    return frameTransform._invPixelInfo.xy;
+    return frameTransform.infos.invPixelInfo.xy;
+}
+
+mat4 getProjection(int side) {
+    return frameTransform.cameras[side]._projection;
+}
+
+mat4 getProjectionInverse(int side) {
+    return frameTransform.cameras[side]._projectionInverse;
 }
 
 float getProjScaleEye() {
-    return frameTransform._projection[0][1][1];
+    return getProjection(0)[1][1];
 }
 
 float getProjScale(int resolutionLevel) {
-    return getWidthHeight(resolutionLevel).y * frameTransform._projection[0][1][1] * 0.5;
+    return getWidthHeight(resolutionLevel).y * getProjScaleEye() * 0.5;
 }
-mat4 getProjection(int side) {
-    return frameTransform._projection[side];
-}
+
 mat4 getProjectionMono() {
-    return frameTransform._projectionMono;
-}
-mat4 getUnjitteredProjection(int side) {
-    return frameTransform._projectionUnJittered[side];
-}
-mat4 getUnjitteredInvProjection(int side) {
-    return frameTransform._invProjectionUnJittered[side];
+    return frameTransform.infos.projectionMono;
 }
 
 // positive near distance of the projection
 float getProjectionNear() {
-    float planeC = frameTransform._projection[0][2][3] + frameTransform._projection[0][2][2];
-    float planeD = frameTransform._projection[0][3][2];
+    mat4 projection = getProjection(0);
+    float planeC = projection[2][3] + projection[2][2];
+    float planeD = projection[3][2];
     return planeD / planeC;
 }
 
 // positive far distance of the projection
 float getPosLinearDepthFar() {
-    return -frameTransform._depthInfo.z;
+    return -frameTransform.infos.depthInfo.z;
 }
 
-mat4 getViewInverse() {
-    return frameTransform._viewInverse * cameraCorrection._correctionInverse;
+mat4 getViewInverse(int side) {
+    return frameTransform.cameras[side]._viewInverse;
 }
 
-mat4 getView() {
-    return cameraCorrection._correction * frameTransform._view;
+mat4 getView(int side) {
+    return frameTransform.cameras[side]._view;
 }
 
-mat4 getPreviousView() {
-    return cameraCorrection._prevView;
+mat4 getPreviousView(int side) {
+    return frameTransform.cameras[side]._previousView;
 }
 
-mat4 getPreviousViewInverse() {
-    return cameraCorrection._prevViewInverse;
-}
-
-DeferredFrameTransform getDeferredFrameTransform() {
-    DeferredFrameTransform result = frameTransform;
-    result._view = getView();  
-    result._viewInverse = getViewInverse();  
-    return result;
+mat4 getPreviousViewInverse(int side) {
+    return frameTransform.cameras[side]._previousViewInverse;
 }
 
 bool isStereo() {
-    return frameTransform._stereoInfo.x > 0.0f;
+    return frameTransform.infos.stereoInfo.x > 0.0f;
 }
 
 float getStereoSideWidth(int resolutionLevel) {
-    return float(int(frameTransform._stereoInfo.y) >> resolutionLevel);
+    return float(int(frameTransform.infos.stereoInfo.y) >> resolutionLevel);
 }
 
 float getStereoSideHeight(int resolutionLevel) {
-    return float(int(frameTransform._pixelInfo.w) >> resolutionLevel);
+    return float(int(frameTransform.infos.pixelInfo.w) >> resolutionLevel);
+}
+
+vec2 getSideImageSize(int resolutionLevel) {
+    return vec2(float(int(frameTransform.infos.stereoInfo.y) >> resolutionLevel), float(int(frameTransform.infos.pixelInfo.w) >> resolutionLevel));
+}
+
+int getStereoSideFromPixel(int xPos, int resolutionLevel) {
+    int sideWidth = int(getStereoSideWidth(resolutionLevel));
+    return int(xPos >= sideWidth && isStereo());
+}
+
+int getStereoSideFromPixel(int xPos) {
+    return getStereoSideFromPixel(xPos, 0);
+}
+
+int getStereoSideFromFragCoord() {
+    return getStereoSideFromPixel(int(gl_FragCoord.x), 0);
+}
+
+int getStereoSideFromUV(float uPos) {
+    return int(uPos >= 0.5 && isStereo());
 }
 
 vec2 getStereoSideSize(int resolutionLevel) {
@@ -134,17 +129,16 @@ ivec4 getStereoSideInfo(int xPos, int resolutionLevel) {
     return getStereoSideInfoFromWidth(xPos, sideWidth);
 }
 
-
 int getStereoSide(ivec4 sideInfo) {
     return sideInfo.x;
 }
 
 float evalZeyeFromZdb(float depth) {
-    return frameTransform._depthInfo.x / (depth * frameTransform._depthInfo.y + frameTransform._depthInfo.z);
+    return frameTransform.infos.depthInfo.x / (depth * frameTransform.infos.depthInfo.y + frameTransform.infos.depthInfo.z);
 }
 
 float evalZdbFromZeye(float Zeye) {
-    return (frameTransform._depthInfo.x - Zeye * frameTransform._depthInfo.z) / (Zeye * frameTransform._depthInfo.y);
+    return (frameTransform.infos.depthInfo.x - Zeye * frameTransform.infos.depthInfo.z) / (Zeye * frameTransform.infos.depthInfo.y);
 }
 
 vec3 evalEyeNormal(vec3 C) {
@@ -155,15 +149,7 @@ vec3 evalEyePositionFromZdb(int side, float Zdb, vec2 texcoord) {
     // compute the view space position using the depth
     vec3 clipPos;
     clipPos.xyz = vec3(texcoord.xy, Zdb) * 2.0 - 1.0;
-    vec4 eyePos = frameTransform._invProjection[side] * vec4(clipPos.xyz, 1.0);
-    return eyePos.xyz / eyePos.w;
-}
-
-vec3 evalUnjitteredEyePositionFromZdb(int side, float Zdb, vec2 texcoord) {
-    // compute the view space position using the depth
-    vec3 clipPos;
-    clipPos.xyz = vec3(texcoord.xy, Zdb) * 2.0 - 1.0;
-    vec4 eyePos = frameTransform._invProjectionUnJittered[side] * vec4(clipPos.xyz, 1.0);
+    vec4 eyePos = getProjectionInverse(side) * vec4(clipPos.xyz, 1.0);
     return eyePos.xyz / eyePos.w;
 }
 

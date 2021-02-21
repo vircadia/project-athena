@@ -1,12 +1,11 @@
 <@include gpu/Config.slh@>
 <$VERSION_HEADER$>
-//  Generated on <$_SCRIBE_DATE$>
-//
-//  taa.frag
-//  fragment shader
+// <$_SCRIBE_FILENAME$>
+// Generated on <$_SCRIBE_DATE$>
 //
 //  Created by Sam Gateau on 8/14/2017
 //  Copyright 2017 High Fidelity, Inc.
+//  Copyright 2020 Vircadia contributors.
 //
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
@@ -28,18 +27,24 @@ void main() {
         return;
     }
 
+    vec4 sourceColor;
+    vec4 historyColor;
+
     vec2 fragVel = taa_fetchVelocityMapBest(fragUV).xy;
+    bool needsTAA = taa_fetchSourceAndHistory(fragUV, fragVel, sourceColor, historyColor);
+    vec4 nextColor = sourceColor;
+    if (needsTAA) {
+        // clamp history to neighbourhood of current sample
+        historyColor.rgb = mix(historyColor.rgb, taa_evalConstrainColor(sourceColor.rgb, fragUV, fragVel, historyColor.rgb).rgb, float(taa_constrainColor()));
 
-    vec3 sourceColor;
-    vec3 historyColor;
-    vec2 prevFragUV = taa_fetchSourceAndHistory(fragUV, fragVel, sourceColor, historyColor);
+        if (taa_feedbackColor()) {
+            nextColor = taa_evalFeedbackColor(sourceColor, historyColor, params.blend);
+        } else {
+            nextColor = mix(historyColor, sourceColor, params.blend);
+        }
 
-    vec3 nextColor = sourceColor;
+        nextColor.rgb = taa_resolveColor(mix(sourceColor.rgb, nextColor.rgb, nextColor.a));
+    }
 
-    // clamp history to neighbourhood of current sample
-    historyColor = mix(historyColor, taa_evalConstrainColor(sourceColor, fragUV, fragVel, historyColor), float(taa_constrainColor()));
-
-    nextColor = mix(mix(historyColor, sourceColor, params.blend), taa_evalFeedbackColor(sourceColor, historyColor, params.blend), float(taa_feedbackColor()));
-
-    outFragColor = vec4(taa_resolveColor(nextColor), 1.0);
+    outFragColor = nextColor;
 }

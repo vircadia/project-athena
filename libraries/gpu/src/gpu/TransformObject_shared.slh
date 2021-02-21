@@ -1,0 +1,19 @@
+// glsl / C++ compatible source as interface for TransformCamera
+#ifdef __cplusplus
+#   define TO_MAT4 Mat4
+#else
+#   define TO_MAT4 mat4
+#endif
+
+struct TransformObject {
+    TO_MAT4 _model;
+    TO_MAT4 _modelInverse;
+    TO_MAT4 _previousModel;
+    TO_MAT4 _previousModelInverse;
+};
+
+    // <@if 1@>
+    // Trigger Scribe include 
+    // <@endif@> <!def that !> 
+//
+

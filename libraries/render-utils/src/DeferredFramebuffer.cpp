@@ -10,6 +10,11 @@
 //
 #include "DeferredFramebuffer.h"
 
+#include "DeferredBufferWrite_shared.slh"
+
+#include "gpu/Batch.h"
+#include "gpu/Context.h"
+
 
 DeferredFramebuffer::DeferredFramebuffer() {
 }
@@ -36,8 +41,10 @@ void DeferredFramebuffer::updatePrimaryDepth(const gpu::TexturePointer& depthBuf
         _deferredColorTexture.reset();
         _deferredNormalTexture.reset();
         _deferredSpecularTexture.reset();
+        _deferredVelocityTexture.reset();
         _lightingTexture.reset();
         _lightingFramebuffer.reset();
+        _lightingWithVelocityFramebuffer.reset();
     }
 }
 
@@ -46,8 +53,9 @@ void DeferredFramebuffer::allocate() {
     _deferredFramebuffer = gpu::FramebufferPointer(gpu::Framebuffer::create("deferred"));
     _deferredFramebufferDepthColor = gpu::FramebufferPointer(gpu::Framebuffer::create("deferredDepthColor"));
 
-    auto colorFormat = gpu::Element::COLOR_SRGBA_32;
-    auto linearFormat = gpu::Element::COLOR_RGBA_32;
+    const auto colorFormat = gpu::Element::COLOR_SRGBA_32;
+    const auto linearFormat = gpu::Element::COLOR_RGBA_32;
+    const auto halfFormat = gpu::Element(gpu::VEC2, gpu::HALF, gpu::XY);
     auto width = _frameSize.x;
     auto height = _frameSize.y;
 
@@ -56,10 +64,12 @@ void DeferredFramebuffer::allocate() {
     _deferredColorTexture = gpu::Texture::createRenderBuffer(colorFormat, width, height, gpu::Texture::SINGLE_MIP, defaultSampler);
     _deferredNormalTexture = gpu::Texture::createRenderBuffer(linearFormat, width, height, gpu::Texture::SINGLE_MIP, defaultSampler);
     _deferredSpecularTexture = gpu::Texture::createRenderBuffer(linearFormat, width, height, gpu::Texture::SINGLE_MIP, defaultSampler);
+    _deferredVelocityTexture = gpu::Texture::createRenderBuffer(halfFormat, width, height, gpu::Texture::SINGLE_MIP, defaultSampler);
 
-    _deferredFramebuffer->setRenderBuffer(0, _deferredColorTexture);
-    _deferredFramebuffer->setRenderBuffer(1, _deferredNormalTexture);
-    _deferredFramebuffer->setRenderBuffer(2, _deferredSpecularTexture);
+    _deferredFramebuffer->setRenderBuffer(DEFERRED_COLOR_SLOT, _deferredColorTexture);
+    _deferredFramebuffer->setRenderBuffer(DEFERRED_NORMAL_SLOT, _deferredNormalTexture);
+    _deferredFramebuffer->setRenderBuffer(DEFERRED_SPECULAR_SLOT, _deferredSpecularTexture);
+    _deferredFramebuffer->setRenderBuffer(DEFERRED_VELOCITY_SLOT, _deferredVelocityTexture);
 
     _deferredFramebufferDepthColor->setRenderBuffer(0, _deferredColorTexture);
 
@@ -80,8 +90,12 @@ void DeferredFramebuffer::allocate() {
     _lightingFramebuffer->setRenderBuffer(0, _lightingTexture);
     _lightingFramebuffer->setDepthStencilBuffer(_primaryDepthTexture, depthFormat);
 
-    _deferredFramebuffer->setRenderBuffer(3, _lightingTexture);
+    _lightingWithVelocityFramebuffer = gpu::FramebufferPointer(gpu::Framebuffer::create("lighting_velocity"));
+    _lightingWithVelocityFramebuffer->setRenderBuffer(0, _lightingTexture);
+    _lightingWithVelocityFramebuffer->setRenderBuffer(1, _deferredVelocityTexture);
+    _lightingWithVelocityFramebuffer->setDepthStencilBuffer(_primaryDepthTexture, depthFormat);
 
+    _deferredFramebuffer->setRenderBuffer(DEFERRED_LIGHTING_SLOT, _lightingTexture);
 }
 
 
@@ -127,11 +141,25 @@ gpu::TexturePointer DeferredFramebuffer::getDeferredSpecularTexture() {
     return _deferredSpecularTexture;
 }
 
+gpu::TexturePointer DeferredFramebuffer::getDeferredVelocityTexture() {
+    if (!_deferredVelocityTexture) {
+        allocate();
+    }
+    return _deferredVelocityTexture;
+}
+
 gpu::FramebufferPointer DeferredFramebuffer::getLightingFramebuffer() {
     if (!_lightingFramebuffer) {
         allocate();
     }
     return _lightingFramebuffer;
+}
+
+gpu::FramebufferPointer DeferredFramebuffer::getLightingWithVelocityFramebuffer() {
+    if (!_lightingWithVelocityFramebuffer) {
+        allocate();
+    }
+    return _lightingWithVelocityFramebuffer;
 }
 
 gpu::TexturePointer DeferredFramebuffer::getLightingTexture() {

@@ -1,7 +1,7 @@
 <@include gpu/Config.slh@>
 <$VERSION_HEADER$>
-//  Generated on <$_SCRIBE_DATE$>
-//
+// <$_SCRIBE_FILENAME$>
+// Generated on <$_SCRIBE_DATE$>
 //  Draw and transform the fed vertex position with the standard MVP stack
 //  and offset the vertices by a certain amount in the vertex direction
 //
@@ -12,9 +12,7 @@
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
 //
 
-<@include gpu/ShaderConstants.h@>
 <@include gpu/Transform.slh@>
-
 <$declareStandardTransform()$>
 
 struct ItemBound {
@@ -107,5 +105,5 @@ void main(void) {
     vec4 offsetPosition;
     <$transformModelToMonoClipPos(cam, obj, pos, offsetPosition)$>
     gl_Position.xy += normalize(offsetPosition.xy-gl_Position.xy) * _parameters.outlineWidth * gl_Position.w;
-    <$transformStereoClipsSpace(cam, gl_Position)$>
+    <$transformStereoClipSpace(gl_Position)$>
 }

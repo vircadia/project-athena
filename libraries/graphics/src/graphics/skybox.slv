@@ -5,6 +5,7 @@
 //
 //  Created by Sam Gateau on 5/5/2015.
 //  Copyright 2015 High Fidelity, Inc.
+//  Copyright 2020 Vircadia contributors.
 //
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
@@ -14,6 +15,9 @@
 <$declareStandardTransform()$>
 
 layout(location=0) out vec3 _normal;
+<@if not HIFI_USE_FORWARD@>
+    layout(location=1) out vec4 _prevPositionCS;
+<@endif@>
 
 void main(void) {
     const float depth = 0.0;
@@ -23,17 +27,20 @@ void main(void) {
         vec4(-1.0, 1.0, depth, 1.0),
         vec4(1.0, 1.0, depth, 1.0)
     );
-    vec4 inPosition = UNIT_QUAD[gl_VertexID];
 
     // standard transform
     TransformCamera cam = getTransformCamera();
-    vec3 clipDir = vec3(inPosition.xy, 0.0);
+    vec3 clipDir = UNIT_QUAD[gl_VertexID].xyz;
     vec3 eyeDir;
     <$transformClipToEyeDir(cam, clipDir, eyeDir)$>
     <$transformEyeToWorldDir(cam, eyeDir, _normal)$>
+
+<@if not HIFI_USE_FORWARD@>
+    _prevPositionCS = cam._previousProjectionViewUntranslated * (cam._viewInverse * (cam._projectionInverse * vec4(clipDir, 1.0)));
+<@endif@>
     
     // Position is supposed to come in clip space
-    gl_Position = vec4(inPosition.xy, 0.0, 1.0);
+    gl_Position = vec4(clipDir, 1.0);
 
-    <$transformStereoClipsSpace(cam, gl_Position)$>
+    <$transformStereoClipSpace(gl_Position)$>
 }

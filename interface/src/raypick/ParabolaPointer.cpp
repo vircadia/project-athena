@@ -1,6 +1,7 @@
 //
 //  Created by Sam Gondelman 7/17/2018
 //  Copyright 2018 High Fidelity, Inc.
+//  Copyright 2020 Vircadia contributors.
 //
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
@@ -441,7 +442,10 @@ void ParabolaPointer::RenderState::ParabolaRenderItem::render(RenderArgs* args) 
 
     Transform transform;
     transform.setTranslation(_origin);
-    batch.setModelTransform(transform);
+    batch.setModelTransform(transform, _prevRenderTransform);
+    if (args->_renderMode == RenderArgs::RenderMode::DEFAULT_RENDER_MODE || args->_renderMode == RenderArgs::RenderMode::MIRROR_RENDER_MODE) {
+        _prevRenderTransform = transform;
+    }
 
     batch.setPipeline(getParabolaPipeline(args->_renderMethod == render::Args::RenderMethod::FORWARD));
 

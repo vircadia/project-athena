@@ -1,22 +1,26 @@
-// glsl / C++ compatible source as interface for FadeEffect
+// glsl / C++ compatible source as interface for TransformCamera
 #ifdef __cplusplus
-#   define _MAT4 Mat4
-#   define _VEC4 Vec4
-#    define _MUTABLE mutable
+#   define TC_MAT4 gpu::Mat4
+#   define TC_VEC4 gpu::Vec4
+#   define TC_MUTABLE mutable
 #else
-#   define _MAT4 mat4
-#   define _VEC4 vec4
-#    define _MUTABLE 
+#   define TC_MAT4 mat4
+#   define TC_VEC4 vec4
+#   define TC_MUTABLE 
 #endif
 
 struct _TransformCamera {
-    _MUTABLE _MAT4 _view;
-    _MUTABLE _MAT4 _viewInverse;
-    _MUTABLE _MAT4 _projectionViewUntranslated;
-    _MAT4 _projection;
-    _MUTABLE _MAT4 _projectionInverse;
-    _VEC4 _viewport; // Public value is int but float in the shader to stay in floats for all the transform computations.
-    _MUTABLE _VEC4 _stereoInfo;
+    TC_MUTABLE TC_MAT4 _view;
+    TC_MUTABLE TC_MAT4 _viewInverse;
+    TC_MUTABLE TC_MAT4 _previousView;
+    TC_MUTABLE TC_MAT4 _previousViewInverse;
+    TC_MAT4 _projection;
+    TC_MUTABLE TC_MAT4 _projectionInverse;
+    TC_MUTABLE TC_MAT4 _projectionViewUntranslated;
+    // Previous projection view untranslated AND jittered with current jitter
+    TC_MUTABLE TC_MAT4 _previousProjectionViewUntranslated;
+    TC_VEC4 _viewport; // Public value is int but float in the shader to stay in floats for all the transform computations.
+    TC_MUTABLE TC_VEC4 _stereoInfo;
 };
 
     // <@if 1@>

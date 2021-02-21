@@ -4,6 +4,7 @@
 //
 //  Created by Sam Gateau 6/3/2016.
 //  Copyright 2016 High Fidelity, Inc.
+//  Copyright 2020 Vircadia contributors.
 //
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
@@ -20,12 +21,13 @@
 // DeferredFrameTransform is  a helper class gathering in one place the needed camera transform
 // and frame resolution needed for all the deferred rendering passes taking advantage of the Deferred buffers
 class DeferredFrameTransform {
+    friend class GenerateDeferredFrameTransform;
 public:
     using UniformBufferView = gpu::BufferView;
 
     DeferredFrameTransform();
 
-    void update(RenderArgs* args, glm::vec2 jitter);
+    void update(RenderArgs* args);
 
     UniformBufferView getFrameTransformBuffer() const { return _frameTransformBuffer; }
 
@@ -34,54 +36,29 @@ protected:
 
     // Class describing the uniform buffer with the transform info common to the AO shaders
     // It s changing every frame
-    class FrameTransform {
+#include "DeferredTransform_shared.slh" 
+    class FrameTransform : public _DeferredFrameTransform {
     public:
-        // Pixel info is { viewport width height}
-        glm::vec4 pixelInfo;
-        glm::vec4 invpixelInfo;
-        // Depth info is { n.f, f - n, -f}
-        glm::vec4 depthInfo;
-        // Stereo info is { isStereoFrame, halfWidth }
-        glm::vec4 stereoInfo{ 0.0 };
-        // Mono proj matrix or Left and Right proj matrix going from Mono Eye space to side clip space
-        glm::mat4 projection[2];
-        // Inverse proj matrix or Left and Right proj matrix going from Mono Eye space to side clip space
-        glm::mat4 invProjection[2];
-        // THe mono projection for sure
-        glm::mat4 projectionMono;
-        // Inv View matrix from eye space (mono) to world space
-        glm::mat4 invView;
-        // View matrix from world space to eye space (mono)
-        glm::mat4 view;
-        // Mono proj matrix or Left and Right proj matrix going from Mono Eye space to side clip space without jittering
-        glm::mat4 projectionUnjittered[2];
-        // Inverse proj matrix or Left and Right proj matrix going from Mono Eye space to side clip space without jittering
-        glm::mat4 invProjectionUnjittered[2];
-
-        FrameTransform() {}
+        FrameTransform() { infos.stereoInfo = glm::vec4(0.0f); }
     };
-    UniformBufferView _frameTransformBuffer;
 
-   
+    UniformBufferView _frameTransformBuffer;
 };
 
 using DeferredFrameTransformPointer = std::shared_ptr<DeferredFrameTransform>;
 
 
-
-
 class GenerateDeferredFrameTransform {
 public:
-
-    using Input = glm::vec2;
     using Output = DeferredFrameTransformPointer;
-    using JobModel = render::Job::ModelIO<GenerateDeferredFrameTransform, Input, Output>;
+    using JobModel = render::Job::ModelO<GenerateDeferredFrameTransform, Output>;
 
-    GenerateDeferredFrameTransform() {}
+    GenerateDeferredFrameTransform(unsigned int transformSlot) : _transformSlot{ transformSlot } {}
 
-    void run(const render::RenderContextPointer& renderContext, const Input& jitter, Output& frameTransform);
+    void run(const render::RenderContextPointer& renderContext, Output& frameTransform);
 
 private:
+    unsigned int _transformSlot;
 };
 
 #endif // hifi_DeferredFrameTransform_h

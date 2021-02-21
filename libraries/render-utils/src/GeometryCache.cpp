@@ -799,7 +799,7 @@ render::ShapePipelinePointer GeometryCache::getFadingShapePipeline(bool textured
         graphics::MaterialKey::CullFaceMode cullFaceMode) {
     auto fadeEffect = DependencyManager::get<FadeEffect>();
     auto fadeBatchSetter = fadeEffect->getBatchSetter();
-    auto fadeItemSetter = fadeEffect->getItemUniformSetter();
+    auto fadeItemSetter = fadeEffect->getItemStoredSetter();
     return std::make_shared<render::ShapePipeline>(getSimplePipeline(textured, transparent, unlit, depthBias, true, true, forward, cullFaceMode), nullptr,
         [fadeBatchSetter, fadeItemSetter](const render::ShapePipeline& shapePipeline, gpu::Batch& batch, render::Args* args) {
             batch.setResourceTexture(gr::Texture::MaterialAlbedo, DependencyManager::get<TextureCache>()->getWhiteTexture());
@@ -1997,7 +1997,7 @@ void GeometryCache::useSimpleDrawPipeline(gpu::Batch& batch, bool noBlend) {
 
         // enable decal blend
         state->setBlendFunction(true, gpu::State::SRC_ALPHA, gpu::State::BLEND_OP_ADD, gpu::State::INV_SRC_ALPHA);
-        PrepareStencil::testMask(*state);
+        PrepareStencil::testMaskResetNoAA(*state);
 
         _standardDrawPipeline = gpu::Pipeline::create(program, state);
 
@@ -2029,7 +2029,7 @@ void GeometryCache::useGridPipeline(gpu::Batch& batch, GridBuffer gridBuffer, bo
             gpu::StatePointer state = gpu::StatePointer(new gpu::State());
             state->setDepthTest(true, !std::get<0>(key), gpu::LESS_EQUAL);
             if (std::get<0>(key)) {
-                PrepareStencil::testMask(*state);
+                PrepareStencil::testMaskResetNoAA(*state);
             } else {
                 PrepareStencil::testMaskDrawShape(*state);
             }
@@ -2136,7 +2136,6 @@ gpu::PipelinePointer GeometryCache::getWebBrowserProgram(bool transparent, bool 
 
             gpu::StatePointer state = gpu::StatePointer(new gpu::State());
             state->setDepthTest(true, !transparent, gpu::LESS_EQUAL);
-            // FIXME: do we need a testMaskDrawNoAA?
             PrepareStencil::testMaskDrawShapeNoAA(*state);
             state->setBlendFunction(transparent,
                 gpu::State::SRC_ALPHA, gpu::State::BLEND_OP_ADD, gpu::State::INV_SRC_ALPHA,
@@ -2217,7 +2216,7 @@ gpu::PipelinePointer GeometryCache::getSimplePipeline(bool textured, bool transp
         gpu::State::FACTOR_ALPHA, gpu::State::BLEND_OP_ADD, gpu::State::ONE);
 
     if (config.isAntiAliased()) {
-        config.isTransparent() ? PrepareStencil::testMask(*state) : PrepareStencil::testMaskDrawShape(*state);
+        config.isTransparent() ? PrepareStencil::testMaskResetNoAA(*state) : PrepareStencil::testMaskDrawShape(*state);
     } else {
         PrepareStencil::testMaskDrawShapeNoAA(*state);
     }

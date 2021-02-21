@@ -4,6 +4,7 @@
 //
 //  Created by Brad Hefta-Gaub on 8/6/14.
 //  Copyright 2014 High Fidelity, Inc.
+//  Copyright 2020 Vircadia contributors.
 //
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
@@ -1471,7 +1472,11 @@ void ModelEntityRenderer::doRender(RenderArgs* args) {
     // If the model doesn't have visual geometry, render our bounding box as green wireframe
     static glm::vec4 greenColor(0.0f, 1.0f, 0.0f, 1.0f);
     gpu::Batch& batch = *args->_batch;
-    batch.setModelTransform(getModelTransform()); // we want to include the scale as well
+    Transform transform = getModelTransform();
+    batch.setModelTransform(transform, _prevRenderTransform); // we want to include the scale as well
+    if (args->_renderMode == Args::RenderMode::DEFAULT_RENDER_MODE || args->_renderMode == Args::RenderMode::MIRROR_RENDER_MODE) {
+        _prevRenderTransform = transform;
+    }
     auto geometryCache = DependencyManager::get<GeometryCache>();
     geometryCache->renderWireCubeInstance(args, batch, greenColor, geometryCache->getShapePipelinePointer(false, false, args->_renderMethod == Args::RenderMethod::FORWARD));
 

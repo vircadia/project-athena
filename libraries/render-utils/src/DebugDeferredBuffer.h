@@ -19,7 +19,6 @@
 #include "DeferredFramebuffer.h"
 #include "SurfaceGeometryPass.h"
 #include "AmbientOcclusionEffect.h"
-#include "VelocityBufferPass.h"
 
 #include "LightStage.h"
 
@@ -44,13 +43,13 @@ public:
                                        LinearDepthFramebufferPointer,
                                        SurfaceGeometryFramebufferPointer,
                                        AmbientOcclusionFramebufferPointer,
-                                       VelocityFramebufferPointer,
                                        DeferredFrameTransformPointer,
-                                       LightStage::ShadowFramePointer>;
+                                       LightStage::ShadowFramePointer,
+                                       gpu::TexturePointer>;
     using Config = DebugDeferredBufferConfig;
     using JobModel = render::Job::ModelI<DebugDeferredBuffer, Inputs, Config>;
 
-    DebugDeferredBuffer();
+    DebugDeferredBuffer(uint transformSlot);
     ~DebugDeferredBuffer();
 
     void configure(const Config& config);
@@ -92,6 +91,7 @@ protected:
         AmbientOcclusionBlurredMode,
         AmbientOcclusionNormalMode,
         VelocityMode,
+        AntialiasingIntensityMode,
         CustomMode,  // Needs to stay last
 
         NumModes,
@@ -100,6 +100,7 @@ protected:
 private:
     Mode _mode{ Off };
     glm::vec4 _size;
+    uint _transformSlot;
 
 #include "debug_deferred_buffer_shared.slh"
 

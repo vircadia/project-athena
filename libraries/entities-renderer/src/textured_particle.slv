@@ -10,10 +10,12 @@
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
 //
 
-<@include gpu/Transform.slh@>
 <@include gpu/Noise.slh@>
 
+<@include gpu/Transform.slh@>
 <$declareStandardTransform()$>
+
+<@include render-utils/ShaderConstants.h@>
 
 struct Radii {
     float start;
@@ -50,6 +52,10 @@ LAYOUT_STD140(binding=0) uniform particleBuffer {
 layout(location=0) in vec3 inPosition;
 layout(location=2) in vec2 inColor; // This is actual Lifetime + Seed
 
+<@if not HIFI_USE_FORWARD@>
+    layout(location=RENDER_UTILS_ATTR_NORMAL_WS) out vec3 _normalWS;
+    layout(location=RENDER_UTILS_ATTR_PREV_POSITION_CS) out vec4 _prevPositionCS;
+<@endif@>
 layout(location=0) out vec4 varColor;
 layout(location=1) out vec2 varTexcoord;
 
@@ -172,5 +178,12 @@ void main(void) {
     );
     vec4 quadPos = radius * vec4(UNIT_QUAD[twoTriID], 0.0);
     vec4 eyePos = anchorPoint + rotation * quadPos;
+
+<@if not HIFI_USE_FORWARD@>
+    vec3 normalEye = vec3(0.0f, 0.0f, 1.0f);
+    <$transformEyeToWorldDir(cam, normalEye, _normalWS)$>
+    <$transformEyeToClipPosAndPrevClipPos(cam, eyePos, gl_Position, _prevPositionCS)$>
+<@else@>
     <$transformEyeToClipPos(cam, eyePos, gl_Position)$>
+<@endif@>
 }

@@ -5,6 +5,7 @@
 //
 //  Created by Andrzej Kapolka on 9/15/14.
 //  Copyright 2014 High Fidelity, Inc.
+//  Copyright 2020 Vircadia contributors.
 //
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
@@ -22,6 +23,7 @@
     layout(location=RENDER_UTILS_ATTR_POSITION_ES) out vec4 _positionES;
 <@else@>
     layout(location=RENDER_UTILS_ATTR_NORMAL_WS) out vec3 _normalWS;
+    layout(location=RENDER_UTILS_ATTR_PREV_POSITION_CS) out vec4 _prevPositionCS;
 <@endif@>
 layout(location=RENDER_UTILS_ATTR_COLOR) out vec4 _color;
 layout(location=RENDER_UTILS_ATTR_TEXCOORD01) out vec4 _texCoord01;
@@ -33,9 +35,9 @@ void main(void) {
     TransformCamera cam = getTransformCamera();
     TransformObject obj = getTransformObject();
 <@if HIFI_USE_FORWARD@>
-    <$transformModelToWorldAndEyeAndClipPos(cam, obj, inPosition, _positionWS, _positionES, gl_Position)$>
+    <$transformModelToWorldEyeAndClipPos(cam, obj, inPosition, _positionWS, _positionES, gl_Position)$>
 <@else@>
-    <$transformModelToClipPos(cam, obj, inPosition, gl_Position)$>
+    <$transformModelToClipPosAndPrevClipPos(cam, obj, inPosition, gl_Position, _prevPositionCS)$>
     <$transformModelToWorldDir(cam, obj, inNormal.xyz, _normalWS)$>
 <@endif@>
 }

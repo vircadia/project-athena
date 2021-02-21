@@ -21,7 +21,6 @@ void main(void) {
     vec3 nextColor = texture(nextMap, varTexCoord0).xyz;
     outFragColor = vec4(nextColor, 1.0);
 
-
     // Pixel being shaded
     vec3 sourceColor = texture(sourceMap, varTexCoord0).xyz;
 

@@ -1,6 +1,7 @@
 //
 //  Created by Bradley Austin Davis on 2018/10/21
 //  Copyright 2014 High Fidelity, Inc.
+//  Copyright 2020 Vircadia contributors.
 //
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
@@ -119,11 +120,10 @@ void RenderThread::renderFrame(gpu::FramePointer& frame) {
 #ifdef USE_GL
     _context.makeCurrent();
 #endif
-    if (_correction != glm::mat4()) {
+    {
        std::unique_lock<std::mutex> lock(_frameLock);
        if (_correction != glm::mat4()) {
-           _backend->setCameraCorrection(_correction, _activeFrame->view);
-           //_prevRenderView = _correction * _activeFrame->view;
+           _backend->updatePresentFrame(_correction);
        }
     }
     _backend->recycle();

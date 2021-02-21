@@ -36,7 +36,7 @@ public:
     RenderForwardTask() {}
 
     void configure(const Config& config);
-    void build(JobModel& task, const render::Varying& input, render::Varying& output);
+    void build(JobModel& task, const render::Varying& input, render::Varying& output, uint8_t transformOffset);
 };
 
 
@@ -93,13 +93,15 @@ public:
     using Inputs = render::VaryingSet3<render::ItemBounds, LightingModelPointer, HazeStage::FramePointer>;
     using JobModel = render::Job::ModelI<DrawForward, Inputs>;
 
-    DrawForward(const render::ShapePlumberPointer& shapePlumber, bool opaquePass) : _shapePlumber(shapePlumber), _opaquePass(opaquePass) {}
+    DrawForward(const render::ShapePlumberPointer& shapePlumber, bool opaquePass, uint transformSlot) :
+        _shapePlumber(shapePlumber), _opaquePass(opaquePass), _transformSlot(transformSlot) {}
     void run(const render::RenderContextPointer& renderContext,
             const Inputs& inputs);
 
 private:
     render::ShapePlumberPointer _shapePlumber;
     bool _opaquePass;
+    uint _transformSlot;
 };
 
 #endif // hifi_RenderForwardTask_h

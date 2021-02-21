@@ -43,15 +43,15 @@ void ProceduralSkybox::clear() {
     Skybox::clear();
 }
 
-void ProceduralSkybox::render(gpu::Batch& batch, const ViewFrustum& frustum, bool forward) const {
+void ProceduralSkybox::render(gpu::Batch& batch, const ViewFrustum& frustum, bool forward, uint transformSlot) const {
     if (_procedural.isReady()) {
-        ProceduralSkybox::render(batch, frustum, (*this), forward);
+        ProceduralSkybox::render(batch, frustum, (*this), forward, transformSlot);
     } else {
-        Skybox::render(batch, frustum, forward);
+        Skybox::render(batch, frustum, forward, transformSlot);
     }
 }
 
-void ProceduralSkybox::render(gpu::Batch& batch, const ViewFrustum& viewFrustum, const ProceduralSkybox& skybox, bool forward) {
+void ProceduralSkybox::render(gpu::Batch& batch, const ViewFrustum& viewFrustum, const ProceduralSkybox& skybox, bool forward, uint transformSlot) {
     glm::mat4 projMat;
     viewFrustum.evalProjectionMatrix(projMat);
 
@@ -59,6 +59,8 @@ void ProceduralSkybox::render(gpu::Batch& batch, const ViewFrustum& viewFrustum,
     viewFrustum.evalViewTransform(viewTransform);
     batch.setProjectionTransform(projMat);
     batch.setViewTransform(viewTransform);
+    // This is needed if we want to have motion vectors on the sky
+    batch.saveViewProjectionTransform(transformSlot);
     batch.setModelTransform(Transform()); // only for Mac
 
     auto& procedural = skybox._procedural;

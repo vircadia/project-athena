@@ -53,6 +53,7 @@ Batch::Batch(const std::string& name) {
     _data.reserve(_dataMax);
     _objects.reserve(_objectsMax);
     _drawCallInfos.reserve(_drawCallInfosMax);
+    _mustUpdatePreviousModels = true;
 }
 
 Batch::~Batch() {
@@ -101,17 +102,18 @@ void Batch::clear() {
     _currentModel = Transform();
     _drawcallUniform = 0;
     _drawcallUniformReset = 0;
-    _projectionJitter = glm::vec2(0.0f);
     _enableStereo = true;
     _enableSkybox = false;
+    _mustUpdatePreviousModels = true; 
 }
 
 size_t Batch::cacheData(size_t size, const void* data) {
     size_t offset = _data.size();
     size_t numBytes = size;
     _data.resize(offset + numBytes);
-    memcpy(_data.data() + offset, data, size);
-
+    if (data) {
+        memcpy(_data.data() + offset, data, size);
+    }
     return offset;
 }
 
@@ -236,6 +238,15 @@ void Batch::setModelTransform(const Transform& model) {
     ADD_COMMAND(setModelTransform);
 
     _currentModel = model;
+    _previousModel = model;
+    _invalidModel = true;
+}
+
+void Batch::setModelTransform(const Transform& model, const Transform& previousModel) {
+    ADD_COMMAND(setModelTransform);
+
+    _currentModel = model;
+    _previousModel = previousModel;
     _invalidModel = true;
 }
 
@@ -252,20 +263,29 @@ void Batch::setProjectionTransform(const Mat4& proj) {
     _params.emplace_back(cacheData(sizeof(Mat4), &proj));
 }
 
-void Batch::setProjectionJitter(float jx, float jy) {
-    _projectionJitter.x = jx;
-    _projectionJitter.y = jy;
-    pushProjectionJitter(jx, jy);
+void Batch::setProjectionJitterEnabled(bool isProjectionEnabled) {
+    _isJitterOnProjectionEnabled = isProjectionEnabled;
+    pushProjectionJitterEnabled(_isJitterOnProjectionEnabled);
 }
 
-void Batch::pushProjectionJitter(float jx, float jy) {
-    ADD_COMMAND(setProjectionJitter);
-    _params.emplace_back(jx);
-    _params.emplace_back(jy);
+void Batch::pushProjectionJitterEnabled(bool isProjectionEnabled) {
+    ADD_COMMAND(setProjectionJitterEnabled);
+    _params.emplace_back(isProjectionEnabled & 1);
 }
 
-void Batch::popProjectionJitter() {
-    pushProjectionJitter(_projectionJitter.x, _projectionJitter.y);
+void Batch::popProjectionJitterEnabled() { 
+    pushProjectionJitterEnabled(_isJitterOnProjectionEnabled);
+}
+
+void Batch::setProjectionJitterSequence(const Vec2* sequence, size_t count) {
+    ADD_COMMAND(setProjectionJitterSequence);
+    _params.emplace_back((uint)count);
+    _params.emplace_back(cacheData(sizeof(Vec2) * count, sequence));
+}
+
+void Batch::setProjectionJitterScale(float scale) {
+    ADD_COMMAND(setProjectionJitterScale);
+    _params.emplace_back(scale);
 }
 
 void Batch::setViewportTransform(const Vec4i& viewport) {
@@ -279,6 +299,34 @@ void Batch::setDepthRangeTransform(float nearDepth, float farDepth) {
 
     _params.emplace_back(farDepth);
     _params.emplace_back(nearDepth);
+}
+
+void Batch::saveViewProjectionTransform(uint32 saveSlot) {
+    ADD_COMMAND(saveViewProjectionTransform);
+    if (saveSlot >= MAX_TRANSFORM_SAVE_SLOT_COUNT) {
+        qCWarning(gpulogging) << "Transform save slot" << saveSlot << "exceeds max save slot count of" << MAX_TRANSFORM_SAVE_SLOT_COUNT;
+    }
+    _params.emplace_back(saveSlot);
+}
+
+void Batch::setSavedViewProjectionTransform(uint32 saveSlot) {
+    ADD_COMMAND(setSavedViewProjectionTransform);
+    if (saveSlot >= MAX_TRANSFORM_SAVE_SLOT_COUNT) {
+        qCWarning(gpulogging) << "Transform save slot" << saveSlot << "exceeds max save slot count of"
+                              << MAX_TRANSFORM_SAVE_SLOT_COUNT;
+    }
+    _params.emplace_back(saveSlot);
+}
+
+void Batch::copySavedViewProjectionTransformToBuffer(uint32 saveSlot, const BufferPointer& buffer, Offset offset) {
+    ADD_COMMAND(copySavedViewProjectionTransformToBuffer);
+    if (saveSlot >= MAX_TRANSFORM_SAVE_SLOT_COUNT) {
+        qCWarning(gpulogging) << "Transform save slot" << saveSlot << "exceeds max save slot count of"
+                              << MAX_TRANSFORM_SAVE_SLOT_COUNT;
+    }
+    _params.emplace_back(saveSlot);
+    _params.emplace_back(_buffers.cache(buffer));
+    _params.emplace_back(offset);
 }
 
 void Batch::setPipeline(const PipelinePointer& pipeline) {
@@ -548,12 +596,15 @@ void Batch::captureDrawCallInfoImpl() {
     if (_invalidModel) {
         TransformObject object;
         _currentModel.getMatrix(object._model);
+        _previousModel.getMatrix(object._previousModel);
 
         // FIXME - we don't want to be using glm::inverse() here but it fixes the flickering issue we are
         // seeing with planky blocks in toybox. Our implementation of getInverseMatrix() is buggy in cases
         // of non-uniform scale. We need to fix that. In the mean time, glm::inverse() works.
         //_model.getInverseMatrix(_object._modelInverse);
+        //_previousModel.getInverseMatrix(_object._previousModelInverse);
         object._modelInverse = glm::inverse(object._model);
+        object._previousModelInverse = glm::inverse(object._previousModel);
 
         _objects.emplace_back(object);
 

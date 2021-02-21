@@ -18,9 +18,6 @@ public:
 
     GLShader* _program { nullptr };
     GLState* _state { nullptr };
-    // Bit of a hack, any pipeline can need the camera correction buffer at execution time, so 
-    // we store whether a given pipeline has declared the uniform buffer for it.
-    bool _cameraCorrection{ false };
 };
 
 } }

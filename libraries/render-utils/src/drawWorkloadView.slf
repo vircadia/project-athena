@@ -17,6 +17,7 @@
 layout(location=0) in vec4 varColor;
 layout(location=1) in vec3 varTexcoord;
 layout(location=2) in vec3 varEyePos;
+layout(location=3) in vec4 _prevPositionCS;
 
 void main(void) {
     if (varColor.w > 0.0) {
@@ -29,6 +30,7 @@ void main(void) {
     }
 
     packDeferredFragmentUnlit(
+        _prevPositionCS,
         vec3(0.0, 1.0, 0.0), 
         1.0,
         varColor.rgb);

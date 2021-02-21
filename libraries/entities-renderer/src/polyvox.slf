@@ -36,6 +36,8 @@
 
     <@if HIFI_USE_FORWARD@>
         layout(location=RENDER_UTILS_ATTR_POSITION_ES) in vec4 _positionES;
+    <@else@>
+        layout(location=RENDER_UTILS_ATTR_PREV_POSITION_CS) in vec4 _prevPositionCS; 
     <@endif@>
     layout(location=RENDER_UTILS_ATTR_POSITION_MS) in vec3 _positionMS;
     layout(location=RENDER_UTILS_ATTR_NORMAL_WS) in vec3 _normalWS;
@@ -88,6 +90,7 @@ void main(void) {
 
     <@if not HIFI_USE_FORWARD@>
         packDeferredFragment(
+            _prevPositionCS,
             normalize(_normalWS),
             1.0,
             diffuse,

@@ -27,6 +27,9 @@ LAYOUT_STD140(binding=0) uniform parabolaData {
 };
 
 layout(location=0) out vec4 _color;
+<@if not HIFI_USE_FORWARD@>
+    layout(location=1) out vec4 _prevPositionCS;
+<@endif@>
 
 void main(void) {
     _color = _parabolaData.color;
@@ -51,5 +54,9 @@ void main(void) {
     
     pos += 0.5 * _parabolaData.width * normal * (-1.0 + 2.0 * float(gl_VertexID % 2 == 0));
 
-    <$transformModelToClipPos(cam, obj, pos, gl_Position)$>
+    <@if HIFI_USE_FORWARD@>
+        <$transformModelToClipPos(cam, obj, pos, gl_Position)$>
+    <@else@>
+        <$transformModelToClipPosAndPrevClipPos(cam, obj, pos, gl_Position, _prevPositionCS)$>
+    <@endif@>
 }

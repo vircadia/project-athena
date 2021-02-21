@@ -108,7 +108,6 @@ void main(void) {
 
     // The position of the pixel fragment in Eye space then in world space
     vec3 eyePos = evalEyePositionFromZeye(stereoSide.x, Zeye, texcoordPos);
-  //  vec3 worldPos = (frameTransform._viewInverse * vec4(eyePos, 1.0)).xyz;
 
   /*  if (texcoordPos.y > 0.5) {
         outFragColor = vec4(fract(10.0 * worldPos.xyz), 1.0);
@@ -138,9 +137,10 @@ void main(void) {
     // Eval px, py, pz world positions of the basis centered on the world pos of the fragment
     float axeLength = nearPlaneScale;
 
-    vec3 ax = (frameTransform._view[0].xyz * axeLength);
-    vec3 ay = (frameTransform._view[1].xyz * axeLength);
-    vec3 az = (frameTransform._view[2].xyz * axeLength);
+    mat4 view = getView(stereoSide.x);
+    vec3 ax = (view[0].xyz * axeLength);
+    vec3 ay = (view[1].xyz * axeLength);
+    vec3 az = (view[2].xyz * axeLength);
 
     vec4 px =  vec4(eyePos + ax, 0.0);
     vec4 py =  vec4(eyePos + ay, 0.0);
@@ -184,7 +184,7 @@ void main(void) {
     vec2 nclipPos = (texcoordPos - 0.5) * 2.0;
 
 
-    //vec4 clipPos = frameTransform._projection[stereoSide.x] * vec4(eyePos, 1.0);
+    //vec4 clipPos = getProjection(stereoSide.x) * vec4(eyePos, 1.0);
     vec4 clipPos = getProjectionMono() * vec4(eyePos, 1.0);
     nclipPos = clipPos.xy / clipPos.w;
 

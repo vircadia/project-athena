@@ -167,7 +167,7 @@ public:
             glSamplerParameteri(result, GL_TEXTURE_WRAP_T, GLTexture::WRAP_MODES[sampler.getWrapModeV()]);
             glSamplerParameteri(result, GL_TEXTURE_WRAP_R, GLTexture::WRAP_MODES[sampler.getWrapModeW()]);
 
-            glSamplerParameterf(result, GL_TEXTURE_MAX_ANISOTROPY_EXT, sampler.getMaxAnisotropy());
+            glSamplerParameterf(result, GL_TEXTURE_MAX_ANISOTROPY, sampler.getMaxAnisotropy());
             glSamplerParameterfv(result, GL_TEXTURE_BORDER_COLOR, (const float*)&sampler.getBorderColor());
 
             glSamplerParameterf(result, GL_TEXTURE_MIN_LOD, sampler.getMinMip());
@@ -314,7 +314,7 @@ void GL45Texture::syncSampler() const {
     glTextureParameteri(_id, GL_TEXTURE_WRAP_T, WRAP_MODES[sampler.getWrapModeV()]);
     glTextureParameteri(_id, GL_TEXTURE_WRAP_R, WRAP_MODES[sampler.getWrapModeW()]);
 
-    glTextureParameterf(_id, GL_TEXTURE_MAX_ANISOTROPY_EXT, sampler.getMaxAnisotropy());
+    glTextureParameterf(_id, GL_TEXTURE_MAX_ANISOTROPY, sampler.getMaxAnisotropy());
     glTextureParameterfv(_id, GL_TEXTURE_BORDER_COLOR, (const float*)&sampler.getBorderColor());
 
     glTextureParameterf(_id, GL_TEXTURE_MIN_LOD, sampler.getMinMip());

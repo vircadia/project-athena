@@ -22,6 +22,15 @@
 layout(location=0) out vec4 varColor;
 layout(location=1) out vec3 varTexcoord;
 layout(location=2) out vec3 varEyePos;
+layout(location=3) out vec4 _prevPositionCS;
+
+vec4 getPosition(WorkloadProxy proxy, vec4 spriteVert, vec4 proxyPosEye) {
+    vec3 dirZ = -normalize(proxyPosEye.xyz);
+    vec3 dirX = normalize(cross(vec3(0.0, 1.0, 0.0), dirZ));
+    vec3 dirY = vec3(0.0, 1.0, 0.0);
+
+    return vec4(proxyPosEye.xyz + proxy.sphere.w * (dirX * spriteVert.x + dirY * spriteVert.y /* + dirZ * spriteVert.z*/), 1.0);
+}
 
 void main(void) {
     const vec4 UNIT_SPRITE[3] = vec4[3](
@@ -44,17 +53,17 @@ void main(void) {
     TransformCamera cam = getTransformCamera();
     TransformObject obj = getTransformObject();
     vec4 proxyPosEye;
-    <$transformModelToEyePos(cam, obj, proxyPosWorld, proxyPosEye)$>
+    vec4 prevProxyPosEye;
+    <$transformModelToEyePosAndPrevEyePos(cam, obj, proxyPosWorld, proxyPosEye, prevProxyPosEye)$>
 
     // Define the billboarded space
-    vec3 dirZ = -normalize(proxyPosEye.xyz);
-    vec3 dirX = normalize(cross(vec3(0.0, 1.0, 0.0), dirZ));
-    vec3 dirY = vec3(0.0, 1.0, 0.0);
+    vec4 pos = getPosition(proxy, spriteVert, proxyPosEye);
+    vec4 prevPos = getPosition(proxy, spriteVert, prevProxyPosEye);
 
-    vec4 pos = vec4(proxyPosEye.xyz + proxy.sphere.w * ( dirX * spriteVert.x + dirY * spriteVert.y /* + dirZ * spriteVert.z*/), 1.0);
     varEyePos = pos.xyz;
     varTexcoord = spriteVert.xyz;
     <$transformEyeToClipPos(cam, pos, gl_Position)$>
+    <$transformPrevEyeToPrevClipPos(cam, prevPos, _prevPositionCS)$>;
 
     // Convert region to color
     int region = floatBitsToInt(proxy.region.x);
