@@ -136,9 +136,6 @@ void EntityEditPacketSender::queueEditEntityMessage(PacketType type,
             #endif
 
             queueOctreeEditMessage(type, bufferOut);
-            if (type == PacketType::EntityAdd && !properties.getCertificateID().isEmpty()) {
-                emit addingEntityWithCertificate(properties.getCertificateID(), DependencyManager::get<AddressManager>()->getPlaceName());
-            }
         }
 
         // if we still have properties to send, switch the message type to edit, and request only the packets that didn't fit

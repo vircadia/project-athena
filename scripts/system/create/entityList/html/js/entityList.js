@@ -23,7 +23,6 @@ const SCROLLBAR_WIDTH = 20;
 const RESIZER_WIDTH = 13; //Must be the number of COLUMNS - 1.
 const DELTA_X_MOVE_COLUMNS_THRESHOLD = 2;
 const DELTA_X_COLUMN_SWAP_POSITION = 5;
-const CERTIFIED_PLACEHOLDER = "** Certified **";
 
 function decimalMegabytes(number) {
     return number ? (number / BYTES_PER_MEGABYTE).toFixed(1) : "";
@@ -954,12 +953,11 @@ function loaded() {
                         id: entity.id,
                         name: entity.name,
                         type: type,
-                        url: entity.certificateID === "" ? filename : "<i>" + CERTIFIED_PLACEHOLDER + "</i>",
-                        fullUrl: entity.certificateID === "" ? filename : CERTIFIED_PLACEHOLDER,
+                        url: filename,
+                        fullUrl: filename,
                         urlWithPath: entity.certificateID === "" ? entity.url : "<i>" + CERTIFIED_PLACEHOLDER + "</i>",
                         locked: entity.locked,
                         visible: entity.visible,
-                        certificateID: entity.certificateID,
                         verticesCount: displayIfNonZero(entity.verticesCount),
                         texturesCount: displayIfNonZero(entity.texturesCount),
                         texturesSize: entity.texturesSize,

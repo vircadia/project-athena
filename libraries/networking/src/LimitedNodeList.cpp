@@ -174,14 +174,6 @@ void LimitedNodeList::setPermissions(const NodePermissions& newPermissions) {
         newPermissions.can(NodePermissions::Permission::canRezTemporaryEntities)) {
         emit canRezTmpChanged(_permissions.can(NodePermissions::Permission::canRezTemporaryEntities));
     }
-    if (originalPermissions.can(NodePermissions::Permission::canRezPermanentCertifiedEntities) !=
-        newPermissions.can(NodePermissions::Permission::canRezPermanentCertifiedEntities)) {
-        emit canRezCertifiedChanged(_permissions.can(NodePermissions::Permission::canRezPermanentCertifiedEntities));
-    }
-    if (originalPermissions.can(NodePermissions::Permission::canRezTemporaryCertifiedEntities) !=
-        newPermissions.can(NodePermissions::Permission::canRezTemporaryCertifiedEntities)) {
-        emit canRezTmpCertifiedChanged(_permissions.can(NodePermissions::Permission::canRezTemporaryCertifiedEntities));
-    }
     if (originalPermissions.can(NodePermissions::Permission::canWriteToAssetServer) !=
         newPermissions.can(NodePermissions::Permission::canWriteToAssetServer)) {
         emit canWriteAssetsChanged(_permissions.can(NodePermissions::Permission::canWriteToAssetServer));

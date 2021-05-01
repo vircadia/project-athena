@@ -78,8 +78,6 @@ public:
         canConnectPastMaxCapacity = 32,
         canKick = 64,
         canReplaceDomainContent = 128,
-        canRezPermanentCertifiedEntities = 256,
-        canRezTemporaryCertifiedEntities = 512,
         canGetAndSetPrivateUserData = 1024,
         canRezAvatarEntities = 2048
     };

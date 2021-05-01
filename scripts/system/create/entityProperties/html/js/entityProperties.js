@@ -612,7 +612,6 @@ const GROUPS = [
                 type: "string",
                 placeholder: "URL",
                 propertyID: "modelURL",
-                hideIfCertified: true,
             },
             {
                 label: "Collision Shape",
@@ -626,7 +625,6 @@ const GROUPS = [
                 label: "Compound Shape",
                 type: "string",
                 propertyID: "compoundShapeURL",
-                hideIfCertified: true,
             },
             {
                 label: "Use Original Pivot",
@@ -637,7 +635,6 @@ const GROUPS = [
                 label: "Animation",
                 type: "string",
                 propertyID: "animation.url",
-                hideIfCertified: true,
             },
             {
                 label: "Play Automatically",
@@ -689,7 +686,6 @@ const GROUPS = [
                 type: "textarea",
                 propertyID: "originalTextures",
                 readOnly: true,
-                hideIfCertified: true,
             },
             {
                 label: "Group Culled",
@@ -1510,7 +1506,6 @@ const GROUPS = [
                 buttons: [ { id: "reload", label: "F", className: "glyph", onClick: reloadScripts } ],
                 propertyID: "script",
                 placeholder: "URL",
-                hideIfCertified: true,
             },
             {
                 label: "Server Script",
@@ -1592,7 +1587,6 @@ const GROUPS = [
                 placeholder: "URL",
                 propertyID: "collisionSoundURL",
                 showPropertyRule: { "collisionless": "false" },
-                hideIfCertified: true,
             },
             {
                 label: "Dynamic",
@@ -4012,9 +4006,6 @@ function handleEntitySelectionUpdate(selections, isPropertiesToolUpdate) {
             disableSaveMaterialDataButton();
         }
 
-        const certificateIDMultiValue = getMultiplePropertyValue('certificateID');
-        const hasCertifiedInSelection = certificateIDMultiValue.isMultiDiffValue || certificateIDMultiValue.value !== "";
-
         Object.entries(properties).forEach(function([propertyID, property]) {
             const propertyData = property.data;
             const propertyName = property.name;
@@ -4047,11 +4038,6 @@ function handleEntitySelectionUpdate(selections, isPropertiesToolUpdate) {
                         "] from hidden group " + property.group_id);
                 }
                 return;
-            }
-
-            if (propertyData.hideIfCertified && hasCertifiedInSelection) {
-                propertyValue = "** Certified **";
-                property.elInput.disabled = true;
             }
 
             if (propertyName === "type") {

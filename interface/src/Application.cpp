@@ -85,7 +85,6 @@
 #include <EntityScriptClient.h>
 #include <EntityScriptServerLogClient.h>
 #include <EntityScriptingInterface.h>
-#include "ui/overlays/ContextOverlayInterface.h"
 #include <ErrorDialog.h>
 #include <FileScriptingInterface.h>
 #include <Finally.h>
@@ -197,7 +196,6 @@
 #include "scripting/ControllerScriptingInterface.h"
 #include "scripting/RatesScriptingInterface.h"
 #include "scripting/SelectionScriptingInterface.h"
-#include "scripting/WalletScriptingInterface.h"
 #include "scripting/TTSScriptingInterface.h"
 #include "scripting/KeyboardScriptingInterface.h"
 #include "scripting/PerformanceScriptingInterface.h"
@@ -243,10 +241,6 @@
 
 #include <FadeEffect.h>
 
-#include "commerce/Ledger.h"
-#include "commerce/Wallet.h"
-#include "commerce/QmlCommerce.h"
-#include "commerce/QmlMarketplace.h"
 #include "ResourceRequestObserver.h"
 
 #include "webbrowser/WebBrowserSuggestionsEngine.h"
@@ -944,11 +938,7 @@ bool setupEssentials(int& argc, char** argv, bool runningMarkerExisted) {
     DependencyManager::set<CloseEventSender>();
     DependencyManager::set<ResourceManager>();
     DependencyManager::set<SelectionScriptingInterface>();
-    DependencyManager::set<Ledger>();
-    DependencyManager::set<Wallet>();
-    DependencyManager::set<WalletScriptingInterface>();
     DependencyManager::set<TTSScriptingInterface>();
-    DependencyManager::set<QmlCommerce>();
 
     DependencyManager::set<FadeEffect>();
     DependencyManager::set<ResourceRequestObserver>();
@@ -1235,10 +1225,6 @@ Application::Application(int& argc, char** argv, QElapsedTimer& startupTimer, bo
     qCDebug(interfaceapp) << "[VERSION] We will use DEVELOPMENT global services.";
 #endif
 
-    bool isStore = property(hifi::properties::OCULUS_STORE).toBool();
-    // Or we could make it a separate arg, or if either arg is set, etc. And should this instead by a hifi::properties?
-    DependencyManager::get<WalletScriptingInterface>()->setLimitedCommerce(isStore || property(hifi::properties::STEAM).toBool());
-
     updateHeartbeat();
 
     // setup a timer for domain-server check ins
@@ -1479,10 +1465,6 @@ Application::Application(int& argc, char** argv, QElapsedTimer& startupTimer, bo
     nodeList->addSetOfNodeTypesToNodeInterestSet(NodeSet() << NodeType::AudioMixer << NodeType::AvatarMixer
         << NodeType::EntityServer << NodeType::AssetServer << NodeType::MessagesMixer << NodeType::EntityScriptServer);
 
-    // connect to the packet sent signal of the _entityEditSender
-    connect(&_entityEditSender, &EntityEditPacketSender::packetSent, this, &Application::packetSent);
-    connect(&_entityEditSender, &EntityEditPacketSender::addingEntityWithCertificate, this, &Application::addingEntityWithCertificate);
-
     QString concurrentDownloadsStr = getCmdOption(argc, constArgv, "--concurrent-downloads");
     bool success;
     uint32_t concurrentDownloads = concurrentDownloadsStr.toUInt(&success);
@@ -1573,7 +1555,6 @@ Application::Application(int& argc, char** argv, QElapsedTimer& startupTimer, bo
 
     // Overlays need to exist before we set the ContextOverlayInterface dependency
     _overlays.init(); // do this before scripts load
-    DependencyManager::set<ContextOverlayInterface>();
 
     auto offscreenUi = getOffscreenUI();
     connect(offscreenUi.data(), &OffscreenUi::desktopReady, []() {
@@ -2870,11 +2851,7 @@ void Application::cleanupBeforeQuit() {
 
     _window->saveGeometry();
 
-    // Destroy third party processes after scripts have finished using them.
-    DependencyManager::destroy<ContextOverlayInterface>(); // Must be destroyed before TabletScriptingInterface
-
     // stop QML
-    DependencyManager::destroy<QmlCommerce>();
     DependencyManager::destroy<TabletScriptingInterface>();
     DependencyManager::destroy<ToolbarScriptingInterface>();
     DependencyManager::destroy<OffscreenUi>();
@@ -3270,54 +3247,11 @@ void Application::initializeUi() {
     LoginDialog::registerType();
     Tooltip::registerType();
     UpdateDialog::registerType();
-    QmlContextCallback commerceCallback = [](QQmlContext* context) {
-        context->setContextProperty("Commerce", DependencyManager::get<QmlCommerce>().data());
-    };
-
-    OffscreenQmlSurface::addWhitelistContextHandler({
-        QUrl{ "hifi/commerce/checkout/Checkout.qml" },
-        QUrl{ "hifi/commerce/common/CommerceLightbox.qml" },
-        QUrl{ "hifi/commerce/common/EmulatedMarketplaceHeader.qml" },
-        QUrl{ "hifi/commerce/common/FirstUseTutorial.qml" },
-        QUrl{ "hifi/commerce/common/sendAsset/SendAsset.qml" },
-        QUrl{ "hifi/commerce/common/SortableListModel.qml" },
-        QUrl{ "hifi/commerce/inspectionCertificate/InspectionCertificate.qml" },
-        QUrl{ "hifi/commerce/marketplaceItemTester/MarketplaceItemTester.qml"},
-        QUrl{ "hifi/commerce/purchases/PurchasedItem.qml" },
-        QUrl{ "hifi/commerce/purchases/Purchases.qml" },
-        QUrl{ "hifi/commerce/wallet/Help.qml" },
-        QUrl{ "hifi/commerce/wallet/NeedsLogIn.qml" },
-        QUrl{ "hifi/commerce/wallet/PassphraseChange.qml" },
-        QUrl{ "hifi/commerce/wallet/PassphraseModal.qml" },
-        QUrl{ "hifi/commerce/wallet/PassphraseSelection.qml" },
-        QUrl{ "hifi/commerce/wallet/Wallet.qml" },
-        QUrl{ "hifi/commerce/wallet/WalletHome.qml" },
-        QUrl{ "hifi/commerce/wallet/WalletSetup.qml" },
-        QUrl{ "hifi/dialogs/security/Security.qml" },
-        QUrl{ "hifi/dialogs/security/SecurityImageChange.qml" },
-        QUrl{ "hifi/dialogs/security/SecurityImageModel.qml" },
-        QUrl{ "hifi/dialogs/security/SecurityImageSelection.qml" },
-        QUrl{ "hifi/tablet/TabletMenu.qml" },
-        QUrl{ "hifi/commerce/marketplace/Marketplace.qml" },
-        QUrl{ "hifi/simplifiedUI/avatarApp/AvatarApp.qml" },
-        QUrl{ "hifi/simplifiedUI/topBar/SimplifiedTopBar.qml" },
-    }, commerceCallback);
-
-    QmlContextCallback marketplaceCallback = [](QQmlContext* context) {
-        context->setContextProperty("MarketplaceScriptingInterface", new QmlMarketplace());
-    };
-    OffscreenQmlSurface::addWhitelistContextHandler({
-        QUrl{ "hifi/commerce/marketplace/Marketplace.qml" },
-        }, marketplaceCallback);
 
     QmlContextCallback platformInfoCallback = [](QQmlContext* context) {
         context->setContextProperty("PlatformInfo", new PlatformInfoScriptingInterface());
     };
     OffscreenQmlSurface::addWhitelistContextHandler({
-        QUrl{ "hifi/commerce/marketplace/Marketplace.qml" },
-        QUrl{ "hifi/commerce/purchases/Purchases.qml" },
-        QUrl{ "hifi/commerce/wallet/Wallet.qml" },
-        QUrl{ "hifi/commerce/wallet/WalletHome.qml" },
         QUrl{ "hifi/tablet/TabletAddressDialog.qml" },
         QUrl{ "hifi/Card.qml" },
         QUrl{ "hifi/Pal.qml" },
@@ -3549,8 +3483,6 @@ void Application::onDesktopRootContextCreated(QQmlContext* surfaceContext) {
 
     surfaceContext->setContextProperty("AvatarInputs", AvatarInputs::getInstance());
     surfaceContext->setContextProperty("Selection", DependencyManager::get<SelectionScriptingInterface>().data());
-    surfaceContext->setContextProperty("ContextOverlay", DependencyManager::get<ContextOverlayInterface>().data());
-    surfaceContext->setContextProperty("WalletScriptingInterface", DependencyManager::get<WalletScriptingInterface>().data());
     surfaceContext->setContextProperty("About", AboutUtil::getInstance());
     surfaceContext->setContextProperty("HiFiAbout", AboutUtil::getInstance());  // Deprecated
     surfaceContext->setContextProperty("ResourceRequestObserver", DependencyManager::get<ResourceRequestObserver>().data());
@@ -3666,7 +3598,6 @@ void Application::setupQmlSurface(QQmlContext* surfaceContext, bool setAdditiona
         surfaceContext->setContextProperty("Reticle", qApp->getApplicationCompositor().getReticleInterface());
         surfaceContext->setContextProperty("About", AboutUtil::getInstance());
         surfaceContext->setContextProperty("HiFiAbout", AboutUtil::getInstance());  // Deprecated.
-        surfaceContext->setContextProperty("WalletScriptingInterface", DependencyManager::get<WalletScriptingInterface>().data());
         surfaceContext->setContextProperty("ResourceRequestObserver", DependencyManager::get<ResourceRequestObserver>().data());
         surfaceContext->setContextProperty("PlatformInfo", PlatformInfoScriptingInterface::getInstance());
         surfaceContext->setContextProperty("ExternalResource", ExternalResource::getInstance());
@@ -7467,14 +7398,6 @@ int Application::processOctreeStats(ReceivedMessage& message, SharedNodePointer 
     return statsMessageLength;
 }
 
-void Application::packetSent(quint64 length) {
-}
-
-void Application::addingEntityWithCertificate(const QString& certificateID, const QString& placeName) {
-    auto ledger = DependencyManager::get<Ledger>();
-    ledger->updateLocation(certificateID, placeName);
-}
-
 void Application::registerScriptEngineWithApplicationServices(const ScriptEnginePointer& scriptEngine) {
 
     scriptEngine->setEmitScriptUpdatesFunction([this]() {
@@ -7632,8 +7555,6 @@ void Application::registerScriptEngineWithApplicationServices(const ScriptEngine
     scriptEngine->registerGlobalObject("EntityScriptServerLog", entityScriptServerLog.data());
     scriptEngine->registerGlobalObject("AvatarInputs", AvatarInputs::getInstance());
     scriptEngine->registerGlobalObject("Selection", DependencyManager::get<SelectionScriptingInterface>().data());
-    scriptEngine->registerGlobalObject("ContextOverlay", DependencyManager::get<ContextOverlayInterface>().data());
-    scriptEngine->registerGlobalObject("WalletScriptingInterface", DependencyManager::get<WalletScriptingInterface>().data());
     scriptEngine->registerGlobalObject("AddressManager", DependencyManager::get<AddressManager>().data());
     scriptEngine->registerGlobalObject("About", AboutUtil::getInstance());
     scriptEngine->registerGlobalObject("HifiAbout", AboutUtil::getInstance());  // Deprecated.

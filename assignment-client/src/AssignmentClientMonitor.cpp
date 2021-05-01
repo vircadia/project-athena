@@ -40,7 +40,7 @@ AssignmentClientMonitor::AssignmentClientMonitor(const unsigned int numAssignmen
                                                  const unsigned int minAssignmentClientForks,
                                                  const unsigned int maxAssignmentClientForks,
                                                  Assignment::Type requestAssignmentType, QString assignmentPool,
-                                                 quint16 listenPort, quint16 childMinListenPort, QUuid walletUUID, QString assignmentServerHostname,
+                                                 quint16 listenPort, quint16 childMinListenPort, QString assignmentServerHostname,
                                                  quint16 assignmentServerPort, quint16 httpStatusServerPort, QString logDirectory) :
     _httpManager(QHostAddress::LocalHost, httpStatusServerPort, "", this),
     _numAssignmentClientForks(numAssignmentClientForks),
@@ -48,7 +48,6 @@ AssignmentClientMonitor::AssignmentClientMonitor(const unsigned int numAssignmen
     _maxAssignmentClientForks(maxAssignmentClientForks),
     _requestAssignmentType(requestAssignmentType),
     _assignmentPool(assignmentPool),
-    _walletUUID(walletUUID),
     _assignmentServerHostname(assignmentServerHostname),
     _assignmentServerPort(assignmentServerPort),
     _childMinListenPort(childMinListenPort)
@@ -181,10 +180,6 @@ void AssignmentClientMonitor::spawnChildClient() {
     if (_assignmentPool != "") {
         _childArguments.append("--" + ASSIGNMENT_POOL_OPTION);
         _childArguments.append(_assignmentPool);
-    }
-    if (!_walletUUID.isNull()) {
-        _childArguments.append("--" + ASSIGNMENT_WALLET_DESTINATION_ID_OPTION);
-        _childArguments.append(_walletUUID.toString());
     }
     if (_assignmentServerHostname != "") {
         _childArguments.append("--" + CUSTOM_ASSIGNMENT_SERVER_HOSTNAME_OPTION);

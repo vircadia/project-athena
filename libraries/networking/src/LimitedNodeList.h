@@ -127,8 +127,6 @@ public:
     bool isAllowedEditor() const { return _permissions.can(NodePermissions::Permission::canAdjustLocks); }
     bool getThisNodeCanRez() const { return _permissions.can(NodePermissions::Permission::canRezPermanentEntities); }
     bool getThisNodeCanRezTmp() const { return _permissions.can(NodePermissions::Permission::canRezTemporaryEntities); }
-    bool getThisNodeCanRezCertified() const { return _permissions.can(NodePermissions::Permission::canRezPermanentCertifiedEntities); }
-    bool getThisNodeCanRezTmpCertified() const { return _permissions.can(NodePermissions::Permission::canRezTemporaryCertifiedEntities); }
     bool getThisNodeCanWriteAssets() const { return _permissions.can(NodePermissions::Permission::canWriteToAssetServer); }
     bool getThisNodeCanKick() const { return _permissions.can(NodePermissions::Permission::canKick); }
     bool getThisNodeCanReplaceContent() const { return _permissions.can(NodePermissions::Permission::canReplaceDomainContent); }
@@ -385,8 +383,6 @@ signals:
     void isAllowedEditorChanged(bool isAllowedEditor);
     void canRezChanged(bool canRez);
     void canRezTmpChanged(bool canRezTmp);
-    void canRezCertifiedChanged(bool canRez);
-    void canRezTmpCertifiedChanged(bool canRezTmp);
     void canWriteAssetsChanged(bool canWriteAssets);
     void canKickChanged(bool canKick);
     void canReplaceContentChanged(bool canReplaceContent);

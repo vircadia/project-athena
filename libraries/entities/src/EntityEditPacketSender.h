@@ -43,9 +43,6 @@ public:
     virtual char getMyNodeType() const override { return NodeType::EntityServer; }
     virtual void adjustEditPacketForClockSkew(PacketType type, QByteArray& buffer, qint64 clockSkew) override;
 
-signals:
-    void addingEntityWithCertificate(const QString& certificateID, const QString& placeName);
-
 public slots:
     void processEntityEditNackPacket(QSharedPointer<ReceivedMessage> message, SharedNodePointer sendingNode);
 

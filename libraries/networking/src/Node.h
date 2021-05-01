@@ -78,8 +78,6 @@ public:
     bool isAllowedEditor() const { return _permissions.can(NodePermissions::Permission::canAdjustLocks); }
     bool getCanRez() const { return _permissions.can(NodePermissions::Permission::canRezPermanentEntities); }
     bool getCanRezTmp() const { return _permissions.can(NodePermissions::Permission::canRezTemporaryEntities); }
-    bool getCanRezCertified() const { return _permissions.can(NodePermissions::Permission::canRezPermanentCertifiedEntities); }
-    bool getCanRezTmpCertified() const { return _permissions.can(NodePermissions::Permission::canRezTemporaryCertifiedEntities); }
     bool getCanWriteToAssetServer() const { return _permissions.can(NodePermissions::Permission::canWriteToAssetServer); }
     bool getCanKick() const { return _permissions.can(NodePermissions::Permission::canKick); }
     bool getCanReplaceContent() const { return _permissions.can(NodePermissions::Permission::canReplaceDomainContent); }

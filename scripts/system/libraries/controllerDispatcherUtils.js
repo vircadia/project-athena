@@ -160,9 +160,7 @@ DISPATCHER_PROPERTIES = [
     "grab.equippableIndicatorOffset",
     "userData",
     "avatarEntity",
-    "owningAvatarID",
-    "certificateID",
-    "certificateType"
+    "owningAvatarID"
 ];
 
 // priority -- a lower priority means the module will be asked sooner than one with a higher priority in a given update step

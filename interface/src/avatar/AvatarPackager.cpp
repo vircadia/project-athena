@@ -19,7 +19,6 @@
 
 #include <OffscreenUi.h>
 #include "ModelSelector.h"
-#include <avatar/MarketplaceItemUploader.h>
 
 #include <mutex>
 #include "ui/TabletScriptingInterface.h"
@@ -28,7 +27,6 @@ std::once_flag setupQMLTypesFlag;
 AvatarPackager::AvatarPackager() {
     std::call_once(setupQMLTypesFlag, []() {
         qmlRegisterType<FST>();
-        qmlRegisterType<MarketplaceItemUploader>();
         qRegisterMetaType<AvatarPackager*>();
         qRegisterMetaType<AvatarProject*>();
         qRegisterMetaType<AvatarDoctor*>();

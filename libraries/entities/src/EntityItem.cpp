@@ -49,7 +49,6 @@ int entityItemPointernMetaTypeId = qRegisterMetaType<EntityItemPointer>();
 
 int EntityItem::_maxActionsDataSize = 800;
 quint64 EntityItem::_rememberDeletedActionTime = 20 * USECS_PER_SECOND;
-QString EntityItem::_marketplacePublicKey;
 
 EntityItem::EntityItem(const EntityItemID& entityItemID) :
     SpatiallyNestable(NestableType::Entity, entityItemID)
@@ -338,18 +337,18 @@ OctreeElement::AppendState EntityItem::appendEntityData(OctreePacketData* packet
         APPEND_ENTITY_PROPERTY(PROP_SERVER_SCRIPTS, getServerScripts());
 
         // Certifiable Properties
-        APPEND_ENTITY_PROPERTY(PROP_ITEM_NAME, getItemName());
-        APPEND_ENTITY_PROPERTY(PROP_ITEM_DESCRIPTION, getItemDescription());
-        APPEND_ENTITY_PROPERTY(PROP_ITEM_CATEGORIES, getItemCategories());
-        APPEND_ENTITY_PROPERTY(PROP_ITEM_ARTIST, getItemArtist());
-        APPEND_ENTITY_PROPERTY(PROP_ITEM_LICENSE, getItemLicense());
-        APPEND_ENTITY_PROPERTY(PROP_LIMITED_RUN, getLimitedRun());
-        APPEND_ENTITY_PROPERTY(PROP_MARKETPLACE_ID, getMarketplaceID());
-        APPEND_ENTITY_PROPERTY(PROP_EDITION_NUMBER, getEditionNumber());
-        APPEND_ENTITY_PROPERTY(PROP_ENTITY_INSTANCE_NUMBER, getEntityInstanceNumber());
-        APPEND_ENTITY_PROPERTY(PROP_CERTIFICATE_ID, getCertificateID());
-        APPEND_ENTITY_PROPERTY(PROP_CERTIFICATE_TYPE, getCertificateType());
-        APPEND_ENTITY_PROPERTY(PROP_STATIC_CERTIFICATE_VERSION, getStaticCertificateVersion());
+        APPEND_ENTITY_PROPERTY(PROP_ITEM_NAME, QString());
+        APPEND_ENTITY_PROPERTY(PROP_ITEM_DESCRIPTION, QString());
+        APPEND_ENTITY_PROPERTY(PROP_ITEM_CATEGORIES, QString());
+        APPEND_ENTITY_PROPERTY(PROP_ITEM_ARTIST, QString());
+        APPEND_ENTITY_PROPERTY(PROP_ITEM_LICENSE, QString());
+        APPEND_ENTITY_PROPERTY(PROP_LIMITED_RUN, quint32(-1));
+        APPEND_ENTITY_PROPERTY(PROP_MARKETPLACE_ID, QString());
+        APPEND_ENTITY_PROPERTY(PROP_EDITION_NUMBER, 0U);
+        APPEND_ENTITY_PROPERTY(PROP_ENTITY_INSTANCE_NUMBER, 0U);
+        APPEND_ENTITY_PROPERTY(PROP_CERTIFICATE_ID, QString());
+        APPEND_ENTITY_PROPERTY(PROP_CERTIFICATE_TYPE, QString());
+        APPEND_ENTITY_PROPERTY(PROP_STATIC_CERTIFICATE_VERSION, 0U);
 
         appendSubclassData(packetData, params, entityTreeElementExtraEncodeData,
                                 requestedProperties,
@@ -945,18 +944,18 @@ int EntityItem::readEntityDataFromBuffer(const unsigned char* data, int bytesLef
     }
 
     // Certifiable props
-    READ_ENTITY_PROPERTY(PROP_ITEM_NAME, QString, setItemName);
-    READ_ENTITY_PROPERTY(PROP_ITEM_DESCRIPTION, QString, setItemDescription);
-    READ_ENTITY_PROPERTY(PROP_ITEM_CATEGORIES, QString, setItemCategories);
-    READ_ENTITY_PROPERTY(PROP_ITEM_ARTIST, QString, setItemArtist);
-    READ_ENTITY_PROPERTY(PROP_ITEM_LICENSE, QString, setItemLicense);
-    READ_ENTITY_PROPERTY(PROP_LIMITED_RUN, quint32, setLimitedRun);
-    READ_ENTITY_PROPERTY(PROP_MARKETPLACE_ID, QString, setMarketplaceID);
-    READ_ENTITY_PROPERTY(PROP_EDITION_NUMBER, quint32, setEditionNumber);
-    READ_ENTITY_PROPERTY(PROP_ENTITY_INSTANCE_NUMBER, quint32, setEntityInstanceNumber);
-    READ_ENTITY_PROPERTY(PROP_CERTIFICATE_ID, QString, setCertificateID);
-    READ_ENTITY_PROPERTY(PROP_CERTIFICATE_TYPE, QString, setCertificateType);
-    READ_ENTITY_PROPERTY(PROP_STATIC_CERTIFICATE_VERSION, quint32, setStaticCertificateVersion);
+    SKIP_ENTITY_PROPERTY(PROP_ITEM_NAME, QString);
+    SKIP_ENTITY_PROPERTY(PROP_ITEM_DESCRIPTION, QString);
+    SKIP_ENTITY_PROPERTY(PROP_ITEM_CATEGORIES, QString);
+    SKIP_ENTITY_PROPERTY(PROP_ITEM_ARTIST, QString);
+    SKIP_ENTITY_PROPERTY(PROP_ITEM_LICENSE, QString);
+    SKIP_ENTITY_PROPERTY(PROP_LIMITED_RUN, quint32);
+    SKIP_ENTITY_PROPERTY(PROP_MARKETPLACE_ID, QString);
+    SKIP_ENTITY_PROPERTY(PROP_EDITION_NUMBER, quint32);
+    SKIP_ENTITY_PROPERTY(PROP_ENTITY_INSTANCE_NUMBER, quint32);
+    SKIP_ENTITY_PROPERTY(PROP_CERTIFICATE_ID, QString);
+    SKIP_ENTITY_PROPERTY(PROP_CERTIFICATE_TYPE, QString);
+    SKIP_ENTITY_PROPERTY(PROP_STATIC_CERTIFICATE_VERSION, quint32);
 
     bytesRead += readEntitySubclassDataFromBuffer(dataAt, (bytesLeftToRead - bytesRead), args,
                                                   propertyFlags, overwriteLocalData, somethingChanged);
@@ -1393,20 +1392,6 @@ EntityItemProperties EntityItem::getProperties(const EntityPropertyFlags& desire
     COPY_ENTITY_PROPERTY_TO_PROPERTIES(scriptTimestamp, getScriptTimestamp);
     COPY_ENTITY_PROPERTY_TO_PROPERTIES(serverScripts, getServerScripts);
 
-    // Certifiable Properties
-    COPY_ENTITY_PROPERTY_TO_PROPERTIES(itemName, getItemName);
-    COPY_ENTITY_PROPERTY_TO_PROPERTIES(itemDescription, getItemDescription);
-    COPY_ENTITY_PROPERTY_TO_PROPERTIES(itemCategories, getItemCategories);
-    COPY_ENTITY_PROPERTY_TO_PROPERTIES(itemArtist, getItemArtist);
-    COPY_ENTITY_PROPERTY_TO_PROPERTIES(itemLicense, getItemLicense);
-    COPY_ENTITY_PROPERTY_TO_PROPERTIES(limitedRun, getLimitedRun);
-    COPY_ENTITY_PROPERTY_TO_PROPERTIES(marketplaceID, getMarketplaceID);
-    COPY_ENTITY_PROPERTY_TO_PROPERTIES(editionNumber, getEditionNumber);
-    COPY_ENTITY_PROPERTY_TO_PROPERTIES(entityInstanceNumber, getEntityInstanceNumber);
-    COPY_ENTITY_PROPERTY_TO_PROPERTIES(certificateID, getCertificateID);
-    COPY_ENTITY_PROPERTY_TO_PROPERTIES(certificateType, getCertificateType);
-    COPY_ENTITY_PROPERTY_TO_PROPERTIES(staticCertificateVersion, getStaticCertificateVersion);
-
     // Script local data
     COPY_ENTITY_PROPERTY_TO_PROPERTIES(localPosition, getLocalPosition);
     COPY_ENTITY_PROPERTY_TO_PROPERTIES(localRotation, getLocalOrientation);
@@ -1544,20 +1529,6 @@ bool EntityItem::setProperties(const EntityItemProperties& properties) {
     SET_ENTITY_PROPERTY_FROM_PROPERTIES(script, setScript);
     SET_ENTITY_PROPERTY_FROM_PROPERTIES(scriptTimestamp, setScriptTimestamp);
     SET_ENTITY_PROPERTY_FROM_PROPERTIES(serverScripts, setServerScripts);
-
-    // Certifiable Properties
-    SET_ENTITY_PROPERTY_FROM_PROPERTIES(itemName, setItemName);
-    SET_ENTITY_PROPERTY_FROM_PROPERTIES(itemDescription, setItemDescription);
-    SET_ENTITY_PROPERTY_FROM_PROPERTIES(itemCategories, setItemCategories);
-    SET_ENTITY_PROPERTY_FROM_PROPERTIES(itemArtist, setItemArtist);
-    SET_ENTITY_PROPERTY_FROM_PROPERTIES(itemLicense, setItemLicense);
-    SET_ENTITY_PROPERTY_FROM_PROPERTIES(limitedRun, setLimitedRun);
-    SET_ENTITY_PROPERTY_FROM_PROPERTIES(marketplaceID, setMarketplaceID);
-    SET_ENTITY_PROPERTY_FROM_PROPERTIES(editionNumber, setEditionNumber);
-    SET_ENTITY_PROPERTY_FROM_PROPERTIES(entityInstanceNumber, setEntityInstanceNumber);
-    SET_ENTITY_PROPERTY_FROM_PROPERTIES(certificateID, setCertificateID);
-    SET_ENTITY_PROPERTY_FROM_PROPERTIES(certificateType, setCertificateType);
-    SET_ENTITY_PROPERTY_FROM_PROPERTIES(staticCertificateVersion, setStaticCertificateVersion);
 
     if (updateQueryAACube()) {
         somethingChanged = true;
@@ -3168,36 +3139,6 @@ void EntityItem::setPrivateUserData(const QString& value) {
     });
 }
 
-// Certifiable Properties
-#define DEFINE_PROPERTY_GETTER(type, accessor, var) \
-type EntityItem::get##accessor() const {            \
-    type result;         \
-    withReadLock([&] {   \
-        result = _##var; \
-    });                  \
-    return result;       \
-}
-
-#define DEFINE_PROPERTY_SETTER(type, accessor, var)   \
-void EntityItem::set##accessor(const type & value) { \
-    withWriteLock([&] {                               \
-       _##var = value;                                \
-    });                                               \
-}
-#define DEFINE_PROPERTY_ACCESSOR(type, accessor, var) DEFINE_PROPERTY_GETTER(type, accessor, var) DEFINE_PROPERTY_SETTER(type, accessor, var)
-DEFINE_PROPERTY_ACCESSOR(QString, ItemName, itemName)
-DEFINE_PROPERTY_ACCESSOR(QString, ItemDescription, itemDescription)
-DEFINE_PROPERTY_ACCESSOR(QString, ItemCategories, itemCategories)
-DEFINE_PROPERTY_ACCESSOR(QString, ItemArtist, itemArtist)
-DEFINE_PROPERTY_ACCESSOR(QString, ItemLicense, itemLicense)
-DEFINE_PROPERTY_ACCESSOR(quint32, LimitedRun, limitedRun)
-DEFINE_PROPERTY_ACCESSOR(QString, MarketplaceID, marketplaceID)
-DEFINE_PROPERTY_ACCESSOR(quint32, EditionNumber, editionNumber)
-DEFINE_PROPERTY_ACCESSOR(quint32, EntityInstanceNumber, entityInstanceNumber)
-DEFINE_PROPERTY_ACCESSOR(QString, CertificateID, certificateID)
-DEFINE_PROPERTY_ACCESSOR(QString, CertificateType, certificateType)
-DEFINE_PROPERTY_ACCESSOR(quint32, StaticCertificateVersion, staticCertificateVersion)
-
 uint32_t EntityItem::getDirtyFlags() const {
     uint32_t result;
     withReadLock([&] {
@@ -3270,38 +3211,6 @@ void EntityItem::somethingChangedNotification() {
         for (const auto& handler : _changeHandlers.values()) {
             handler(id);
         }
-    });
-}
-
-// static
-void EntityItem::retrieveMarketplacePublicKey() {
-    QNetworkAccessManager& networkAccessManager = NetworkAccessManager::getInstance();
-    QNetworkRequest networkRequest;
-    networkRequest.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
-    QUrl requestURL = MetaverseAPI::getCurrentMetaverseServerURL();
-    requestURL.setPath("/api/v1/commerce/marketplace_key");
-    QJsonObject request;
-    networkRequest.setUrl(requestURL);
-
-    QNetworkReply* networkReply = NULL;
-    networkReply = networkAccessManager.get(networkRequest);
-
-    connect(networkReply, &QNetworkReply::finished, [=]() {
-        QJsonObject jsonObject = QJsonDocument::fromJson(networkReply->readAll()).object();
-        jsonObject = jsonObject["data"].toObject();
-
-        if (networkReply->error() == QNetworkReply::NoError) {
-            if (!jsonObject["public_key"].toString().isEmpty()) {
-                EntityItem::_marketplacePublicKey = jsonObject["public_key"].toString();
-                qCWarning(entities) << "Marketplace public key has been set to" << _marketplacePublicKey;
-            } else {
-                qCWarning(entities) << "Marketplace public key is empty!";
-            }
-        } else {
-            qCWarning(entities) << "Call to" << networkRequest.url() << "failed! Error:" << networkReply->error();
-        }
-
-        networkReply->deleteLater();
     });
 }
 

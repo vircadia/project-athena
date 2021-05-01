@@ -18,19 +18,15 @@
 class PendingAssignedNodeData : public QObject {
     Q_OBJECT
 public:
-    PendingAssignedNodeData(const QUuid& assignmentUUID, const QUuid& walletUUID, const QString& nodeVersion);
+    PendingAssignedNodeData(const QUuid& assignmentUUID, const QString& nodeVersion);
     
     void setAssignmentUUID(const QUuid& assignmentUUID) { _assignmentUUID = assignmentUUID; }
     const QUuid& getAssignmentUUID() const { return _assignmentUUID; }
-    
-    void setWalletUUID(const QUuid& walletUUID) { _walletUUID = walletUUID; }
-    const QUuid& getWalletUUID() const { return _walletUUID; }
     
     const QString& getNodeVersion() const { return _nodeVersion; }
 
 private:
     QUuid _assignmentUUID;
-    QUuid _walletUUID;
     QString _nodeVersion;
 };
 

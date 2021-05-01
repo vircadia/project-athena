@@ -28,7 +28,6 @@ exports.handlers = {
             '../../interface/src/assets',
             //'../../interface/src/audio', Exclude AudioScope API from output.
             '../../interface/src/avatar',
-            '../../interface/src/commerce',
             '../../interface/src/java',
             '../../interface/src/networking',
             '../../interface/src/raypick',

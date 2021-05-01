@@ -731,7 +731,6 @@ function createUpdateInterval() {
     }, UPDATE_INTERVAL_MS);
 }
 
-var previousContextOverlay = ContextOverlay.enabled;
 var previousRequestsDomainListData = Users.requestsDomainListData;
 function palOpened() {
     ui.sendMessage({
@@ -739,9 +738,7 @@ function palOpened() {
         shouldShowDot: shouldShowDot
     });
 
-    previousContextOverlay = ContextOverlay.enabled;
     previousRequestsDomainListData = Users.requestsDomainListData;
-    ContextOverlay.enabled = false;
     Users.requestsDomainListData = true;
 
     ui.tablet.tabletShownChanged.connect(tabletVisibilityChanged);
@@ -922,7 +919,6 @@ function off() {
     }
 
     removeOverlays();
-    ContextOverlay.enabled = previousContextOverlay;
     Users.requestsDomainListData = previousRequestsDomainListData;
 }
 

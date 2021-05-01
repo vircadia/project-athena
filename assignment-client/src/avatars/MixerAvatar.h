@@ -21,27 +21,13 @@ class ResourceRequest;
 class MixerAvatar : public AvatarData {
     Q_OBJECT
 public:
-    MixerAvatar();
+    inline MixerAvatar() {}
 
     bool getNeedsHeroCheck() const { return _needsHeroCheck; }
     void setNeedsHeroCheck(bool needsHeroCheck = true) { _needsHeroCheck = needsHeroCheck; }
 
-    void fetchAvatarFST();
-    virtual bool isCertifyFailed() const override { return _certifyFailed; }
     bool needsIdentityUpdate() const { return _needsIdentityUpdate; }
     void setNeedsIdentityUpdate(bool value = true) { _needsIdentityUpdate = value; }
-
-    void processCertifyEvents();
-    void processChallengeResponse(ReceivedMessage& response);
-
-    void stopChallengeTimer();
-
-    // Avatar certification/verification:
-    enum VerifyState {
-        nonCertified, requestingFST, receivedFST, staticValidation, requestingOwner, ownerResponse,
-        challengeClient, verified, verificationFailed, verificationSucceeded, error
-    };
-    Q_ENUM(VerifyState)
 
     bool isInScreenshareZone() const { return _inScreenshareZone; }
     void setInScreenshareZone(bool value = true) { _inScreenshareZone = value; }
@@ -50,44 +36,9 @@ public:
 
 private:
     bool _needsHeroCheck { false };
-    static const char* stateToName(VerifyState state);
-    VerifyState _verifyState { nonCertified };
-    std::atomic<bool> _pendingEvent { false };
-    QMutex _avatarCertifyLock;
-    ResourceRequest* _avatarRequest { nullptr };
-    QString _marketplaceIdFromURL;
-    QString _marketplaceIdFromFST;
-    QByteArray _avatarFSTContents;
-    QByteArray _certificateHash;
-    QString _certificateIdFromURL;
-    QString _certificateIdFromFST;
-    QString _dynamicMarketResponse;
-    QString _ownerPublicKey;
-    QByteArray _challengeNonce;
-    QByteArray _challengeNonceHash;
-    QTimer _challengeTimer;
-    static constexpr int NUM_CHALLENGES_BEFORE_FAIL = 1;
-    int _numberChallenges { 0 };
-    bool _certifyFailed { false };
     bool _needsIdentityUpdate { false };
     bool _inScreenshareZone { false };
     QUuid _screenshareZone;
-
-    bool generateFSTHash();
-    bool validateFSTHash(const QString& publicKey) const;
-    QByteArray canonicalJson(const QString fstFile);
-    void requestCurrentOwnership();
-    void sendOwnerChallenge();
-
-    static const QString VERIFY_FAIL_MODEL;
-
-private slots:
-    void fstRequestComplete();
-    void ownerRequestComplete();
-    void challengeTimeout();
-
- signals:
-    void startChallengeTimer();
 };
 
 using MixerAvatarSharedPointer = std::shared_ptr<MixerAvatar>;

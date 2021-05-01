@@ -13,7 +13,6 @@
 #ifndef hifi_AvatarProject_h
 #define hifi_AvatarProject_h
 
-#include "MarketplaceItemUploader.h"
 #include "AvatarDoctor.h"
 #include "ProjectFile.h"
 #include "FST.h"
@@ -57,8 +56,6 @@ class AvatarProject : public QObject {
     Q_PROPERTY(bool hasErrors READ getHasErrors WRITE setHasErrors NOTIFY hasErrorsChanged)
 
 public:
-    Q_INVOKABLE MarketplaceItemUploader* upload(bool updateExisting);
-    Q_INVOKABLE void openInInventory() const;
     Q_INVOKABLE QStringList getProjectFiles() const;
     Q_INVOKABLE AvatarDoctor* diagnose();
 

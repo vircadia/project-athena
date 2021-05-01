@@ -110,7 +110,7 @@ EntityScriptServer::~EntityScriptServer() {
 static const QString ENTITY_SCRIPT_SERVER_LOGGING_NAME = "entity-script-server";
 
 void EntityScriptServer::handleReloadEntityServerScriptPacket(QSharedPointer<ReceivedMessage> message, SharedNodePointer senderNode) {
-    if (senderNode->getCanRez() || senderNode->getCanRezTmp() || senderNode->getCanRezCertified() || senderNode->getCanRezTmpCertified()) {
+    if (senderNode->getCanRez() || senderNode->getCanRezTmp()) {
         auto entityID = QUuid::fromRfc4122(message->read(NUM_BYTES_RFC4122_UUID));
 
         if (_entityViewer.getTree() && !_shuttingDown) {
@@ -121,7 +121,7 @@ void EntityScriptServer::handleReloadEntityServerScriptPacket(QSharedPointer<Rec
 }
 
 void EntityScriptServer::handleEntityScriptGetStatusPacket(QSharedPointer<ReceivedMessage> message, SharedNodePointer senderNode) {
-    if (senderNode->getCanRez() || senderNode->getCanRezTmp() || senderNode->getCanRezCertified() || senderNode->getCanRezTmpCertified()) {
+    if (senderNode->getCanRez() || senderNode->getCanRezTmp()) {
         MessageID messageID;
         message->readPrimitive(&messageID);
         auto entityID = QUuid::fromRfc4122(message->read(NUM_BYTES_RFC4122_UUID));
@@ -189,7 +189,7 @@ void EntityScriptServer::updateEntityPPS() {
 }
 
 void EntityScriptServer::handleEntityServerScriptLogPacket(QSharedPointer<ReceivedMessage> message, SharedNodePointer senderNode) {
-    bool canRezAny = senderNode->getCanRez() || senderNode->getCanRezTmp() || senderNode->getCanRezCertified() || senderNode->getCanRezTmpCertified();
+    bool canRezAny = senderNode->getCanRez() || senderNode->getCanRezTmp();
     bool enable = false;
     message->readPrimitive(&enable);
 

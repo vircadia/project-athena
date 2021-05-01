@@ -400,14 +400,6 @@ void DomainServerSettingsManager::setupConfigMap(const QString& userConfigFilena
             packPermissions();
         }
 
-        if (oldVersion < 1.9) {
-            unpackPermissions();
-            // This was prior to addition of canRez(Tmp)Certified; add those to localhost permissions by default
-            _standardAgentPermissions[NodePermissions::standardNameLocalhost]->set(NodePermissions::Permission::canRezPermanentCertifiedEntities);
-            _standardAgentPermissions[NodePermissions::standardNameLocalhost]->set(NodePermissions::Permission::canRezTemporaryCertifiedEntities);
-            packPermissions();
-        }
-
         if (oldVersion < 2.0) {
             const QString WIZARD_COMPLETED_ONCE = "wizard.completed_once";
 
