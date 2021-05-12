@@ -46,9 +46,6 @@ bool BaseAssetScriptingInterface::initializeCache() {
         return true; // cache is ready
     }
 
-    // attempt to initialize the cache
-    QMetaObject::invokeMethod(assetClient().data(), "initCaching");
-
     Promise deferred = makePromise("BaseAssetScriptingInterface--queryCacheStatus");
     deferred->then([this](QVariantMap result) {
         _cacheReady = !result.value("cacheDirectory").toString().isEmpty();

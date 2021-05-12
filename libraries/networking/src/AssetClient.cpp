@@ -19,7 +19,6 @@
 #include <QtScript/QScriptEngine>
 #include <QtNetwork/QNetworkDiskCache>
 
-#include <shared/GlobalAppProperties.h>
 #include <shared/MiniPromises.h>
 
 #include "AssetRequest.h"
@@ -35,7 +34,6 @@
 MessageID AssetClient::_currentID = 0;
 
 AssetClient::AssetClient() {
-    _cacheDir = qApp->property(hifi::properties::APP_LOCAL_DATA_PATH).toString();
     setCustomDeleter([](Dependency* dependency){
         static_cast<AssetClient*>(dependency)->deleteLater();
     });
@@ -55,34 +53,6 @@ AssetClient::AssetClient() {
     connect(nodeList.data(), &LimitedNodeList::nodeKilled, this, &AssetClient::handleNodeKilled);
     connect(nodeList.data(), &LimitedNodeList::clientConnectionToNodeReset,
             this, &AssetClient::handleNodeClientConnectionReset);
-}
-
-void AssetClient::initCaching() {
-    Q_ASSERT(QThread::currentThread() == thread());
-
-    // Setup disk cache if not already
-    auto& networkAccessManager = NetworkAccessManager::getInstance();
-    if (!networkAccessManager.cache()) {
-        if (_cacheDir.isEmpty()) {
-#ifdef Q_OS_ANDROID
-            QString cachePath = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
-#else
-            QString cachePath = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
-#endif
-            _cacheDir = !cachePath.isEmpty() ? cachePath : "interfaceCache";
-        }
-        QNetworkDiskCache* cache = new QNetworkDiskCache();
-        cache->setMaximumCacheSize(MAXIMUM_CACHE_SIZE);
-        cache->setCacheDirectory(_cacheDir);
-        networkAccessManager.setCache(cache);
-        qInfo() << "ResourceManager disk cache setup at" << _cacheDir
-                 << "(size:" << MAXIMUM_CACHE_SIZE / BYTES_PER_GIGABYTES << "GB)";
-    } else {
-        auto cache = qobject_cast<QNetworkDiskCache*>(networkAccessManager.cache());
-        qInfo() << "ResourceManager disk cache already setup at" << cache->cacheDirectory()
-                << "(size:" << cache->maximumCacheSize() / BYTES_PER_GIGABYTES << "GB)";
-    }
-
 }
 
 namespace {

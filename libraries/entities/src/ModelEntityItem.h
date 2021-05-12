@@ -123,6 +123,9 @@ public:
     bool getUseOriginalPivot() const;
     void setUseOriginalPivot(bool useOriginalPivot);
 
+    void forceReloadModelURL();
+    bool shouldForceReloadModelURL();
+
 private:
     void setAnimationSettings(const QString& value); // only called for old bitstream format
     bool applyNewAnimationProperties(AnimationPropertyGroup newProperties);
@@ -157,6 +160,7 @@ protected:
     bool _groupCulled { false };
     QVariantMap _blendshapeCoefficientsMap;
     bool _useOriginalPivot { false };
+    bool _forceReloadModelURL { false };
 
     ThreadSafeValueCache<QString> _compoundShapeURL;
 

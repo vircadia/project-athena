@@ -11,18 +11,42 @@
 
 #include "NetworkAccessManager.h"
 
-#include <QThreadStorage>
-
 #include "AtpReply.h"
+#include "ResourceCache.h"
+
+#include <QStandardPaths>
+#include <QThreadStorage>
 #include <QtNetwork/QNetworkProxy>
+#include <QtNetwork/QNetworkDiskCache>
+
+#include <shared/GlobalAppProperties.h>
 
 QThreadStorage<QNetworkAccessManager*> networkAccessManagers;
 
 QNetworkAccessManager& NetworkAccessManager::getInstance() {
     if (!networkAccessManagers.hasLocalData()) {
-        networkAccessManagers.setLocalData(new QNetworkAccessManager());
+        auto networkAccessManager = new QNetworkAccessManager();
+        // Setup disk cache if not already
+        if (!networkAccessManager->cache()) {
+            QString cacheDir = qApp->property(hifi::properties::APP_LOCAL_DATA_PATH).toString();
+            if (cacheDir.isEmpty()) {
+#ifdef Q_OS_ANDROID
+                QString cachePath = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
+#else
+                QString cachePath = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+#endif
+                cacheDir = !cachePath.isEmpty() ? cachePath : "interfaceCache";
+            }
+            QNetworkDiskCache* cache = new QNetworkDiskCache();
+            cache->setMaximumCacheSize(MAXIMUM_CACHE_SIZE);
+            cache->setCacheDirectory(cacheDir);
+            networkAccessManager->setCache(cache);
+            qInfo() << "NetworkAccessManager disk cache set up at" << cacheDir
+                     << "(size:" << MAXIMUM_CACHE_SIZE / BYTES_PER_GIGABYTES << "GB)";
+        }
+        networkAccessManagers.setLocalData(networkAccessManager);
     }
-    
+
     return *networkAccessManagers.localData();
 }
 

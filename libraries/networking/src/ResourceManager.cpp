@@ -13,9 +13,6 @@
 
 #include <mutex>
 
-#include <QNetworkDiskCache>
-#include <QStandardPaths>
-#include <QThread>
 #include <QFileInfo>
 
 #include <SharedUtil.h>
@@ -37,7 +34,6 @@ ResourceManager::ResourceManager(bool atpSupportEnabled) : _atpSupportEnabled(at
         assetClient->moveToThread(&_thread);
         QObject::connect(&_thread, &QThread::started, assetClient.data(), [assetClient, name] {
             setThreadName(name.toStdString());
-            assetClient->initCaching();
         });
     }
 

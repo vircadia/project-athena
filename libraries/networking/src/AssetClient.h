@@ -64,8 +64,6 @@ public:
     Q_INVOKABLE AssetUpload* createUpload(const QByteArray& data);
 
 public slots:
-    void initCaching();
-
     void cacheInfoRequest(QObject* reciever, QString slot);
     MiniPromise::Promise cacheInfoRequestAsync(MiniPromise::Promise deferred = nullptr);
     MiniPromise::Promise queryCacheMetaAsync(const QUrl& url, MiniPromise::Promise deferred = nullptr);
@@ -116,8 +114,6 @@ private:
     std::unordered_map<SharedNodePointer, std::unordered_map<MessageID, GetAssetRequestData>> _pendingRequests;
     std::unordered_map<SharedNodePointer, std::unordered_map<MessageID, GetInfoCallback>> _pendingInfoRequests;
     std::unordered_map<SharedNodePointer, std::unordered_map<MessageID, UploadResultCallback>> _pendingUploads;
-
-    QString _cacheDir;
 
     friend class AssetRequest;
     friend class AssetUpload;

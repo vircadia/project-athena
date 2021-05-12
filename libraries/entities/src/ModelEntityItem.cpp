@@ -754,3 +754,19 @@ bool ModelEntityItem::getUseOriginalPivot() const {
         return _useOriginalPivot;
     });
 }
+
+void ModelEntityItem::forceReloadModelURL() {
+    withWriteLock([&] {
+        _forceReloadModelURL = true;
+        _needsRenderUpdate = true;
+    });
+    somethingChangedNotification();
+}
+
+bool ModelEntityItem::shouldForceReloadModelURL() {
+    return resultWithWriteLock<bool>([&] {
+        bool toReturn = _forceReloadModelURL;
+        _forceReloadModelURL = false; // we also reset this here so we don't need to lock + unlock multiple times
+        return toReturn;
+    });
+}

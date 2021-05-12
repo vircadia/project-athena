@@ -838,9 +838,16 @@ public slots:
             bool visibleOnly = false, bool collidableOnly = false) const;
 
     /**jsdoc
-     * Reloads an entity's server entity script such that the latest version re-downloaded.
+     * Reloads an entity's model URL such that the latest version is re-downloaded.
+     * @function Entities.reloadModelURL
+     * @param {Uuid} entityID - The ID of the entity for which to reload the modelURL.
+     */
+    Q_INVOKABLE void reloadModelURL(const QUuid& entityID);
+
+    /**jsdoc
+     * Reloads an entity's server entity script such that the latest version is re-downloaded.
      * @function Entities.reloadServerScripts
-     * @param {Uuid} entityID - The ID of the entity to reload the server entity script of.
+     * @param {Uuid} entityID - The ID of the entity for which to reload the server entity script.
      * @returns {boolean} <code>true</code> if the reload request was successfully sent to the server, otherwise 
      *     <code>false</code>.
      */

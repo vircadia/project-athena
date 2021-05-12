@@ -2598,6 +2598,12 @@ var PropertiesTool = function (opts) {
                     pushCommandForSelections();
                     selectionManager._update(false, this);
                 }
+            } else if (data.action === "reloadModelURL") {
+                if (selectionManager.hasSelection()) {
+                    for (i = 0; i < selectionManager.selections.length; i++) {
+                        Entities.reloadModelURL(selectionManager.selections[i]);
+                    }
+                }
             } else if (data.action === "reloadClientScripts") {
                 if (selectionManager.hasSelection()) {
                     var timestamp = Date.now();
