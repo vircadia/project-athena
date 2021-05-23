@@ -52,6 +52,7 @@ public:
     virtual ScriptValuePointer call(const ScriptValuePointer& thisObject, const ScriptValuePointer& arguments) = 0;
     virtual ScriptValuePointer construct(const ScriptValueList& args = ScriptValueList()) = 0;
     virtual ScriptValuePointer construct(const ScriptValuePointer& arguments) = 0;
+    virtual ScriptValuePointer data() const = 0;
     virtual ScriptEnginePointer engine() const = 0;
     inline bool equals(const ScriptValuePointer& other) const;
     inline bool isArray() const;
@@ -68,6 +69,7 @@ public:
     virtual ScriptValueIteratorPointer newIterator() = 0;
     virtual ScriptValuePointer property(const QString& name, const ResolveFlags& mode = ResolvePrototype) const = 0;
     virtual ScriptValuePointer property(quint32 arrayIndex, const ResolveFlags& mode = ResolvePrototype) const = 0;
+    virtual void setData(const ScriptValuePointer& val) = 0;
     virtual void setProperty(const QString& name,
                              const ScriptValuePointer& value,
                              const PropertyFlags& flags = KeepExistingFlags) = 0;

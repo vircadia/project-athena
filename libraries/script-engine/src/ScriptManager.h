@@ -177,9 +177,11 @@ public:
 
     QString getFilename() const;
 
-    ScriptEnginePointer engine();
+    inline ScriptEnginePointer engine() { return _engine; }
 
     QList<EntityItemID> getListOfEntityScriptIDs();
+
+    bool isStopped() const;
 
     /*@jsdoc
      * Stops and unloads the current script.

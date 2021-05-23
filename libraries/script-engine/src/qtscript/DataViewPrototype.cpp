@@ -13,12 +13,14 @@
 
 #include <QDebug>
 #include <QtCore/QDataStream>
+#include <QtScript/QScriptEngine>
+#include <QtScript/QScriptValue>
 
 #include <glm/glm.hpp>
 
 #include <SharedUtil.h>
 
-#include "DataViewClass.h"
+#include "ArrayBufferViewClass.h"
 
 Q_DECLARE_METATYPE(QByteArray*)
 

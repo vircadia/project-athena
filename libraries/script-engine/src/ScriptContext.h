@@ -14,11 +14,16 @@
 
 #include <QtCore/QSharedPointer>
 #include <QtCore/QString>
+#include <QtCore/QStringList>
 
+class ScriptContext;
 class ScriptEngine;
+class ScriptFunctionContext;
 class ScriptValue;
-using ScriptValuePointer = QSharedPointer<ScriptValue>;
+using ScriptContextPointer = QSharedPointer<ScriptContext>;
+using ScriptFunctionContextPointer = QSharedPointer<ScriptFunctionContext>;
 using ScriptEnginePointer = QSharedPointer<ScriptEngine>;
+using ScriptValuePointer = QSharedPointer<ScriptValue>;
 
 class ScriptFunctionContext {
 public:
@@ -43,8 +48,8 @@ public:
     virtual QStringList backtrace() const = 0;
     virtual ScriptValuePointer callee() const = 0;
     virtual ScriptEnginePointer engine() const = 0;
-    virtual ScriptFunctionContext* functionContext() const = 0;
-    virtual ScriptContext* parentContext() const = 0;
+    virtual ScriptFunctionContextPointer functionContext() const = 0;
+    virtual ScriptContextPointer parentContext() const = 0;
     virtual ScriptValuePointer thisObject() const = 0;
     virtual ScriptValuePointer throwError(const QString& text) = 0;
     virtual ScriptValuePointer throwValue(const ScriptValuePointer& value) = 0;

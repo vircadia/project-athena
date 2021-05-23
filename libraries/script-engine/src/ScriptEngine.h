@@ -103,6 +103,7 @@ public:
     virtual ScriptValuePointer uncaughtException() const = 0;
     virtual QStringList uncaughtExceptionBacktrace() const = 0;
     virtual int uncaughtExceptionLineNumber() const = 0;
+    virtual void updateMemoryCost(const qint64& deltaSize) = 0;
 
 public:
     // helper to detect and log warnings when other code invokes QScriptEngine/BaseScriptEngine in thread-unsafe ways

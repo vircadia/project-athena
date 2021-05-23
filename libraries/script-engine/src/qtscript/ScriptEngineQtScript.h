@@ -13,50 +13,25 @@
 #ifndef hifi_ScriptEngineQtScript_h
 #define hifi_ScriptEngineQtScript_h
 
-//#include <unordered_map>
-//#include <vector>
-
-//#include <QtCore/QUrl>
-//#include <QtCore/QSet>
-//#include <QtCore/QWaitCondition>
-//#include <QtCore/QStringList>
-//#include <QMap>
-
 #include <QtCore/QByteArray>
+#include <QtCore/QEnableSharedFromThis>
 #include <QtCore/QMetaEnum>
 #include <QtCore/QObject>
 #include <QtCore/QPointer>
-#include <QtScript/QScriptEngine>
-#include <QtScriptTools/QScriptEngineDebugger>
+#include <QtCore/QSharedPointer>
 #include <QtCore/QString>
 
-//#include <AnimationCache.h>
-//#include <AnimVariant.h>
-//#include <AvatarData.h>
-//#include <AvatarHashMap.h>
-//#include <LimitedNodeList.h>
-//#include <EntityItemID.h>
-//#include <EntityScriptUtils.h>
-#include <ScriptEngine.h>
-#include <ScriptManager.h>
+#include <QtScript/QScriptEngine>
+#include <QtScriptTools/QScriptEngineDebugger>
 
-//#include "PointerEvent.h"
+#include "../ScriptEngine.h"
+#include "../ScriptManager.h"
+
 #include "ArrayBufferClass.h"
-//#include "AssetScriptingInterface.h"
-//#include "AudioScriptingInterface.h"
-#include "BaseScriptEngine.h"
-//#include "ExternalResource.h"
-//#include "Quat.h"
-//#include "Mat4.h"
-//#include "ScriptCache.h"
-//#include "ScriptUUID.h"
-//#include "Vec3.h"
-//#include "ConsoleScriptingInterface.h"
-//#include "SettingHandle.h"
-//#include "Profile.h"
 
-//class QScriptEngineDebugger;
 class ScriptManager;
+class ScriptEngineQtScript;
+using ScriptEngineQtScriptPointer = QSharedPointer<ScriptEngineQtScript>;
 
 Q_DECLARE_METATYPE(ScriptEngineQtScriptPointer)
 
@@ -92,18 +67,34 @@ Q_DECLARE_METATYPE(ScriptEngineQtScriptPointer)
  *     <em>Read-only.</em>
  * @property {Script.ResourceBuckets} ExternalPaths - External resource buckets.
  */
-class ScriptEngineQtScript : public BaseScriptEngine, public ScriptEngine {
+class ScriptEngineQtScript : public QScriptEngine, public ScriptEngine, public QEnableSharedFromThis<ScriptEngineQtScript> {
     Q_OBJECT
-    using Base = BaseScriptEngine;
 
 public:  // ScriptEngine implementation
+    virtual void abortEvaluation();
+    virtual void clearExceptions();
+    virtual ScriptValuePointer cloneUncaughtException(const QString& detail = QString());
+    virtual ScriptContext* currentContext() const;
+    //virtual ScriptValuePointer evaluate(const QString& program, const QString& fileName = QString());
+    virtual ScriptValuePointer evaluate(const ScriptProgramPointer &program);
+    //virtual ScriptValuePointer evaluateInClosure(const ScriptValuePointer& locals, const ScriptProgramPointer& program);
     virtual ScriptValuePointer globalObject() const;
+    virtual bool hasUncaughtException() const;
+    virtual bool isEvaluating() const;
+    virtual ScriptValuePointer lintScript(const QString& sourceCode, const QString& fileName, const int lineNumber = 1);
+    virtual ScriptValuePointer makeError(const ScriptValuePointer& other, const QString& type = "Error");
     virtual ScriptManager* manager() const;
+
+    // if there is a pending exception and we are at the top level (non-recursive) stack frame, this emits and resets it
+    virtual bool maybeEmitUncaughtException(const QString& debugHint = QString());
+
     virtual ScriptValuePointer newArray(uint length = 0);
     virtual ScriptValuePointer newArrayBuffer(const QByteArray& message);
+    virtual ScriptValuePointer newFunction(ScriptEngine::FunctionSignature fun, int length = 0);
     virtual ScriptValuePointer newObject();
     virtual ScriptProgramPointer newProgram(const QString& sourceCode, const QString& fileName);
-    virtual ScriptValuePointer newQObject(QObject* obj);
+    virtual ScriptValuePointer newQObject(QObject *object, ScriptEngine::ValueOwnership ownership = ScriptEngine::QtOwnership,
+        const ScriptEngine::QObjectWrapOptions &options = ScriptEngine::QObjectWrapOptions());
     virtual ScriptValuePointer newValue(bool value);
     virtual ScriptValuePointer newValue(int value);
     virtual ScriptValuePointer newValue(uint value);
@@ -113,8 +104,41 @@ public:  // ScriptEngine implementation
     virtual ScriptValuePointer newValue(const char* value);
     virtual ScriptValuePointer newVariant(const QVariant& value);
     virtual ScriptValuePointer nullValue();
+    virtual bool raiseException(const ScriptValuePointer& exception);
+    //virtual void registerEnum(const QString& enumName, QMetaEnum newEnum);
+    virtual void registerFunction(const QString& name, ScriptEngine::FunctionSignature fun, int numArguments = -1);
+    virtual void registerFunction(const QString& parent, const QString& name, ScriptEngine::FunctionSignature fun, int numArguments = -1);
+    virtual void registerGetterSetter(const QString& name, ScriptEngine::FunctionSignature getter, ScriptEngine::FunctionSignature setter, const QString& parent = QString(""));
+    //virtual void registerGlobalObject(const QString& name, QObject* object);
     virtual void setDefaultPrototype(int metaTypeId, const ScriptValuePointer& prototype);
+    virtual void setObjectName(const QString& name);
+    virtual bool setProperty(const char* name, const QVariant& value);
+    virtual void setProcessEventsInterval(int interval);
+    virtual QThread* thread() const;
     virtual ScriptValuePointer undefinedValue();
+    virtual ScriptValuePointer uncaughtException() const;
+    virtual QStringList uncaughtExceptionBacktrace() const;
+    virtual int uncaughtExceptionLineNumber() const;
+
+    // helper to detect and log warnings when other code invokes QScriptEngine/BaseScriptEngine in thread-unsafe ways
+    inline bool IS_THREADSAFE_INVOCATION(const QString& method) { return ScriptEngine::IS_THREADSAFE_INVOCATION(method); }
+
+protected: // brought over from BaseScriptEngine
+    /*@jsdoc
+     * @function Script.makeError
+     * @param {object} [other] - Other.
+     * @param {string} [type="Error"] - Error.
+     * @returns {object} Object.
+     * @deprecated This function is deprecated and will be removed.
+     */
+    Q_INVOKABLE QScriptValue makeError(const QScriptValue& other = QScriptValue(), const QString& type = "Error");
+
+    // if the currentContext() is valid then throw the passed exception; otherwise, immediately emit it.
+    // note: this is used in cases where C++ code might call into JS API methods directly
+    bool raiseException(const QScriptValue& exception);
+
+    // helper to detect and log warnings when other code invokes QScriptEngine/BaseScriptEngine in thread-unsafe ways
+    static bool IS_THREADSAFE_INVOCATION(const QThread* thread, const QString& method);
 
 public:
     ScriptEngineQtScript(ScriptManager* scriptManager = nullptr);
@@ -131,7 +155,7 @@ public:
      * @deprecated This function is deprecated and will be removed.
      */
     /// registers a global object by name
-    Q_INVOKABLE void registerGlobalObject(const QString& name, QObject* object);
+    Q_INVOKABLE virtual void registerGlobalObject(const QString& name, QObject* object);
 
     /*@jsdoc
      * @function Script.registerGetterSetter
@@ -176,7 +200,7 @@ public:
     // WARNING: This function must be called after a registerGlobalObject that creates the namespace this enum is located in, or
     // the globalObject won't function. E.g., if you have a Foo object and a Foo.FooType enum, Foo must be registered first.
     /// registers a global enum
-    Q_INVOKABLE void registerEnum(const QString& enumName, QMetaEnum newEnum);
+    Q_INVOKABLE virtual void registerEnum(const QString& enumName, QMetaEnum newEnum);
 
     /*@jsdoc
      * @function Script.registerValue
@@ -196,7 +220,7 @@ public:
      * @deprecated This function is deprecated and will be removed.
      */
     /// evaluate some code in the context of the ScriptEngineQtScript and return the result
-    Q_INVOKABLE QScriptValue evaluate(const QString& program, const QString& fileName, int lineNumber = 1); // this is also used by the script tool widget
+    Q_INVOKABLE virtual ScriptValuePointer evaluate(const QString& program, const QString& fileName, int lineNumber = 1); // this is also used by the script tool widget
 
     /*@jsdoc
      * @function Script.evaluateInClosure
@@ -205,7 +229,7 @@ public:
      * @returns {object} Object.
      * @deprecated This function is deprecated and will be removed.
      */
-    Q_INVOKABLE QScriptValue evaluateInClosure(const QScriptValue& locals, const QScriptProgram& program);
+    Q_INVOKABLE virtual ScriptValuePointer evaluateInClosure(const ScriptValuePointer& locals, const ScriptProgramPointer& program);
 
     /*@jsdoc
      * Checks whether the application was compiled as a debug build.
@@ -245,14 +269,12 @@ public:
     // NOTE - this is used by the TypedArray implementation. we need to review this for thread safety
     ArrayBufferClass* getArrayBufferClass() { return _arrayBufferClass; }
 
-public slots:
-
     /*@jsdoc
      * @function Script.updateMemoryCost
      * @param {number} deltaSize - Delta size.
      * @deprecated This function is deprecated and will be removed.
      */
-    void updateMemoryCost(const qint64&);
+    virtual void updateMemoryCost(const qint64& deltaSize);
 
 signals:
 
@@ -373,6 +395,15 @@ signals:
     void entityScriptDetailsUpdated();
 
 protected:
+    // like `newFunction`, but allows mapping inline C++ lambdas with captures as callable QScriptValues
+    // even though the context/engine parameters are redundant in most cases, the function signature matches `newFunction`
+    // anyway so that newLambdaFunction can be used to rapidly prototype / test utility APIs and then if becoming
+    // permanent more easily promoted into regular static newFunction scenarios.
+    QScriptValue newLambdaFunction(std::function<QScriptValue(QScriptContext* context, ScriptEngineQtScript* engine)> operation,
+                                   const QScriptValue& data = QScriptValue(),
+                                   const QScriptEngine::ValueOwnership& ownership = QScriptEngine::AutoOwnership);
+
+protected:
 
     /*@jsdoc
      * @function Script.executeOnScriptThread
@@ -384,6 +415,9 @@ protected:
 
     QPointer<ScriptManager> _manager;
 
+    ScriptValuePointer _nullValue;
+    ScriptValuePointer _undefinedValue;
+
     std::atomic<bool> _isRunning { false };
 
     bool _isThreaded { false };
@@ -394,4 +428,23 @@ protected:
     ArrayBufferClass* _arrayBufferClass;
 };
 
-#endif // hifi_ScriptEngineQtScript_h
+// Lambda helps create callable QScriptValues out of std::functions:
+// (just meant for use from within the script engine itself)
+class Lambda : public QObject {
+    Q_OBJECT
+public:
+    Lambda(ScriptEngineQtScript* engine,
+           std::function<QScriptValue(QScriptContext* context, ScriptEngineQtScript* engine)> operation,
+           QScriptValue data);
+    ~Lambda();
+public slots:
+    QScriptValue call();
+    QString toString() const;
+
+private:
+    ScriptEngineQtScript* engine;
+    std::function<QScriptValue(QScriptContext* context, ScriptEngineQtScript* engine)> operation;
+    QScriptValue data;
+};
+
+#endif  // hifi_ScriptEngineQtScript_h

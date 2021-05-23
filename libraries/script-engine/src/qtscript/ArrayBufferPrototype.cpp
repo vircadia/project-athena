@@ -15,8 +15,7 @@
 
 #include <QtCore/QBuffer>
 #include <QtGui/QImage>
-
-#include "ArrayBufferClass.h"
+#include <QtScript/QScriptEngine>
 
 static const int QCOMPRESS_HEADER_POSITION = 0;
 static const int QCOMPRESS_HEADER_SIZE = 4;
