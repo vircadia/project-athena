@@ -16,17 +16,17 @@
 #include <QtCore/QObject>
 #include <QtCore/QMutex>
 #include <QtCore/QReadWriteLock>
+#include <QtCore/QSharedPointer>
+#include <QtCore/QUrl>
 
 #include <SettingHandle.h>
 #include <DependencyManager.h>
 #include <shared/ScriptInitializerMixin.h>
+#include "ScriptManager.h"
 
-#include "ScriptEngine.h"
 #include "ScriptsModel.h"
 #include "ScriptsModelFilter.h"
 #include "ScriptGatekeeper.h"
-
-class ScriptEngine;
 
 /*@jsdoc
  * The <code>ScriptDiscoveryService</code> API provides facilities to work with Interface scripts.
@@ -50,7 +50,7 @@ class ScriptEngine;
  *     <em>Read-only.</em>
  */
 
-class ScriptEngines : public QObject, public Dependency, public ScriptInitializerMixin<ScriptEnginePointer> {
+class ScriptEngines : public QObject, public Dependency, public ScriptInitializerMixin<ScriptManagerPointer> {
     Q_OBJECT
 
     Q_PROPERTY(ScriptsModel* scriptsModel READ scriptsModel CONSTANT)
@@ -58,8 +58,8 @@ class ScriptEngines : public QObject, public Dependency, public ScriptInitialize
     Q_PROPERTY(QString debugScriptUrl READ getDebugScriptUrl WRITE setDebugScriptUrl)
 
 public:
-    ScriptEngines(ScriptEngine::Context context, const QUrl& defaultScriptsOverride = QUrl());
-    int runScriptInitializers(ScriptEnginePointer engine) override;
+    ScriptEngines(ScriptManager::Context context, const QUrl& defaultScriptsOverride = QUrl());
+    int runScriptInitializers(ScriptManagerPointer manager) override;
 
     void loadScripts();
     void saveScripts();
@@ -71,7 +71,7 @@ public:
     void reloadLocalFiles();
 
     QStringList getRunningScripts();
-    ScriptEnginePointer getScriptEngine(const QUrl& scriptHash);
+    ScriptManagerPointer getScriptEngine(const QUrl& scriptHash);
 
     ScriptsModel* scriptsModel() { return &_scriptsModel; };
     ScriptsModelFilter* scriptsModelFilter() { return &_scriptsModelFilter; };
@@ -107,7 +107,7 @@ public:
      *     <code>false</code> to not close Interface.
      * @returns {object} An empty object, <code>{}</code>.
      */
-    Q_INVOKABLE ScriptEnginePointer loadScript(const QUrl& scriptFilename = QString(),
+    Q_INVOKABLE ScriptManagerPointer loadScript(const QUrl& scriptFilename = QString(),
         bool isUserLoaded = true, bool loadScriptFromEditor = false, bool activateMainWindow = false, bool reload = false, bool quitWhenFinished = false);
 
     /*@jsdoc
@@ -176,7 +176,7 @@ public:
     void shutdownScripting();
     bool isStopped() const { return _isStopped; }
 
-    void addScriptEngine(ScriptEnginePointer);
+    void addScriptEngine(ScriptManagerPointer);
     
     ScriptGatekeeper scriptGatekeeper;
 
@@ -322,26 +322,24 @@ protected slots:
     /*@jsdoc
      * @function ScriptDiscoveryService.onScriptFinished
      * @param {string} scriptName - Script name.
-     * @param {object} engine - Engine.
+     * @param {object} manager - Script manager.
      * @deprecated This function is deprecated and will be removed.
      */
     // Deprecated because it wasn't intended to be in the API.
-    void onScriptFinished(const QString& fileNameString, ScriptEnginePointer engine);
+    void onScriptFinished(const QString& fileNameString, ScriptManagerPointer manager);
 
 protected:
-    friend class ScriptEngine;
-
-    ScriptEnginePointer reloadScript(const QString& scriptName, bool isUserLoaded = true) { return loadScript(scriptName, isUserLoaded, false, false, true); }
-    void removeScriptEngine(ScriptEnginePointer);
+    ScriptManagerPointer reloadScript(const QString& scriptName, bool isUserLoaded = true) { return loadScript(scriptName, isUserLoaded, false, false, true); }
+    void removeScriptEngine(ScriptManagerPointer);
     void onScriptEngineLoaded(const QString& scriptFilename);
     void quitWhenFinished();
     void onScriptEngineError(const QString& scriptFilename);
-    void launchScriptEngine(ScriptEnginePointer);
+    void launchScriptEngine(ScriptManagerPointer);
 
-    ScriptEngine::Context _context;
-    QReadWriteLock _scriptEnginesHashLock;
-    QHash<QUrl, ScriptEnginePointer> _scriptEnginesHash;
-    QSet<ScriptEnginePointer> _allKnownScriptEngines;
+    ScriptManager::Context _context;
+    QReadWriteLock _scriptManagersHashLock;
+    QHash<QUrl, ScriptManagerPointer> _scriptManagersHash;
+    QSet<ScriptManagerPointer> _allKnownScriptManagers;
     QMutex _allScriptsMutex;
     ScriptsModel _scriptsModel;
     ScriptsModelFilter _scriptsModelFilter;

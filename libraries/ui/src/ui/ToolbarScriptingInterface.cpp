@@ -10,32 +10,32 @@
 
 #include <QtCore/QThread>
 #include <QtQuick/QQuickItem>
-#include <QtScript/QScriptValue>
-#include <QtScript/QScriptEngine>
+#include <ScriptValue.h>
+#include <ScriptEngine.h>
 
 #include <shared/QtHelpers.h>
 #include "../OffscreenUi.h"
 
-QScriptValue toolbarToScriptValue(QScriptEngine* engine, ToolbarProxy* const &in) {
+ScriptValuePointer toolbarToScriptValue(ScriptEngine* engine, ToolbarProxy* const &in) {
     if (!in) {
         return engine->undefinedValue();
     }
-    return engine->newQObject(in, QScriptEngine::QtOwnership, QScriptEngine::ExcludeDeleteLater | QScriptEngine::ExcludeChildObjects);
+    return engine->newQObject(in, ScriptEngine::QtOwnership, ScriptEngine::ExcludeDeleteLater | ScriptEngine::ExcludeChildObjects);
 }
 
-void toolbarFromScriptValue(const QScriptValue& value, ToolbarProxy* &out) {
-    out = qobject_cast<ToolbarProxy*>(value.toQObject());
+void toolbarFromScriptValue(const ScriptValuePointer& value, ToolbarProxy* &out) {
+    out = qobject_cast<ToolbarProxy*>(value->toQObject());
 }
 
-QScriptValue toolbarButtonToScriptValue(QScriptEngine* engine, ToolbarButtonProxy* const &in) {
+ScriptValuePointer toolbarButtonToScriptValue(ScriptEngine* engine, ToolbarButtonProxy* const &in) {
     if (!in) {
         return engine->undefinedValue();
     }
-    return engine->newQObject(in, QScriptEngine::QtOwnership, QScriptEngine::ExcludeDeleteLater | QScriptEngine::ExcludeChildObjects);
+    return engine->newQObject(in, ScriptEngine::QtOwnership, ScriptEngine::ExcludeDeleteLater | ScriptEngine::ExcludeChildObjects);
 }
 
-void toolbarButtonFromScriptValue(const QScriptValue& value, ToolbarButtonProxy* &out) {
-    out = qobject_cast<ToolbarButtonProxy*>(value.toQObject());
+void toolbarButtonFromScriptValue(const ScriptValuePointer& value, ToolbarButtonProxy* &out) {
+    out = qobject_cast<ToolbarButtonProxy*>(value->toQObject());
 }
 
 

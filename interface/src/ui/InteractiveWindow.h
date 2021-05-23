@@ -15,13 +15,17 @@
 #define hifi_InteractiveWindow_h
 
 #include <QtCore/QObject>
+#include <QtCore/QSharedPointer>
 #include <QtCore/QPointer>
-#include <QtScript/QScriptValue>
 #include <QQmlEngine>
 #include <ui/QmlWrapper.h>
 
 #include <glm/glm.hpp>
 #include <GLMHelpers.h>
+
+class ScriptEngine;
+class ScriptValue;
+using ScriptValuePointer = QSharedPointer<ScriptValue>;
 
 class QmlWindowProxy : public QmlWrapper {
     Q_OBJECT
@@ -408,10 +412,10 @@ private:
 
 typedef InteractiveWindow* InteractiveWindowPointer;
 
-QScriptValue interactiveWindowPointerToScriptValue(QScriptEngine* engine, const InteractiveWindowPointer& in);
-void interactiveWindowPointerFromScriptValue(const QScriptValue& object, InteractiveWindowPointer& out);
+ScriptValuePointer interactiveWindowPointerToScriptValue(ScriptEngine* engine, const InteractiveWindowPointer& in);
+void interactiveWindowPointerFromScriptValue(const ScriptValuePointer& object, InteractiveWindowPointer& out);
 
-void registerInteractiveWindowMetaType(QScriptEngine* engine);
+void registerInteractiveWindowMetaType(ScriptEngine* engine);
 
 Q_DECLARE_METATYPE(InteractiveWindowPointer)
 

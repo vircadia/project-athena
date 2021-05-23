@@ -45,7 +45,6 @@
 #define SKIN_DQ
 
 class AbstractViewStateInterface;
-class QScriptEngine;
 
 class ViewFrustum;
 

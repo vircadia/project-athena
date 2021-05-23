@@ -16,13 +16,13 @@
 #include "EntityItemProperties.h"
 #include "EntityItemPropertiesMacros.h"
 
-void BloomPropertyGroup::copyToScriptValue(const EntityPropertyFlags& desiredProperties, QScriptValue& properties, QScriptEngine* engine, bool skipDefaults, EntityItemProperties& defaultEntityProperties) const {
+void BloomPropertyGroup::copyToScriptValue(const EntityPropertyFlags& desiredProperties, ScriptValuePointer& properties, ScriptEngine* engine, bool skipDefaults, EntityItemProperties& defaultEntityProperties) const {
     COPY_GROUP_PROPERTY_TO_QSCRIPTVALUE(PROP_BLOOM_INTENSITY, Bloom, bloom, BloomIntensity, bloomIntensity);
     COPY_GROUP_PROPERTY_TO_QSCRIPTVALUE(PROP_BLOOM_THRESHOLD, Bloom, bloom, BloomThreshold, bloomThreshold);
     COPY_GROUP_PROPERTY_TO_QSCRIPTVALUE(PROP_BLOOM_SIZE, Bloom, bloom, BloomSize, bloomSize);
 }
 
-void BloomPropertyGroup::copyFromScriptValue(const QScriptValue& object, bool& _defaultSettings) {
+void BloomPropertyGroup::copyFromScriptValue(const ScriptValuePointer& object, bool& _defaultSettings) {
     COPY_GROUP_PROPERTY_FROM_QSCRIPTVALUE(bloom, bloomIntensity, float, setBloomIntensity);
     COPY_GROUP_PROPERTY_FROM_QSCRIPTVALUE(bloom, bloomThreshold, float, setBloomThreshold);
     COPY_GROUP_PROPERTY_FROM_QSCRIPTVALUE(bloom, bloomSize, float, setBloomSize);

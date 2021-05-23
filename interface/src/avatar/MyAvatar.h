@@ -17,6 +17,7 @@
 #include <glm/glm.hpp>
 
 #include <QUuid>
+#include <QtCore/QSharedPointer>
 
 #include <AvatarConstants.h>
 #include <avatars-renderer/Avatar.h>
@@ -26,7 +27,6 @@
 #include <EntityItem.h>
 #include <ThreadSafeValueCache.h>
 #include <Rig.h>
-#include <ScriptEngine.h>
 #include <SettingHandle.h>
 #include <Sound.h>
 #include <shared/Camera.h>
@@ -39,6 +39,10 @@ class AvatarActionHold;
 class ModelItemID;
 class MyHead;
 class DetailedMotionState;
+class ScriptEngine;
+class ScriptValue;
+using ScriptValuePointer = QSharedPointer<ScriptValue>;
+using ScriptEnginePointer = QSharedPointer<ScriptEngine>;
 
 /*@jsdoc
  * <p>Locomotion control types.</p>
@@ -867,7 +871,7 @@ public:
      *     MyAvatar.removeAnimationStateHandler(handler);
      * }, 100);
      */
-    Q_INVOKABLE QScriptValue addAnimationStateHandler(QScriptValue handler, QScriptValue propertiesList) { return _skeletonModel->getRig().addAnimationStateHandler(handler, propertiesList); }
+    Q_INVOKABLE ScriptValuePointer addAnimationStateHandler(ScriptValuePointer handler, ScriptValuePointer propertiesList) { return _skeletonModel->getRig().addAnimationStateHandler(handler, propertiesList); }
 
     /*@jsdoc
      * Removes an animation state handler function.
@@ -875,7 +879,7 @@ public:
      * @param {number} handler - The ID of the animation state handler function to remove.
      */
     // Removes a handler previously added by addAnimationStateHandler.
-    Q_INVOKABLE void removeAnimationStateHandler(QScriptValue handler) { _skeletonModel->getRig().removeAnimationStateHandler(handler); }
+    Q_INVOKABLE void removeAnimationStateHandler(ScriptValuePointer handler) { _skeletonModel->getRig().removeAnimationStateHandler(handler); }
 
 
     /*@jsdoc
@@ -3096,7 +3100,7 @@ private:
     //
     // keep a ScriptEngine around so we don't have to instantiate on the fly (these are very slow to create/delete)
     mutable std::mutex _scriptEngineLock;
-    QScriptEngine* _scriptEngine { nullptr };
+    ScriptEnginePointer _scriptEngine { nullptr };
     bool _needToSaveAvatarEntitySettings { false };
 
     bool _reactionTriggers[NUM_AVATAR_TRIGGER_REACTIONS] { false, false };
@@ -3113,11 +3117,11 @@ private:
     QTimer _addAvatarEntitiesToTreeTimer;
 };
 
-QScriptValue audioListenModeToScriptValue(QScriptEngine* engine, const AudioListenerMode& audioListenerMode);
-void audioListenModeFromScriptValue(const QScriptValue& object, AudioListenerMode& audioListenerMode);
+ScriptValuePointer audioListenModeToScriptValue(ScriptEngine* engine, const AudioListenerMode& audioListenerMode);
+void audioListenModeFromScriptValue(const ScriptValuePointer& object, AudioListenerMode& audioListenerMode);
 
-QScriptValue driveKeysToScriptValue(QScriptEngine* engine, const MyAvatar::DriveKeys& driveKeys);
-void driveKeysFromScriptValue(const QScriptValue& object, MyAvatar::DriveKeys& driveKeys);
+ScriptValuePointer driveKeysToScriptValue(ScriptEngine* engine, const MyAvatar::DriveKeys& driveKeys);
+void driveKeysFromScriptValue(const ScriptValuePointer& object, MyAvatar::DriveKeys& driveKeys);
 
 bool isWearableEntity(const EntityItemPointer& entity);
 

@@ -10,8 +10,9 @@
 
 #include <QtCore/QThread>
 
-#include <QtScript/QScriptContext>
-#include <QtScript/QScriptEngine>
+#include <ScriptContext.h>
+#include <ScriptEngine.h>
+#include <ScriptManager.h>
 
 #include <shared/QtHelpers.h>
 
@@ -19,7 +20,7 @@ static const char* const URL_PROPERTY = "source";
 static const char* const SCRIPT_PROPERTY = "scriptUrl";
 
 // Method called by Qt scripts to create a new web window in the overlay
-QScriptValue QmlWebWindowClass::internal_constructor(QScriptContext* context, QScriptEngine* engine, bool restricted) {
+ScriptValuePointer QmlWebWindowClass::internal_constructor(ScriptContext* context, ScriptEngine* engine, bool restricted) {
     auto properties = parseArguments(context);
     QmlWebWindowClass* retVal = new QmlWebWindowClass(restricted);
     Q_ASSERT(retVal);
@@ -29,7 +30,8 @@ QScriptValue QmlWebWindowClass::internal_constructor(QScriptContext* context, QS
     } else {
         retVal->initQml(properties);
     }
-    connect(engine, &QScriptEngine::destroyed, retVal, &QmlWindowClass::deleteLater);
+    auto manager = engine->manager();
+    connect(manager, &ScriptManager::destroyed, retVal, &QmlWindowClass::deleteLater);
     return engine->newQObject(retVal);
 }
 

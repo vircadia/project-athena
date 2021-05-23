@@ -11,22 +11,24 @@
 #define hifi_Controllers_ScriptConditional_h
 
 #include <QtCore/QObject>
-
-#include <QtScript/QScriptValue>
+#include <QtCore/QSharedPointer>
 
 #include "../Conditional.h"
+
+class ScriptValue;
+using ScriptValuePointer = QSharedPointer<ScriptValue>;
 
 namespace controller {
 
 class ScriptConditional : public QObject, public Conditional {
     Q_OBJECT;
 public:
-    ScriptConditional(const QScriptValue& callable) : _callable(callable) { }
+    ScriptConditional(const ScriptValuePointer& callable) : _callable(callable) {}
     virtual bool satisfied() override;
 protected:
     Q_INVOKABLE void updateValue();
 private:
-    QScriptValue _callable;
+    ScriptValuePointer _callable;
     bool _lastValue { false };
 };
 

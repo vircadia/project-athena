@@ -29,6 +29,8 @@
 #include "EntityTransformNode.h"
 
 #include <ScriptEngine.h>
+#include <ScriptEngineCast.h>
+#include <ScriptValueUtils.h>
 
 static const float WEB_TOUCH_Y_OFFSET = 0.105f;  // how far forward (or back with a negative number) to slide stylus in hand
 static const glm::vec3 TIP_OFFSET = glm::vec3(0.0f, StylusPick::WEB_STYLUS_LENGTH - WEB_TOUCH_Y_OFFSET, 0.0f);
@@ -425,11 +427,11 @@ void PickScriptingInterface::setPrecisionPicking(unsigned int uid, bool precisio
     DependencyManager::get<PickManager>()->setPrecisionPicking(uid, precisionPicking);
 }
 
-void PickScriptingInterface::setIgnoreItems(unsigned int uid, const QScriptValue& ignoreItems) {
+void PickScriptingInterface::setIgnoreItems(unsigned int uid, const ScriptValuePointer& ignoreItems) {
     DependencyManager::get<PickManager>()->setIgnoreItems(uid, qVectorQUuidFromScriptValue(ignoreItems));
 }
 
-void PickScriptingInterface::setIncludeItems(unsigned int uid, const QScriptValue& includeItems) {
+void PickScriptingInterface::setIncludeItems(unsigned int uid, const ScriptValuePointer& includeItems) {
     DependencyManager::get<PickManager>()->setIncludeItems(uid, qVectorQUuidFromScriptValue(includeItems));
 }
 
@@ -445,23 +447,23 @@ bool PickScriptingInterface::isMouse(unsigned int uid) {
     return DependencyManager::get<PickManager>()->isMouse(uid);
 }
 
-QScriptValue pickTypesToScriptValue(QScriptEngine* engine, const PickQuery::PickType& pickType) {
-    return pickType;
+ScriptValuePointer pickTypesToScriptValue(ScriptEngine* engine, const PickQuery::PickType& pickType) {
+    return engine->newValue(pickType);
 }
 
-void pickTypesFromScriptValue(const QScriptValue& object, PickQuery::PickType& pickType) {
-    pickType = static_cast<PickQuery::PickType>(object.toUInt16());
+void pickTypesFromScriptValue(const ScriptValuePointer& object, PickQuery::PickType& pickType) {
+    pickType = static_cast<PickQuery::PickType>(object->toUInt16());
 }
 
-void PickScriptingInterface::registerMetaTypes(QScriptEngine* engine) {
-    QScriptValue pickTypes = engine->newObject();
+void PickScriptingInterface::registerMetaTypes(ScriptEngine* engine) {
+    ScriptValuePointer pickTypes = engine->newObject();
     auto metaEnum = QMetaEnum::fromType<PickQuery::PickType>();
     for (int i = 0; i < PickQuery::PickType::NUM_PICK_TYPES; ++i) {
-        pickTypes.setProperty(metaEnum.key(i), metaEnum.value(i));
+        pickTypes->setProperty(metaEnum.key(i), metaEnum.value(i));
     }
-    engine->globalObject().setProperty("PickType", pickTypes);
+    engine->globalObject()->setProperty("PickType", pickTypes);
 
-    qScriptRegisterMetaType(engine, pickTypesToScriptValue, pickTypesFromScriptValue);
+    scriptRegisterMetaType(engine, pickTypesToScriptValue, pickTypesFromScriptValue);
 }
 
 unsigned int PickScriptingInterface::getPerFrameTimeBudget() const {

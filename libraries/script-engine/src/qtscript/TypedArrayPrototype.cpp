@@ -11,6 +11,8 @@
 
 #include "TypedArrayPrototype.h"
 
+#include <glm/common.hpp>
+
 #include "TypedArrays.h"
 
 Q_DECLARE_METATYPE(QByteArray*)

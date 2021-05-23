@@ -118,27 +118,27 @@ DownloadInfoResult::DownloadInfoResult() :
  * @property {number[]} downloading - The download percentage remaining of each asset currently downloading.
  * @property {number} pending - The number of assets pending download.
  */
-QScriptValue DownloadInfoResultToScriptValue(QScriptEngine* engine, const DownloadInfoResult& result) {
-    QScriptValue object = engine->newObject();
+ScriptValuePointer DownloadInfoResultToScriptValue(ScriptEngine* engine, const DownloadInfoResult& result) {
+    ScriptValuePointer object = engine->newObject();
 
-    QScriptValue array = engine->newArray(result.downloading.count());
+    ScriptValuePointer array = engine->newArray(result.downloading.count());
     for (int i = 0; i < result.downloading.count(); i += 1) {
-        array.setProperty(i, result.downloading[i]);
+        array->setProperty(i, result.downloading[i]);
     }
 
-    object.setProperty("downloading", array);
-    object.setProperty("pending", result.pending);
+    object->setProperty("downloading", array);
+    object->setProperty("pending", result.pending);
     return object;
 }
 
-void DownloadInfoResultFromScriptValue(const QScriptValue& object, DownloadInfoResult& result) {
-    QList<QVariant> downloading = object.property("downloading").toVariant().toList();
+void DownloadInfoResultFromScriptValue(const ScriptValuePointer& object, DownloadInfoResult& result) {
+    QList<QVariant> downloading = object->property("downloading")->toVariant().toList();
     result.downloading.clear();
     for (int i = 0; i < downloading.count(); i += 1) {
         result.downloading.append(downloading[i].toFloat());
     }
 
-    result.pending = object.property("pending").toVariant().toFloat();
+    result.pending = object->property("pending")->toVariant().toFloat();
 }
 
 DownloadInfoResult AccountServicesScriptingInterface::getDownloadInfo() {

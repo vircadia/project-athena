@@ -12,7 +12,6 @@
 #ifndef hifi_RegisteredMetaTypes_h
 #define hifi_RegisteredMetaTypes_h
 
-#include <QtScript/QScriptEngine>
 #include <QtCore/QUuid>
 #include <QtCore/QUrl>
 
@@ -43,8 +42,6 @@ Q_DECLARE_METATYPE(AACube)
 Q_DECLARE_METATYPE(std::function<void()>);
 Q_DECLARE_METATYPE(std::function<QVariant()>);
 
-void registerMetaTypes(QScriptEngine* engine);
-
 // Mat4
 /*@jsdoc
  * A 4 x 4 matrix, typically containing a scale, rotation, and translation transform. See also the {@link Mat4(0)|Mat4} object.
@@ -67,9 +64,6 @@ void registerMetaTypes(QScriptEngine* engine);
  * @property {number} r2c3 - Row 2, column 3 value.
  * @property {number} r3c3 - Row 3, column 3 value.
  */
-QScriptValue mat4toScriptValue(QScriptEngine* engine, const glm::mat4& mat4);
-void mat4FromScriptValue(const QScriptValue& object, glm::mat4& mat4);
-
 QVariant mat4ToVariant(const glm::mat4& mat4);
 glm::mat4 mat4FromVariant(const QVariant& object, bool& valid);
 glm::mat4 mat4FromVariant(const QVariant& object);
@@ -88,9 +82,6 @@ glm::mat4 mat4FromVariant(const QVariant& object);
 * var color = Entities.getEntityProperties(<id>).materialMappingPos;             // { x: 0.7, y: 0.7 }
 * color.v = 0.8;                                                                 // { x: 0.7, y: 0.8 }
 */
-QScriptValue vec2ToScriptValue(QScriptEngine* engine, const glm::vec2& vec2);
-void vec2FromScriptValue(const QScriptValue& object, glm::vec2& vec2);
-
 QVariant vec2ToVariant(const glm::vec2& vec2);
 glm::vec2 vec2FromVariant(const QVariant& object, bool& valid);
 glm::vec2 vec2FromVariant(const QVariant& object);
@@ -115,10 +106,6 @@ glm::vec2 vec2FromVariant(const QVariant& object);
 * Entities.editEntity(<id>, { position: "red"});                                // { x: 255, y: 0, z: 0 }
 * Entities.editEntity(<id>, { position: "#00FF00"});                            // { x: 0, y: 255, z: 0 }
 */
-QScriptValue vec3ToScriptValue(QScriptEngine* engine, const glm::vec3& vec3);
-QScriptValue vec3ColorToScriptValue(QScriptEngine* engine, const glm::vec3& vec3);
-void vec3FromScriptValue(const QScriptValue& object, glm::vec3& vec3);
-
 QVariant vec3toVariant(const glm::vec3& vec3);
 glm::vec3 vec3FromVariant(const QVariant &object, bool& valid);
 glm::vec3 vec3FromVariant(const QVariant &object);
@@ -161,10 +148,6 @@ glm::vec3 vec3FromVariant(const QVariant &object);
  * Entities.editEntity(<id>, { color: "red"});                                // { red: 255, green: 0, blue: 0 }
  * Entities.editEntity(<id>, { color: "#00FF00"});                            // { red: 0, green: 255, blue: 0 }
  */
-QScriptValue u8vec3ToScriptValue(QScriptEngine* engine, const glm::u8vec3& vec3);
-QScriptValue u8vec3ColorToScriptValue(QScriptEngine* engine, const glm::u8vec3& vec3);
-void u8vec3FromScriptValue(const QScriptValue& object, glm::u8vec3& vec3);
-
 QVariant u8vec3toVariant(const glm::u8vec3& vec3);
 QVariant u8vec3ColortoVariant(const glm::u8vec3& vec3);
 glm::u8vec3 u8vec3FromVariant(const QVariant &object, bool& valid);
@@ -179,16 +162,11 @@ glm::u8vec3 u8vec3FromVariant(const QVariant &object);
  * @property {number} z - Z-coordinate of the vector.
  * @property {number} w - W-coordinate of the vector.
  */
-QScriptValue vec4toScriptValue(QScriptEngine* engine, const glm::vec4& vec4);
-void vec4FromScriptValue(const QScriptValue& object, glm::vec4& vec4);
 QVariant vec4toVariant(const glm::vec4& vec4);
 glm::vec4 vec4FromVariant(const QVariant &object, bool& valid);
 glm::vec4 vec4FromVariant(const QVariant &object);
 
 // Quaternions
-QScriptValue quatToScriptValue(QScriptEngine* engine, const glm::quat& quat);
-void quatFromScriptValue(const QScriptValue &object, glm::quat& quat);
-
 QVariant quatToVariant(const glm::quat& quat);
 glm::quat quatFromVariant(const QVariant &object, bool& isValid);
 glm::quat quatFromVariant(const QVariant &object);
@@ -201,58 +179,13 @@ glm::quat quatFromVariant(const QVariant &object);
  * @property {number} width - Width of the rectangle.
  * @property {number} height - Height of the rectangle.
  */
-QScriptValue qRectToScriptValue(QScriptEngine* engine, const QRect& rect);
-void qRectFromScriptValue(const QScriptValue& object, QRect& rect);
 QRect qRectFromVariant(const QVariant& object, bool& isValid);
 QRect qRectFromVariant(const QVariant& object);
 QVariant qRectToVariant(const QRect& rect);
 
-QScriptValue qRectFToScriptValue(QScriptEngine* engine, const QRectF& rect);
-void qRectFFromScriptValue(const QScriptValue& object, QRectF& rect);
 QRectF qRectFFromVariant(const QVariant& object, bool& isValid);
 QRectF qRectFFromVariant(const QVariant& object);
 QVariant qRectFToVariant(const QRectF& rect);
-
-// QColor
-QScriptValue qColorToScriptValue(QScriptEngine* engine, const QColor& color);
-void qColorFromScriptValue(const QScriptValue& object, QColor& color);
-
-QScriptValue qURLToScriptValue(QScriptEngine* engine, const QUrl& url);
-void qURLFromScriptValue(const QScriptValue& object, QUrl& url);
-
-// vector<vec3>
-Q_DECLARE_METATYPE(QVector<glm::vec3>)
-QScriptValue qVectorVec3ToScriptValue(QScriptEngine* engine, const QVector<glm::vec3>& vector);
-QScriptValue qVectorVec3ColorToScriptValue(QScriptEngine* engine, const QVector<glm::vec3>& vector);
-void qVectorVec3FromScriptValue(const QScriptValue& array, QVector<glm::vec3>& vector);
-QVector<glm::vec3> qVectorVec3FromScriptValue(const QScriptValue& array);
-
-// vector<quat>
-Q_DECLARE_METATYPE(QVector<glm::quat>)
-QScriptValue qVectorQuatToScriptValue(QScriptEngine* engine, const QVector<glm::quat>& vector);
-void qVectorQuatFromScriptValue(const QScriptValue& array, QVector<glm::quat>& vector);
-QVector<glm::quat> qVectorQuatFromScriptValue(const QScriptValue& array);
-
-// vector<bool>
-QScriptValue qVectorBoolToScriptValue(QScriptEngine* engine, const QVector<bool>& vector);
-void qVectorBoolFromScriptValue(const QScriptValue& array, QVector<bool>& vector);
-QVector<bool> qVectorBoolFromScriptValue(const QScriptValue& array);
-
-// vector<float>
-QScriptValue qVectorFloatToScriptValue(QScriptEngine* engine, const QVector<float>& vector);
-void qVectorFloatFromScriptValue(const QScriptValue& array, QVector<float>& vector);
-QVector<float> qVectorFloatFromScriptValue(const QScriptValue& array);
-
-// vector<uint32_t>
-QScriptValue qVectorIntToScriptValue(QScriptEngine* engine, const QVector<uint32_t>& vector);
-void qVectorIntFromScriptValue(const QScriptValue& array, QVector<uint32_t>& vector);
-
-QScriptValue qVectorQUuidToScriptValue(QScriptEngine* engine, const QVector<QUuid>& vector);
-void qVectorQUuidFromScriptValue(const QScriptValue& array, QVector<QUuid>& vector);
-QVector<QUuid> qVectorQUuidFromScriptValue(const QScriptValue& array);
-
-QScriptValue aaCubeToScriptValue(QScriptEngine* engine, const AACube& aaCube);
-void aaCubeFromScriptValue(const QScriptValue &object, AACube& aaCube);
 
 // MathPicks also have to overide operator== for their type
 class MathPick {
@@ -292,8 +225,6 @@ public:
     }
 };
 Q_DECLARE_METATYPE(PickRay)
-QScriptValue pickRayToScriptValue(QScriptEngine* engine, const PickRay& pickRay);
-void pickRayFromScriptValue(const QScriptValue& object, PickRay& pickRay);
 
 /*@jsdoc
  * The tip of a stylus.
@@ -644,22 +575,6 @@ public:
     glm::vec3 velocityChange;
 };
 Q_DECLARE_METATYPE(Collision)
-QScriptValue collisionToScriptValue(QScriptEngine* engine, const Collision& collision);
-void collisionFromScriptValue(const QScriptValue &object, Collision& collision);
-
-/*@jsdoc
- * UUIDs (Universally Unique IDentifiers) are used to uniquely identify entities, avatars, and the like. They are represented 
- * in JavaScript as strings in the format, <code>"{nnnnnnnn-nnnn-nnnn-nnnn-nnnnnnnnnnnn}"</code>, where the "n"s are
- * hexadecimal digits.
- * @typedef {string} Uuid
- */
-//Q_DECLARE_METATYPE(QUuid) // don't need to do this for QUuid since it's already a meta type
-QScriptValue quuidToScriptValue(QScriptEngine* engine, const QUuid& uuid);
-void quuidFromScriptValue(const QScriptValue& object, QUuid& uuid);
-
-//Q_DECLARE_METATYPE(QSizeF) // Don't need to to this becase it's arleady a meta type
-QScriptValue qSizeFToScriptValue(QScriptEngine* engine, const QSizeF& qSizeF);
-void qSizeFFromScriptValue(const QScriptValue& object, QSizeF& qSizeF);
 
 class AnimationDetails {
 public:
@@ -681,8 +596,6 @@ public:
     bool allowTranslation;
 };
 Q_DECLARE_METATYPE(AnimationDetails);
-QScriptValue animationDetailsToScriptValue(QScriptEngine* engine, const AnimationDetails& event);
-void animationDetailsFromScriptValue(const QScriptValue& object, AnimationDetails& event);
 
 namespace graphics {
     class Mesh;
@@ -733,12 +646,6 @@ class MeshProxyList : public QList<MeshProxy*> {}; // typedef and using fight wi
 Q_DECLARE_METATYPE(MeshProxyList);
 
 
-QScriptValue meshToScriptValue(QScriptEngine* engine, MeshProxy* const &in);
-void meshFromScriptValue(const QScriptValue& value, MeshProxy* &out);
-
-QScriptValue meshesToScriptValue(QScriptEngine* engine, const MeshProxyList &in);
-void meshesFromScriptValue(const QScriptValue& value, MeshProxyList &out);
-
 class MeshFace {
 
 public:
@@ -752,15 +659,8 @@ public:
 Q_DECLARE_METATYPE(MeshFace)
 Q_DECLARE_METATYPE(QVector<MeshFace>)
 
-QScriptValue meshFaceToScriptValue(QScriptEngine* engine, const MeshFace &meshFace);
-void meshFaceFromScriptValue(const QScriptValue &object, MeshFace& meshFaceResult);
-QScriptValue qVectorMeshFaceToScriptValue(QScriptEngine* engine, const QVector<MeshFace>& vector);
-void qVectorMeshFaceFromScriptValue(const QScriptValue& array, QVector<MeshFace>& result);
-
 QVariantMap parseTexturesToMap(QString textures, const QVariantMap& defaultTextures);
 
 Q_DECLARE_METATYPE(StencilMaskMode)
-QScriptValue stencilMaskModeToScriptValue(QScriptEngine* engine, const StencilMaskMode& stencilMode);
-void stencilMaskModeFromScriptValue(const QScriptValue& object, StencilMaskMode& stencilMode);
 
 #endif // hifi_RegisteredMetaTypes_h

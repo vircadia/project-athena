@@ -18,6 +18,8 @@
 #include <UUID.h>
 
 #include "RegisteredMetaTypes.h"
+#include <ScriptValue.h>
+#include <ScriptValueUtils.h>
 
 int entityItemIDTypeID = qRegisterMetaType<EntityItemID>();
 
@@ -42,27 +44,27 @@ EntityItemID EntityItemID::readEntityItemIDFromBuffer(const unsigned char* data,
     return result;
 }
 
-QScriptValue EntityItemID::toScriptValue(QScriptEngine* engine) const { 
+ScriptValuePointer EntityItemID::toScriptValue(ScriptEngine* engine) const { 
     return EntityItemIDtoScriptValue(engine, *this); 
 }
 
-QScriptValue EntityItemIDtoScriptValue(QScriptEngine* engine, const EntityItemID& id) {
+ScriptValuePointer EntityItemIDtoScriptValue(ScriptEngine* engine, const EntityItemID& id) {
     return quuidToScriptValue(engine, id);
 }
 
-void EntityItemIDfromScriptValue(const QScriptValue &object, EntityItemID& id) {
+void EntityItemIDfromScriptValue(const ScriptValuePointer &object, EntityItemID& id) {
     quuidFromScriptValue(object, id);
 }
 
-QVector<EntityItemID> qVectorEntityItemIDFromScriptValue(const QScriptValue& array) {
-    if (!array.isArray()) {
+QVector<EntityItemID> qVectorEntityItemIDFromScriptValue(const ScriptValuePointer& array) {
+    if (!array->isArray()) {
         return QVector<EntityItemID>();
     }
     QVector<EntityItemID> newVector;
-    int length = array.property("length").toInteger();
+    int length = array->property("length")->toInteger();
     newVector.reserve(length);
     for (int i = 0; i < length; i++) {
-        QString uuidAsString = array.property(i).toString();
+        QString uuidAsString = array->property(i)->toString();
         EntityItemID fromString(uuidAsString);
         newVector << fromString;
     }

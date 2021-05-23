@@ -20,6 +20,8 @@
 
 #include <SharedUtil.h>
 #include <PathUtils.h>
+#include <ScriptEngine.h>
+#include <ScriptValue.h>
 
 #include <graphics-scripting/GraphicsScriptingInterface.h>
 
@@ -28,6 +30,7 @@ std::function<QThread*()> MaterialBaker::_getNextOvenWorkerThreadOperator;
 static int materialNum = 0;
 
 MaterialBaker::MaterialBaker(const QString& materialData, bool isURL, const QString& bakedOutputDir, QUrl destinationPath) :
+    _scriptEngine(newScriptEngine()),
     _materialData(materialData),
     _isURL(isURL),
     _destinationPath(destinationPath),
@@ -209,13 +212,13 @@ void MaterialBaker::outputMaterial() {
         if (_materialResource->parsedMaterials.networkMaterials.size() == 1) {
             auto networkMaterial = _materialResource->parsedMaterials.networkMaterials.begin();
             auto scriptableMaterial = scriptable::ScriptableMaterial(networkMaterial->second);
-            QVariant materialVariant = scriptable::scriptableMaterialToScriptValue(&_scriptEngine, scriptableMaterial).toVariant();
+            QVariant materialVariant = scriptable::scriptableMaterialToScriptValue(_scriptEngine.data(), scriptableMaterial)->toVariant();
             json.insert("materials", QJsonDocument::fromVariant(materialVariant).object());
         } else {
             QJsonArray materialArray;
             for (auto networkMaterial : _materialResource->parsedMaterials.networkMaterials) {
                 auto scriptableMaterial = scriptable::ScriptableMaterial(networkMaterial.second);
-                QVariant materialVariant = scriptable::scriptableMaterialToScriptValue(&_scriptEngine, scriptableMaterial).toVariant();
+                QVariant materialVariant = scriptable::scriptableMaterialToScriptValue(_scriptEngine.data(), scriptableMaterial)->toVariant();
                 materialArray.append(QJsonDocument::fromVariant(materialVariant).object());
             }
             json.insert("materials", materialArray);

@@ -14,11 +14,12 @@
 
 #include "WebSocketClass.h"
 
+#include "ScriptContext.h"
 #include "ScriptEngine.h"
-
 #include "ScriptEngineLogging.h"
+#include "ScriptValue.h"
 
-WebSocketClass::WebSocketClass(QScriptEngine* engine, QString url) :
+WebSocketClass::WebSocketClass(ScriptEngine* engine, QString url) :
     _webSocket(new QWebSocket()),
     _engine(engine)
 {
@@ -26,7 +27,7 @@ WebSocketClass::WebSocketClass(QScriptEngine* engine, QString url) :
     _webSocket->open(url);
 }
 
-WebSocketClass::WebSocketClass(QScriptEngine* engine, QWebSocket* qWebSocket) :
+WebSocketClass::WebSocketClass(ScriptEngine* engine, QWebSocket* qWebSocket) :
     _webSocket(qWebSocket),
     _engine(engine)
 {
@@ -43,24 +44,24 @@ void WebSocketClass::initialize() {
     _binaryType = QStringLiteral("arraybuffer");
 }
 
-QScriptValue WebSocketClass::constructor(QScriptContext* context, QScriptEngine* engine) {
+ScriptValuePointer WebSocketClass::constructor(ScriptContext* context, ScriptEngine* engine) {
     QString url;
     if (context->argumentCount() > 0) {
-        url = context->argument(0).toString();
+        url = context->argument(0)->toString();
     }
-    return engine->newQObject(new WebSocketClass(engine, url), QScriptEngine::ScriptOwnership);
+    return engine->newQObject(new WebSocketClass(engine, url), ScriptEngine::ScriptOwnership);
 }
 
 WebSocketClass::~WebSocketClass() {
     _webSocket->deleteLater();
 }
 
-void WebSocketClass::send(QScriptValue message) {
-    if (message.isObject()) {
-        QByteArray ba = qscriptvalue_cast<QByteArray>(message);
+void WebSocketClass::send(ScriptValuePointer message) {
+    if (message->isObject()) {
+        QByteArray ba = scriptvalue_cast<QByteArray>(message);
         _webSocket->sendBinaryMessage(ba);
     } else {
-        _webSocket->sendTextMessage(message.toString());
+        _webSocket->sendTextMessage(message->toString());
     }
 }
 
@@ -90,14 +91,14 @@ void WebSocketClass::close(QWebSocketProtocol::CloseCode closeCode, QString reas
  */
 void WebSocketClass::handleOnClose() {
     bool hasError = (_webSocket->error() != QAbstractSocket::UnknownSocketError);
-    if (_onCloseEvent.isFunction()) {
-        QScriptValueList args;
-        QScriptValue arg = _engine->newObject();
-        arg.setProperty("code", hasError ? QWebSocketProtocol::CloseCodeAbnormalDisconnection : _webSocket->closeCode());
-        arg.setProperty("reason", _webSocket->closeReason());
-        arg.setProperty("wasClean", !hasError);
+    if (_onCloseEvent->isFunction()) {
+        ScriptValueList args;
+        ScriptValuePointer arg = _engine->newObject();
+        arg->setProperty("code", hasError ? QWebSocketProtocol::CloseCodeAbnormalDisconnection : _webSocket->closeCode());
+        arg->setProperty("reason", _webSocket->closeReason());
+        arg->setProperty("wasClean", !hasError);
         args << arg;
-        _onCloseEvent.call(QScriptValue(), args);
+        _onCloseEvent->call(ScriptValuePointer(), args);
     }
 }
 
@@ -153,8 +154,8 @@ void WebSocketClass::handleOnClose() {
  * @typedef {number} WebSocket.SocketError
  */
 void WebSocketClass::handleOnError(QAbstractSocket::SocketError error) {
-    if (_onErrorEvent.isFunction()) {
-        _onErrorEvent.call();
+    if (_onErrorEvent->isFunction()) {
+        _onErrorEvent->call();
     }
 }
 
@@ -169,31 +170,26 @@ void WebSocketClass::handleOnError(QAbstractSocket::SocketError error) {
  * @property {string} data - The message content.
  */
 void WebSocketClass::handleOnMessage(const QString& message) {
-    if (_onMessageEvent.isFunction()) {
-        QScriptValueList args;
-        QScriptValue arg = _engine->newObject();
-        arg.setProperty("data", message);
+    if (_onMessageEvent->isFunction()) {
+        ScriptValueList args;
+        ScriptValuePointer arg = _engine->newObject();
+        arg->setProperty("data", message);
         args << arg;
-        _onMessageEvent.call(QScriptValue(), args);
+        _onMessageEvent->call(ScriptValuePointer(), args);
     }
 }
 
 void WebSocketClass::handleOnBinaryMessage(const QByteArray& message) {
-    if (_onMessageEvent.isFunction()) {
-        QScriptValueList args;
-        QScriptValue arg = _engine->newObject();
-        QScriptValue data = _engine->newVariant(QVariant::fromValue(message));
-        QScriptValue ctor = _engine->globalObject().property("ArrayBuffer");
-        auto array = qscriptvalue_cast<ArrayBufferClass*>(ctor.data());
-        QScriptValue arrayBuffer;
-        if (!array) {
+    if (_onMessageEvent->isFunction()) {
+        ScriptValueList args;
+        ScriptValuePointer arg = _engine->newObject();
+        ScriptValuePointer arrayBuffer = _engine->newArrayBuffer(message);
+        if (arrayBuffer->isUndefined()) {
             qCWarning(scriptengine) << "WebSocketClass::handleOnBinaryMessage !ArrayBuffer";
-        } else {
-            arrayBuffer = _engine->newObject(array, data);
         }
-        arg.setProperty("data", arrayBuffer);
+        arg->setProperty("data", arrayBuffer);
         args << arg;
-        _onMessageEvent.call(QScriptValue(), args);
+        _onMessageEvent->call(ScriptValuePointer(), args);
     }
 }
 
@@ -202,31 +198,31 @@ void WebSocketClass::handleOnBinaryMessage(const QByteArray& message) {
  * @callback WebSocket~onOpenCallback
  */
 void WebSocketClass::handleOnOpen() {
-    if (_onOpenEvent.isFunction()) {
-        _onOpenEvent.call();
+    if (_onOpenEvent->isFunction()) {
+        _onOpenEvent->call();
     }
 }
 
-QScriptValue qWSCloseCodeToScriptValue(QScriptEngine* engine, const QWebSocketProtocol::CloseCode &closeCode) {
-    return closeCode;
+ScriptValuePointer qWSCloseCodeToScriptValue(ScriptEngine* engine, const QWebSocketProtocol::CloseCode &closeCode) {
+    return engine->newValue(closeCode);
 }
 
-void qWSCloseCodeFromScriptValue(const QScriptValue &object, QWebSocketProtocol::CloseCode &closeCode) {
-    closeCode = (QWebSocketProtocol::CloseCode)object.toUInt16();
+void qWSCloseCodeFromScriptValue(const ScriptValuePointer &object, QWebSocketProtocol::CloseCode &closeCode) {
+    closeCode = (QWebSocketProtocol::CloseCode)object->toUInt16();
 }
 
-QScriptValue webSocketToScriptValue(QScriptEngine* engine, WebSocketClass* const &in) {
-    return engine->newQObject(in, QScriptEngine::ScriptOwnership);
+ScriptValuePointer webSocketToScriptValue(ScriptEngine* engine, WebSocketClass* const &in) {
+    return engine->newQObject(in, ScriptEngine::ScriptOwnership);
 }
 
-void webSocketFromScriptValue(const QScriptValue &object, WebSocketClass* &out) {
-    out = qobject_cast<WebSocketClass*>(object.toQObject());
+void webSocketFromScriptValue(const ScriptValuePointer &object, WebSocketClass* &out) {
+    out = qobject_cast<WebSocketClass*>(object->toQObject());
 }
 
-QScriptValue wscReadyStateToScriptValue(QScriptEngine* engine, const WebSocketClass::ReadyState& readyState) {
-    return readyState;
+ScriptValuePointer wscReadyStateToScriptValue(ScriptEngine* engine, const WebSocketClass::ReadyState& readyState) {
+    return engine->newValue(readyState);
 }
 
-void wscReadyStateFromScriptValue(const QScriptValue& object, WebSocketClass::ReadyState& readyState) {
-    readyState = (WebSocketClass::ReadyState)object.toUInt16();
+void wscReadyStateFromScriptValue(const ScriptValuePointer& object, WebSocketClass::ReadyState& readyState) {
+    readyState = (WebSocketClass::ReadyState)object->toUInt16();
 }

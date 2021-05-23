@@ -10,9 +10,12 @@
 #ifndef hifi_Controllers_ScriptEndpoint_h
 #define hifi_Controllers_ScriptEndpoint_h
 
-#include <QtScript/QScriptValue>
+#include <QtCore/QSharedPointer>
 
 #include "../Endpoint.h"
+
+class ScriptValue;
+using ScriptValuePointer = QSharedPointer<ScriptValue>;
 
 namespace controller {
 
@@ -20,7 +23,7 @@ class ScriptEndpoint : public Endpoint {
     Q_OBJECT;
 public:
     using Endpoint::apply;
-    ScriptEndpoint(const QScriptValue& callable)
+    ScriptEndpoint(const ScriptValuePointer& callable)
         : Endpoint(Input::INVALID_INPUT), _callable(callable) {
     }
 
@@ -39,7 +42,7 @@ protected:
     Q_INVOKABLE void updatePose();
     Q_INVOKABLE virtual void internalApply(const Pose& newValue, int sourceID);
 private:
-    QScriptValue _callable;
+    ScriptValuePointer _callable;
     float _lastValueRead { 0.0f };
     AxisValue _lastValueWritten { 0.0f, 0, false };
 

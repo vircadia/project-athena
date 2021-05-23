@@ -16,7 +16,7 @@
 #include "EntityItemProperties.h"
 #include "EntityItemPropertiesMacros.h"
 
-void HazePropertyGroup::copyToScriptValue(const EntityPropertyFlags& desiredProperties, QScriptValue& properties, QScriptEngine* engine, bool skipDefaults, EntityItemProperties& defaultEntityProperties) const {
+void HazePropertyGroup::copyToScriptValue(const EntityPropertyFlags& desiredProperties, ScriptValuePointer& properties, ScriptEngine* engine, bool skipDefaults, EntityItemProperties& defaultEntityProperties) const {
     COPY_GROUP_PROPERTY_TO_QSCRIPTVALUE(PROP_HAZE_RANGE, Haze, haze, HazeRange, hazeRange);
     COPY_GROUP_PROPERTY_TO_QSCRIPTVALUE_TYPED(PROP_HAZE_COLOR, Haze, haze, HazeColor, hazeColor, u8vec3Color);
     COPY_GROUP_PROPERTY_TO_QSCRIPTVALUE_TYPED(PROP_HAZE_GLARE_COLOR, Haze, haze, HazeGlareColor, hazeGlareColor, u8vec3Color);
@@ -34,7 +34,7 @@ void HazePropertyGroup::copyToScriptValue(const EntityPropertyFlags& desiredProp
     COPY_GROUP_PROPERTY_TO_QSCRIPTVALUE(PROP_HAZE_KEYLIGHT_ALTITUDE, Haze, haze, HazeKeyLightAltitude, hazeKeyLightAltitude);
 }
 
-void HazePropertyGroup::copyFromScriptValue(const QScriptValue& object, bool& _defaultSettings) {
+void HazePropertyGroup::copyFromScriptValue(const ScriptValuePointer& object, bool& _defaultSettings) {
     COPY_GROUP_PROPERTY_FROM_QSCRIPTVALUE(haze, hazeRange, float, setHazeRange);
     COPY_GROUP_PROPERTY_FROM_QSCRIPTVALUE(haze, hazeColor, u8vec3Color, setHazeColor);
     COPY_GROUP_PROPERTY_FROM_QSCRIPTVALUE(haze, hazeGlareColor, u8vec3Color, setHazeGlareColor);

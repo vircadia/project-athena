@@ -10,11 +10,12 @@
 //
 
 #include "ArrayBufferViewClass.h"
+#include "ScriptEngineQtScript.h"
 
 Q_DECLARE_METATYPE(QByteArray*)
 
-ArrayBufferViewClass::ArrayBufferViewClass(ScriptEngine* scriptEngine) :
-QObject(scriptEngine),
+ArrayBufferViewClass::ArrayBufferViewClass(ScriptEngineQtScript* scriptEngine) :
+    QObject(scriptEngine),
 QScriptClass(scriptEngine),
 _scriptEngine(scriptEngine) {
     // Save string handles for quick lookup

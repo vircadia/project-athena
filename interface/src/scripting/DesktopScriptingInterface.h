@@ -13,7 +13,6 @@
 #define hifi_DesktopScriptingInterface_h
 
 #include <QObject>
-#include <QtScript/QScriptValue>
 
 #include <DependencyManager.h>
 

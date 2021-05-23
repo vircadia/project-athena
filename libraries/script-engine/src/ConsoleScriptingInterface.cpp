@@ -19,7 +19,10 @@
 
 #include <QtCore/QDateTime>
 
+#include "ScriptContext.h"
 #include "ScriptEngine.h"
+#include "ScriptManager.h"
+#include "ScriptValue.h"
 
 #define INDENTATION 4 // 1 Tab - 4 spaces
 const QString LINE_SEPARATOR = "\n    ";
@@ -27,71 +30,71 @@ const QString SPACE_SEPARATOR = " ";
 const QString STACK_TRACE_FORMAT = "\n[Stacktrace]%1%2";
 QList<QString> ConsoleScriptingInterface::_groupDetails = QList<QString>();
 
-QScriptValue ConsoleScriptingInterface::info(QScriptContext* context, QScriptEngine* engine) {
-    if (ScriptEngine* scriptEngine = qobject_cast<ScriptEngine*>(engine)) {
-        scriptEngine->scriptInfoMessage(appendArguments(context));
+ScriptValuePointer ConsoleScriptingInterface::info(ScriptContext* context, ScriptEngine* engine) {
+    if (ScriptManager* scriptManager = engine->manager()) {
+        scriptManager->scriptInfoMessage(appendArguments(context));
     }
-    return QScriptValue::NullValue;
+    return engine->nullValue();
 }
 
-QScriptValue ConsoleScriptingInterface::log(QScriptContext* context, QScriptEngine* engine) {
+ScriptValuePointer ConsoleScriptingInterface::log(ScriptContext* context, ScriptEngine* engine) {
     QString message = appendArguments(context);
     if (_groupDetails.count() == 0) {
-        if (ScriptEngine* scriptEngine = qobject_cast<ScriptEngine*>(engine)) {
-            scriptEngine->scriptPrintedMessage(message);
+        if (ScriptManager* scriptManager = engine->manager()) {
+            scriptManager->scriptPrintedMessage(message);
         }
     } else {
         logGroupMessage(message, engine);
     }
-    return QScriptValue::NullValue;
+    return engine->nullValue();
 }
 
-QScriptValue ConsoleScriptingInterface::debug(QScriptContext* context, QScriptEngine* engine) {
-    if (ScriptEngine* scriptEngine = qobject_cast<ScriptEngine*>(engine)) {
-        scriptEngine->scriptPrintedMessage(appendArguments(context));
+ScriptValuePointer ConsoleScriptingInterface::debug(ScriptContext* context, ScriptEngine* engine) {
+    if (ScriptManager* scriptManager = engine->manager()) {
+        scriptManager->scriptPrintedMessage(appendArguments(context));
     }
-    return QScriptValue::NullValue;
+    return engine->nullValue();
 }
 
-QScriptValue ConsoleScriptingInterface::warn(QScriptContext* context, QScriptEngine* engine) {
-    if (ScriptEngine* scriptEngine = qobject_cast<ScriptEngine*>(engine)) {
-        scriptEngine->scriptWarningMessage(appendArguments(context));
+ScriptValuePointer ConsoleScriptingInterface::warn(ScriptContext* context, ScriptEngine* engine) {
+    if (ScriptManager* scriptManager = engine->manager()) {
+        scriptManager->scriptWarningMessage(appendArguments(context));
     }
-    return QScriptValue::NullValue;
+    return engine->nullValue();
 }
 
-QScriptValue ConsoleScriptingInterface::error(QScriptContext* context, QScriptEngine* engine) {
-    if (ScriptEngine* scriptEngine = qobject_cast<ScriptEngine*>(engine)) {
-        scriptEngine->scriptErrorMessage(appendArguments(context));
+ScriptValuePointer ConsoleScriptingInterface::error(ScriptContext* context, ScriptEngine* engine) {
+    if (ScriptManager* scriptManager = engine->manager()) {
+        scriptManager->scriptErrorMessage(appendArguments(context));
     }
-    return QScriptValue::NullValue;
+    return engine->nullValue();
 }
 
-QScriptValue ConsoleScriptingInterface::exception(QScriptContext* context, QScriptEngine* engine) {
-    if (ScriptEngine* scriptEngine = qobject_cast<ScriptEngine*>(engine)) {
-        scriptEngine->scriptErrorMessage(appendArguments(context));
+ScriptValuePointer ConsoleScriptingInterface::exception(ScriptContext* context, ScriptEngine* engine) {
+    if (ScriptManager* scriptManager = engine->manager()) {
+        scriptManager->scriptErrorMessage(appendArguments(context));
     }
-    return QScriptValue::NullValue;
+    return engine->nullValue();
 }
 
 void ConsoleScriptingInterface::time(QString labelName) {
     _timerDetails.insert(labelName, QDateTime::currentDateTime().toUTC());
     QString message = QString("%1: Timer started").arg(labelName);
-    if (ScriptEngine* scriptEngine = qobject_cast<ScriptEngine*>(engine())) {
-        scriptEngine->scriptPrintedMessage(message);
+    if (ScriptManager* scriptManager = engine()->manager()) {
+        scriptManager->scriptPrintedMessage(message);
     }
 }
 
 void ConsoleScriptingInterface::timeEnd(QString labelName) {
-    if (ScriptEngine* scriptEngine = qobject_cast<ScriptEngine*>(engine())) {
+    if (ScriptManager* scriptManager = engine()->manager()) {
         if (!_timerDetails.contains(labelName)) {
-            scriptEngine->scriptErrorMessage("No such label found " + labelName);
+            scriptManager->scriptErrorMessage("No such label found " + labelName);
             return;
         }
 
         if (_timerDetails.value(labelName).isNull()) {
             _timerDetails.remove(labelName);
-            scriptEngine->scriptErrorMessage("Invalid start time for " + labelName);
+            scriptManager->scriptErrorMessage("Invalid start time for " + labelName);
             return;
         }
         QDateTime _startTime = _timerDetails.value(labelName);
@@ -101,18 +104,18 @@ void ConsoleScriptingInterface::timeEnd(QString labelName) {
         QString message = QString("%1: %2ms").arg(labelName).arg(QString::number(diffInMS));
         _timerDetails.remove(labelName);
 
-        scriptEngine->scriptPrintedMessage(message);
+        scriptManager->scriptPrintedMessage(message);
     }
 }
 
-QScriptValue ConsoleScriptingInterface::assertion(QScriptContext* context, QScriptEngine* engine) {
+ScriptValuePointer ConsoleScriptingInterface::assertion(ScriptContext* context, ScriptEngine* engine) {
     QString message;
     bool condition = false;
     for (int i = 0; i < context->argumentCount(); i++) {
         if (i == 0) {
-            condition = context->argument(i).toBool(); // accept first value as condition
+            condition = context->argument(i)->toBool(); // accept first value as condition
         } else {
-            message += SPACE_SEPARATOR + context->argument(i).toString(); // accept other parameters as message
+            message += SPACE_SEPARATOR + context->argument(i)->toString(); // accept other parameters as message
         }
     }
 
@@ -123,63 +126,64 @@ QScriptValue ConsoleScriptingInterface::assertion(QScriptContext* context, QScri
         } else {
             assertionResult = QString("Assertion failed : %1").arg(message);
         }
-        if (ScriptEngine* scriptEngine = qobject_cast<ScriptEngine*>(engine)) {
-            scriptEngine->scriptErrorMessage(assertionResult);
+        if (ScriptManager* scriptManager = engine->manager()) {
+            scriptManager->scriptErrorMessage(assertionResult);
         }
     }
-    return QScriptValue::NullValue;
+    return engine->nullValue();
 }
 
 void ConsoleScriptingInterface::trace() {
-    if (ScriptEngine* scriptEngine = qobject_cast<ScriptEngine*>(engine())) {
-        scriptEngine->scriptPrintedMessage
+    ScriptEnginePointer scriptEngine = engine();
+    if (ScriptManager* scriptManager = scriptEngine->manager()) {
+        scriptManager->scriptPrintedMessage
             (QString(STACK_TRACE_FORMAT).arg(LINE_SEPARATOR,
             scriptEngine->currentContext()->backtrace().join(LINE_SEPARATOR)));
     }
 }
 
 void ConsoleScriptingInterface::clear() {
-    if (ScriptEngine* scriptEngine = qobject_cast<ScriptEngine*>(engine())) {
-        scriptEngine->clearDebugLogWindow();
+    if (ScriptManager* scriptManager = engine()->manager()) {
+        scriptManager->clearDebugLogWindow();
     }
 }
 
-QScriptValue ConsoleScriptingInterface::group(QScriptContext* context, QScriptEngine* engine) {
-    logGroupMessage(context->argument(0).toString(), engine); // accept first parameter as label
-    _groupDetails.push_back(context->argument(0).toString());
-    return QScriptValue::NullValue;
+ScriptValuePointer ConsoleScriptingInterface::group(ScriptContext* context, ScriptEngine* engine) {
+    logGroupMessage(context->argument(0)->toString(), engine); // accept first parameter as label
+    _groupDetails.push_back(context->argument(0)->toString());
+    return engine->nullValue();
 }
 
-QScriptValue ConsoleScriptingInterface::groupCollapsed(QScriptContext* context, QScriptEngine* engine) {
-    logGroupMessage(context->argument(0).toString(), engine); // accept first parameter as label
-    _groupDetails.push_back(context->argument(0).toString());
-    return QScriptValue::NullValue;
+ScriptValuePointer ConsoleScriptingInterface::groupCollapsed(ScriptContext* context, ScriptEngine* engine) {
+    logGroupMessage(context->argument(0)->toString(), engine); // accept first parameter as label
+    _groupDetails.push_back(context->argument(0)->toString());
+    return engine->nullValue();
 }
 
-QScriptValue ConsoleScriptingInterface::groupEnd(QScriptContext* context, QScriptEngine* engine) {
+ScriptValuePointer ConsoleScriptingInterface::groupEnd(ScriptContext* context, ScriptEngine* engine) {
     ConsoleScriptingInterface::_groupDetails.removeLast();
-    return QScriptValue::NullValue;
+    return engine->nullValue();
 }
 
-QString ConsoleScriptingInterface::appendArguments(QScriptContext* context) {
+QString ConsoleScriptingInterface::appendArguments(ScriptContext* context) {
     QString message;
     for (int i = 0; i < context->argumentCount(); i++) {
         if (i > 0) {
             message += SPACE_SEPARATOR;
         }
-        message += context->argument(i).toString();
+        message += context->argument(i)->toString();
     }
     return message;
 }
 
-void ConsoleScriptingInterface::logGroupMessage(QString message, QScriptEngine* engine) {
+void ConsoleScriptingInterface::logGroupMessage(QString message, ScriptEngine* engine) {
     int _addSpaces = _groupDetails.count() * INDENTATION;
     QString logMessage;
     for (int i = 0; i < _addSpaces; i++) {
         logMessage.append(SPACE_SEPARATOR);
     }
     logMessage.append(message);
-    if (ScriptEngine* scriptEngine = qobject_cast<ScriptEngine*>(engine)) {
-        scriptEngine->scriptPrintedMessage(logMessage);
+    if (ScriptManager* scriptManager = engine->manager()) {
+        scriptManager->scriptPrintedMessage(logMessage);
     }
 }

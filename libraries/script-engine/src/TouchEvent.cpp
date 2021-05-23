@@ -11,12 +11,12 @@
 
 #include "TouchEvent.h"
 
-#include <qscriptengine.h>
-#include <qscriptvalue.h>
-
 #include <NumericalConstants.h>
 
 #include "RegisteredMetaTypes.h"
+#include "ScriptEngine.h"
+#include "ScriptValue.h"
+#include "ScriptValueUtils.h"
 
 TouchEvent::TouchEvent() :
     x(0.0f),
@@ -204,47 +204,47 @@ void TouchEvent::calculateMetaAttributes(const TouchEvent& other) {
  *     print(JSON.stringify(event));
  * });
  */
-QScriptValue TouchEvent::toScriptValue(QScriptEngine* engine, const TouchEvent& event) {
-    QScriptValue obj = engine->newObject();
-    obj.setProperty("x", event.x);
-    obj.setProperty("y", event.y);
-    obj.setProperty("isPressed", event.isPressed);
-    obj.setProperty("isMoved", event.isMoved);
-    obj.setProperty("isStationary", event.isStationary);
-    obj.setProperty("isReleased", event.isReleased);
-    obj.setProperty("isShifted", event.isShifted);
-    obj.setProperty("isMeta", event.isMeta);
-    obj.setProperty("isControl", event.isControl);
-    obj.setProperty("isAlt", event.isAlt);
-    obj.setProperty("touchPoints", event.touchPoints);
+ScriptValuePointer TouchEvent::toScriptValue(ScriptEngine* engine, const TouchEvent& event) {
+    ScriptValuePointer obj = engine->newObject();
+    obj->setProperty("x", event.x);
+    obj->setProperty("y", event.y);
+    obj->setProperty("isPressed", event.isPressed);
+    obj->setProperty("isMoved", event.isMoved);
+    obj->setProperty("isStationary", event.isStationary);
+    obj->setProperty("isReleased", event.isReleased);
+    obj->setProperty("isShifted", event.isShifted);
+    obj->setProperty("isMeta", event.isMeta);
+    obj->setProperty("isControl", event.isControl);
+    obj->setProperty("isAlt", event.isAlt);
+    obj->setProperty("touchPoints", event.touchPoints);
 
-    QScriptValue pointsObj = engine->newArray();
+    ScriptValuePointer pointsObj = engine->newArray();
     int index = 0;
     foreach (glm::vec2 point, event.points) {
-        QScriptValue thisPoint = vec2ToScriptValue(engine, point);
-        pointsObj.setProperty(index, thisPoint);
+        ScriptValuePointer thisPoint = vec2ToScriptValue(engine, point);
+        pointsObj->setProperty(index, thisPoint);
         index++;
     }
-    obj.setProperty("points", pointsObj);
-    obj.setProperty("radius", event.radius);
-    obj.setProperty("isPinching", event.isPinching);
-    obj.setProperty("isPinchOpening", event.isPinchOpening);
+    obj->setProperty("points", pointsObj);
+    obj->setProperty("radius", event.radius);
+    obj->setProperty("isPinching", event.isPinching);
+    obj->setProperty("isPinchOpening", event.isPinchOpening);
 
-    obj.setProperty("angle", event.angle);
-    obj.setProperty("deltaAngle", event.deltaAngle);
-    QScriptValue anglesObj = engine->newArray();
+    obj->setProperty("angle", event.angle);
+    obj->setProperty("deltaAngle", event.deltaAngle);
+    ScriptValuePointer anglesObj = engine->newArray();
     index = 0;
     foreach (float angle, event.angles) {
-        anglesObj.setProperty(index, angle);
+        anglesObj->setProperty(index, angle);
         index++;
     }
-    obj.setProperty("angles", anglesObj);
+    obj->setProperty("angles", anglesObj);
 
-    obj.setProperty("isRotating", event.isRotating);
-    obj.setProperty("rotating", event.rotating);
+    obj->setProperty("isRotating", event.isRotating);
+    obj->setProperty("rotating", event.rotating);
     return obj;
 }
 
-void TouchEvent::fromScriptValue(const QScriptValue& object, TouchEvent& event) {
+void TouchEvent::fromScriptValue(const ScriptValuePointer& object, TouchEvent& event) {
     // nothing for now...
 }

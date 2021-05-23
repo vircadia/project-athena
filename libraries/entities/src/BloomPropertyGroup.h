@@ -15,7 +15,7 @@
 #include <stdint.h>
 #include <glm/glm.hpp>
 
-#include <QtScript/QScriptEngine>
+#include <QtCore/QSharedPointer>
 
 #include "PropertyGroup.h"
 #include "EntityItemPropertiesMacros.h"
@@ -25,6 +25,9 @@ class EncodeBitstreamParams;
 class OctreePacketData;
 class EntityTreeElementExtraEncodeData;
 class ReadBitstreamToTreeParams;
+class ScriptEngine;
+class ScriptValue;
+using ScriptValuePointer = QSharedPointer<ScriptValue>;
 
 static const float INITIAL_BLOOM_INTENSITY { 0.25f };
 static const float INITIAL_BLOOM_THRESHOLD { 0.7f };
@@ -40,10 +43,10 @@ static const float INITIAL_BLOOM_SIZE { 0.9f };
 class BloomPropertyGroup : public PropertyGroup {
 public:
     // EntityItemProperty related helpers
-    virtual void copyToScriptValue(const EntityPropertyFlags& desiredProperties, QScriptValue& properties,
-                                   QScriptEngine* engine, bool skipDefaults,
+    virtual void copyToScriptValue(const EntityPropertyFlags& desiredProperties, ScriptValuePointer& properties,
+                                   ScriptEngine* engine, bool skipDefaults,
                                    EntityItemProperties& defaultEntityProperties) const override;
-    virtual void copyFromScriptValue(const QScriptValue& object, bool& _defaultSettings) override;
+    virtual void copyFromScriptValue(const ScriptValuePointer& object, bool& _defaultSettings) override;
 
     void merge(const BloomPropertyGroup& other);
 

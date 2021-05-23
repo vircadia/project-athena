@@ -9,7 +9,7 @@
 //
 
 // BaseAssetScriptingInterface contains the engine-agnostic support code that can be used from
-// both QML JS and QScriptEngine JS engine implementations
+// both QML JS and ScriptEngine JS engine implementations
 
 #ifndef hifi_BaseAssetScriptingInterface_h
 #define hifi_BaseAssetScriptingInterface_h

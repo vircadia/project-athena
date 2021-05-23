@@ -42,7 +42,6 @@ public:
     using HandlerFunctions = QVector<HandlerFunction>;
     using Promise = std::shared_ptr<MiniPromise>;
 
-    static void registerMetaTypes(QObject* engine);
     static int metaTypeID;
 
     MiniPromise() {}

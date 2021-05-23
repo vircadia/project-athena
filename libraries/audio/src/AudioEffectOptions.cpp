@@ -10,6 +10,10 @@
 
 #include "AudioEffectOptions.h"
 
+#include <ScriptContext.h>
+#include <ScriptEngine.h>
+#include <ScriptValue.h>
+
 static const QString BANDWIDTH_HANDLE = "bandwidth";
 static const QString PRE_DELAY_HANDLE = "preDelay";
 static const QString LATE_DELAY_HANDLE = "lateDelay";
@@ -54,8 +58,8 @@ static const float LATE_MIX_LEFT_DEFAULT = 90.0f;
 static const float LATE_MIX_RIGHT_DEFAULT = 90.0f;
 static const float WET_DRY_MIX_DEFAULT = 50.0f;
 
-static void setOption(QScriptValue arguments, const QString name, float defaultValue, float& variable) {
-    variable = arguments.property(name).isNumber() ? (float)arguments.property(name).toNumber() : defaultValue;
+static void setOption(ScriptValuePointer arguments, const QString name, float defaultValue, float& variable) {
+    variable = arguments->property(name)->isNumber() ? (float)arguments->property(name)->toNumber() : defaultValue;
 }
 
 /*@jsdoc
@@ -83,7 +87,7 @@ static void setOption(QScriptValue arguments, const QString name, float defaultV
  * @property {number} lateMixRight=90 - The apparent distance of the source (percent) in the reverb tail.
  * @property {number} wetDryMix=50 - Adjusts the wet/dry ratio, from completely dry (0%) to completely wet (100%).
  */
-AudioEffectOptions::AudioEffectOptions(QScriptValue arguments) {
+AudioEffectOptions::AudioEffectOptions(ScriptValuePointer arguments) {
     setOption(arguments, BANDWIDTH_HANDLE, BANDWIDTH_DEFAULT, _bandwidth);
     setOption(arguments, PRE_DELAY_HANDLE, PRE_DELAY_DEFAULT, _preDelay);
     setOption(arguments, LATE_DELAY_HANDLE, LATE_DELAY_DEFAULT, _lateDelay);
@@ -137,6 +141,6 @@ AudioEffectOptions& AudioEffectOptions::operator=(const AudioEffectOptions &othe
     return *this;
 }
 
-QScriptValue AudioEffectOptions::constructor(QScriptContext* context, QScriptEngine* engine) {
+ScriptValuePointer AudioEffectOptions::constructor(ScriptContext* context, ScriptEngine* engine) {
     return engine->newQObject(new AudioEffectOptions(context->argument(0)));
 }

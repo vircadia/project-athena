@@ -16,10 +16,10 @@
 
 #include <QObject>
 #include <QMutex>
-#include <QScriptValue>
 #include <vector>
 #include <JointData.h>
 #include <QReadWriteLock>
+#include <QtCore/QSharedPointer>
 
 #include "AnimNode.h"
 #include "AnimNodeLoader.h"
@@ -30,6 +30,8 @@
 
 class Rig;
 class AnimInverseKinematics;
+class ScriptValue;
+using ScriptValuePointer = QSharedPointer<ScriptValue>;
 
 // Rig instances are reentrant.
 // However only specific methods thread-safe.  Noted below.
@@ -40,7 +42,7 @@ public:
     struct StateHandler {
         AnimVariantMap results;
         QStringList propertyNames;
-        QScriptValue function;
+        ScriptValuePointer function;
         bool useNames;
     };
 
@@ -205,9 +207,9 @@ public:
     AnimNode::ConstPointer getAnimNode() const { return _animNode; }
     AnimNode::ConstPointer findAnimNodeByName(const QString& name) const;
     AnimSkeleton::ConstPointer getAnimSkeleton() const { return _animSkeleton; }
-    QScriptValue addAnimationStateHandler(QScriptValue handler, QScriptValue propertiesList);
-    void removeAnimationStateHandler(QScriptValue handler);
-    void animationStateHandlerResult(int identifier, QScriptValue result);
+    ScriptValuePointer addAnimationStateHandler(ScriptValuePointer handler, ScriptValuePointer propertiesList);
+    void removeAnimationStateHandler(ScriptValuePointer handler);
+    void animationStateHandlerResult(int identifier, ScriptValuePointer result);
 
     // rig space
     bool getModelRegistrationPoint(glm::vec3& modelRegistrationPointOut) const;

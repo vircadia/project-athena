@@ -12,10 +12,13 @@
 #ifndef hifi_MenuItemProperties_h
 #define hifi_MenuItemProperties_h
 
-#include <QtScript/QScriptEngine>
-
 #include "KeyEvent.h"
 
+#include <QtCore/QSharedPointer>
+
+class ScriptEngine;
+class ScriptValue;
+using ScriptValuePointer = QSharedPointer<ScriptValue>;
 
 class MenuItemProperties {
 public:
@@ -49,9 +52,9 @@ private:
     static const int UNSPECIFIED_POSITION = -1;
 };
 Q_DECLARE_METATYPE(MenuItemProperties)
-QScriptValue menuItemPropertiesToScriptValue(QScriptEngine* engine, const MenuItemProperties& props);
-void menuItemPropertiesFromScriptValue(const QScriptValue& object, MenuItemProperties& props);
-void registerMenuItemProperties(QScriptEngine* engine);
+ScriptValuePointer menuItemPropertiesToScriptValue(ScriptEngine* engine, const MenuItemProperties& props);
+void menuItemPropertiesFromScriptValue(const ScriptValuePointer& object, MenuItemProperties& props);
+void registerMenuItemProperties(ScriptEngine* engine);
 
 
 

@@ -13,16 +13,18 @@
 
 #include "KeyEvent.h"
 #include "MouseEvent.h"
-#include "SpatialEvent.h"
 #include "PointerEvent.h"
+#include "ScriptEngine.h"
+#include "ScriptEngineCast.h"
+#include "SpatialEvent.h"
 #include "TouchEvent.h"
 #include "WheelEvent.h"
 
-void registerEventTypes(QScriptEngine* engine) {
-    qScriptRegisterMetaType(engine, KeyEvent::toScriptValue, KeyEvent::fromScriptValue);
-    qScriptRegisterMetaType(engine, MouseEvent::toScriptValue, MouseEvent::fromScriptValue);
-    qScriptRegisterMetaType(engine, PointerEvent::toScriptValue, PointerEvent::fromScriptValue);
-    qScriptRegisterMetaType(engine, TouchEvent::toScriptValue, TouchEvent::fromScriptValue);
-    qScriptRegisterMetaType(engine, WheelEvent::toScriptValue, WheelEvent::fromScriptValue);
-    qScriptRegisterMetaType(engine, SpatialEvent::toScriptValue, SpatialEvent::fromScriptValue);
+void registerEventTypes(ScriptEngine* engine) {
+    scriptRegisterMetaType(engine, KeyEvent::toScriptValue, KeyEvent::fromScriptValue);
+    scriptRegisterMetaType(engine, MouseEvent::toScriptValue, MouseEvent::fromScriptValue);
+    scriptRegisterMetaType(engine, PointerEvent::toScriptValue, PointerEvent::fromScriptValue);
+    scriptRegisterMetaType(engine, TouchEvent::toScriptValue, TouchEvent::fromScriptValue);
+    scriptRegisterMetaType(engine, WheelEvent::toScriptValue, WheelEvent::fromScriptValue);
+    scriptRegisterMetaType(engine, SpatialEvent::toScriptValue, SpatialEvent::fromScriptValue);
 }

@@ -15,6 +15,7 @@
 #include "GLMHelpers.h"
 
 #include <PickManager.h>
+#include <ScriptValueUtils.h>
 
 unsigned int RayPickScriptingInterface::createRayPick(const QVariant& properties) {
     return DependencyManager::get<PickScriptingInterface>()->createPick(PickQuery::PickType::Ray, properties);
@@ -45,11 +46,11 @@ void RayPickScriptingInterface::setPrecisionPicking(unsigned int uid, bool preci
     DependencyManager::get<PickManager>()->setPrecisionPicking(uid, precisionPicking);
 }
 
-void RayPickScriptingInterface::setIgnoreItems(unsigned int uid, const QScriptValue& ignoreItems) {
+void RayPickScriptingInterface::setIgnoreItems(unsigned int uid, const ScriptValuePointer& ignoreItems) {
     DependencyManager::get<PickManager>()->setIgnoreItems(uid, qVectorQUuidFromScriptValue(ignoreItems));
 }
 
-void RayPickScriptingInterface::setIncludeItems(unsigned int uid, const QScriptValue& includeItems) {
+void RayPickScriptingInterface::setIncludeItems(unsigned int uid, const ScriptValuePointer& includeItems) {
     DependencyManager::get<PickManager>()->setIncludeItems(uid, qVectorQUuidFromScriptValue(includeItems));
 }
 

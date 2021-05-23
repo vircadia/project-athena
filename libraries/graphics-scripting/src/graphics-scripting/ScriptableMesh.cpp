@@ -7,17 +7,19 @@
 
 #include "ScriptableMesh.h"
 
-#include <QtScript/QScriptValue>
+#include <ScriptValue.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtx/norm.hpp>
 #include <glm/gtx/transform.hpp>
 
-#include <BaseScriptEngine.h>
 #include <graphics/BufferViewHelpers.h>
 #include <graphics/GpuHelpers.h>
 #include <graphics/Geometry.h>
 #include <RegisteredMetaTypes.h>
+#include <ScriptEngine.h>
+#include <ScriptEngineCast.h>
+#include <ScriptValue.h>
 
 #include "Forward.h"
 #include "ScriptableMeshPart.h"
@@ -27,7 +29,7 @@
 // #define SCRIPTABLE_MESH_DEBUG 1
 
 scriptable::ScriptableMesh::ScriptableMesh(const ScriptableMeshBase& other)
-    : ScriptableMeshBase(other), QScriptable() {
+    : ScriptableMeshBase(other), Scriptable() {
     auto mesh = getMeshPointer();
     QString name = mesh ? QString::fromStdString(mesh->modelName) : "";
     if (name.isEmpty()) {
@@ -264,7 +266,7 @@ bool scriptable::ScriptableMesh::setVertexProperty(glm::uint32 vertexIndex, cons
  * @param {number} index - The vertex index.
  * @param {object} properties - The properties of the mesh, per {@link GraphicsMesh}.
  */
-glm::uint32 scriptable::ScriptableMesh::forEachVertex(QScriptValue _callback) {
+glm::uint32 scriptable::ScriptableMesh::forEachVertex(ScriptValuePointer _callback) {
     auto mesh = getMeshPointer();
     if (!mesh) {
         return 0;
@@ -272,16 +274,16 @@ glm::uint32 scriptable::ScriptableMesh::forEachVertex(QScriptValue _callback) {
     auto scopedHandler = jsBindCallback(_callback);
 
     // destructure so we can still invoke callback scoped, but with a custom signature (obj, i, jsMesh)
-    auto scope = scopedHandler.property("scope");
-    auto callback = scopedHandler.property("callback");
-    auto js = engine() ? engine() : scopedHandler.engine(); // cache value to avoid resolving each iteration
+    auto scope = scopedHandler->property("scope");
+    auto callback = scopedHandler->property("callback");
+    auto js = engine() ? engine() : scopedHandler->engine(); // cache value to avoid resolving each iteration
     if (!js) {
         return 0;
     }
-    auto meshPart = js ? js->toScriptValue(getSelf()) : QScriptValue::NullValue;
+    auto meshPart = js ? js->toScriptValue(getSelf()) : js->nullValue();
     int numProcessed = 0;
     buffer_helpers::mesh::forEachVertex(mesh, [&](glm::uint32 index, const QVariantMap& values) {
-        auto result = callback.call(scope, { js->toScriptValue(values), index, meshPart });
+        auto result = callback->call(scope, { js->toScriptValue(values), js->newValue(index), meshPart });
         if (js->hasUncaughtException()) {
             js->currentContext()->throwValue(js->uncaughtException());
             return false;
@@ -302,7 +304,7 @@ glm::uint32 scriptable::ScriptableMesh::forEachVertex(QScriptValue _callback) {
  * @returns {Object<Graphics.BufferTypeName, Graphics.BufferType>|boolean} The attribute values to update the vertex with, or 
  *     <code>false</code> to not update the vertex.
  */
-glm::uint32 scriptable::ScriptableMesh::updateVertexAttributes(QScriptValue _callback) {
+glm::uint32 scriptable::ScriptableMesh::updateVertexAttributes(ScriptValuePointer _callback) {
     auto mesh = getMeshPointer();
     if (!mesh) {
         return 0;
@@ -310,34 +312,34 @@ glm::uint32 scriptable::ScriptableMesh::updateVertexAttributes(QScriptValue _cal
     auto scopedHandler = jsBindCallback(_callback);
 
     // destructure so we can still invoke callback scoped, but with a custom signature (obj, i, jsMesh)
-    auto scope = scopedHandler.property("scope");
-    auto callback = scopedHandler.property("callback");
-    auto js = engine() ? engine() : scopedHandler.engine(); // cache value to avoid resolving each iteration
+    auto scope = scopedHandler->property("scope");
+    auto callback = scopedHandler->property("callback");
+    auto js = engine() ? engine() : scopedHandler->engine(); // cache value to avoid resolving each iteration
     if (!js) {
         return 0;
     }
-    auto meshPart = js ? js->toScriptValue(getSelf()) : QScriptValue::NullValue;
+    auto meshPart = js ? js->toScriptValue(getSelf()) : js->nullValue();
     int numProcessed = 0;
     auto attributeViews = buffer_helpers::mesh::getAllBufferViews(mesh);
     buffer_helpers::mesh::forEachVertex(mesh, [&](glm::uint32 index, const QVariantMap& values) {
         auto obj = js->toScriptValue(values);
-        auto result = callback.call(scope, { obj, index, meshPart });
+        auto result = callback->call(scope, { obj, js->newValue(index), meshPart });
         if (js->hasUncaughtException()) {
             js->currentContext()->throwValue(js->uncaughtException());
             return false;
         }
-        if (result.isBool() && !result.toBool()) {
+        if (result->isBool() && !result->toBool()) {
             // bail without modifying data if user explicitly returns false
             return true;
         }
-        if (result.isObject() && !result.strictlyEquals(obj)) {
+        if (result->isObject() && !result->strictlyEquals(obj)) {
             // user returned a new object (ie: instead of modifying input properties)
             obj = result;
         }
         for (const auto& a : attributeViews) {
-            const auto& attribute = obj.property(a.first);
-            if (attribute.isValid()) {
-                buffer_helpers::setValue(a.second, index, attribute.toVariant());
+            const auto& attribute = obj->property(a.first);
+            if (attribute->isValid()) {
+                buffer_helpers::setValue(a.second, index, attribute->toVariant());
             }
         }
         numProcessed++;

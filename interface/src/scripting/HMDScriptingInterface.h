@@ -14,15 +14,17 @@
 
 #include <atomic>
 
-#include <QtScript/QScriptValue>
-class QScriptContext;
-class QScriptEngine;
-
 #include <GLMHelpers.h>
 #include <DependencyManager.h>
 #include <display-plugins/AbstractHMDScriptingInterface.h>
 
 #include <QReadWriteLock>
+#include <QtCore/QSharedPointer>
+
+class ScriptContext;
+class ScriptEngine;
+class ScriptValue;
+using ScriptValuePointer = QSharedPointer<ScriptValue>;
 
 /*@jsdoc
  * The <code>HMD</code> API provides access to the HMD used in VR display mode.
@@ -442,14 +444,14 @@ public:
      * @function HMD.getHUDLookAtPosition2D
      * @returns {Vec2} The position on the HUD overlay that your HMD is looking at, in pixels.
      */
-    static QScriptValue getHUDLookAtPosition2D(QScriptContext* context, QScriptEngine* engine);
+    static ScriptValuePointer getHUDLookAtPosition2D(ScriptContext* context, ScriptEngine* engine);
 
     /*@jsdoc
      * Gets the position on the HUD overlay that your HMD is looking at, in world coordinates.
      * @function HMD.getHUDLookAtPosition3D
      * @returns {Vec3} The position on the HUD overlay the your HMD is looking at, in world coordinates.
      */
-    static QScriptValue getHUDLookAtPosition3D(QScriptContext* context, QScriptEngine* engine);
+    static ScriptValuePointer getHUDLookAtPosition3D(ScriptContext* context, ScriptEngine* engine);
 
     bool isMounted() const override;
 

@@ -12,8 +12,6 @@
 #include <platform/Profiler.h>
 #include <QtCore/QObject>
 
-class QScriptValue;
-
 /*@jsdoc
  * The <code>PlatformInfo</code> API provides information about the hardware platform being used.
  *

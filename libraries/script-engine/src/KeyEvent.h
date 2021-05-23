@@ -13,7 +13,11 @@
 #define hifi_KeyEvent_h
 
 #include <QKeyEvent>
-#include <QScriptValue>
+#include <QtCore/QSharedPointer>
+
+class ScriptEngine;
+class ScriptValue;
+using ScriptValuePointer = QSharedPointer<ScriptValue>;
 
 class KeyEvent {
 public:
@@ -22,8 +26,8 @@ public:
     bool operator==(const KeyEvent& other) const;
     operator QKeySequence() const;
     
-    static QScriptValue toScriptValue(QScriptEngine* engine, const KeyEvent& event);
-    static void fromScriptValue(const QScriptValue& object, KeyEvent& event);
+    static ScriptValuePointer toScriptValue(ScriptEngine* engine, const KeyEvent& event);
+    static void fromScriptValue(const ScriptValuePointer& object, KeyEvent& event);
     
     int key;
     QString text;

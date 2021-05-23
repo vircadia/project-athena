@@ -24,6 +24,8 @@
 #include <DependencyManager.h>
 #include <DockWidget.h>
 #include <RegisteredMetaTypes.h>
+#include <ScriptEngine.h>
+#include <ScriptEngineCast.h>
 
 #include "OffscreenUi.h"
 #include "shared/QtHelpers.h"
@@ -91,16 +93,16 @@ static void dockWidgetDeleter(DockWidget* dockWidget) {
     dockWidget->deleteLater();
 }
 
-void registerInteractiveWindowMetaType(QScriptEngine* engine) {
-    qScriptRegisterMetaType(engine, interactiveWindowPointerToScriptValue, interactiveWindowPointerFromScriptValue);
+void registerInteractiveWindowMetaType(ScriptEngine* engine) {
+    scriptRegisterMetaType(engine, interactiveWindowPointerToScriptValue, interactiveWindowPointerFromScriptValue);
 }
 
-QScriptValue interactiveWindowPointerToScriptValue(QScriptEngine* engine, const InteractiveWindowPointer& in) {
-    return engine->newQObject(in, QScriptEngine::ScriptOwnership);
+ScriptValuePointer interactiveWindowPointerToScriptValue(ScriptEngine* engine, const InteractiveWindowPointer& in) {
+    return engine->newQObject(in, ScriptEngine::ScriptOwnership);
 }
 
-void interactiveWindowPointerFromScriptValue(const QScriptValue& object, InteractiveWindowPointer& out) {
-    if (const auto interactiveWindow = qobject_cast<InteractiveWindowPointer>(object.toQObject())) {
+void interactiveWindowPointerFromScriptValue(const ScriptValuePointer& object, InteractiveWindowPointer& out) {
+    if (const auto interactiveWindow = qobject_cast<InteractiveWindowPointer>(object->toQObject())) {
         out = interactiveWindow;
     }
 }

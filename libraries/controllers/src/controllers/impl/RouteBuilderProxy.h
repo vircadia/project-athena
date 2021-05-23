@@ -10,6 +10,7 @@
 #define hifi_Controllers_Impl_RouteBuilderProxy_h
 
 #include <QtCore/QObject>
+#include <QtCore/QSharedPointer>
 
 #include "Filter.h"
 #include "Route.h"
@@ -18,8 +19,9 @@
 #include "../UserInputMapper.h"
 
 class QJSValue;
-class QScriptValue;
 class QJsonValue;
+class ScriptValue;
+using ScriptValuePointer = QSharedPointer<ScriptValue>;
 
 namespace controller {
 
@@ -115,7 +117,7 @@ class RouteBuilderProxy : public QObject {
          *     Controller.disableMapping(MAPPING_NAME);
          * });
          */
-        Q_INVOKABLE void to(const QScriptValue& destination);
+        Q_INVOKABLE void to(const ScriptValuePointer& destination);
 
         /*@jsdoc
          * Enables or disables writing debug information for a route to the program log.
@@ -193,7 +195,7 @@ class RouteBuilderProxy : public QObject {
          *     Controller.disableMapping(MAPPING_NAME);
          * });
          */
-        Q_INVOKABLE QObject* when(const QScriptValue& expression);
+        Q_INVOKABLE QObject* when(const ScriptValuePointer& expression);
 
         /*@jsdoc
          * Filters numeric route values to lie between two values; values outside this range are not passed on through the 

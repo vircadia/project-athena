@@ -12,7 +12,7 @@
 #ifndef hifi_ArrayBufferClass_h
 #define hifi_ArrayBufferClass_h
 
-#include <QScriptClass>
+#include <QtScript/QScriptClass>
 #include <QtCore/QObject>
 #include <QtScript/QScriptClass>
 #include <QtScript/QScriptContext>
@@ -21,12 +21,12 @@
 #include <QtScript/QScriptValue>
 #include <QtCore/QDateTime>
 
-class ScriptEngine;
+class ScriptEngineQtScript;
 
 class ArrayBufferClass : public QObject, public QScriptClass {
     Q_OBJECT
 public:
-    ArrayBufferClass(ScriptEngine* scriptEngine);
+    ArrayBufferClass(ScriptEngineQtScript* scriptEngine);
     QScriptValue newInstance(qint32 size);
     QScriptValue newInstance(const QByteArray& ba);
 

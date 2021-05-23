@@ -18,10 +18,6 @@
 #include <QtCore/QAbstractListModel>
 #include <QSortFilterProxyModel>
 
-#include <QtScript/QScriptValue>
-#include <QtScript/QScriptEngine>
-#include <QtScript/QScriptValueIterator>
-
 #include <QtQuick/QQuickItem>
 
 #include <glm/glm.hpp>

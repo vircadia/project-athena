@@ -13,21 +13,24 @@
 
 #include <QObject>
 #include <QMap>
-#include <QScriptValue>
-#include <QScriptEngine>
+#include <QtCore/QSharedPointer>
 #include <glm/glm.hpp>
 
 #include <functional>
+
+#include <ScriptValue.h>
 
 #include "EntityItemID.h"
 #include "EntityItemProperties.h"
 #include "EntityTree.h"
 
+class ScriptEngine;
+
 class EntityEditFilters : public QObject, public Dependency {
     Q_OBJECT
 public:
     struct FilterData {
-        QScriptValue filterFn;
+        ScriptValuePointer filterFn;
         bool wantsOriginalProperties { false };
         bool wantsZoneProperties { false };
 
@@ -41,11 +44,11 @@ public:
         bool wantsZoneBoundingBox { false };
 
         std::function<bool()> uncaughtExceptions;
-        QScriptEngine* engine;
+        ScriptEngine* engine;
         bool rejectAll;
         
         FilterData(): engine(nullptr), rejectAll(false) {};
-        bool valid() { return (rejectAll || (engine != nullptr && filterFn.isFunction() && uncaughtExceptions)); }
+        bool valid() { return (rejectAll || (engine != nullptr && filterFn->isFunction() && uncaughtExceptions)); }
     };
 
     EntityEditFilters() {};
@@ -68,7 +71,7 @@ private:
 
     EntityTreePointer _tree {};
     bool _rejectAll {false};
-    QScriptValue _nullObjectForFilter{};
+    ScriptValuePointer _nullObjectForFilter{};
     
     QReadWriteLock _lock;
     QMap<EntityItemID, FilterData> _filterDataMap;

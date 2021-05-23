@@ -16,7 +16,6 @@
 #include <QtCore/QBuffer>
 #include <QtCore/QStandardPaths>
 #include <QtCore/QThread>
-#include <QtScript/QScriptEngine>
 #include <QtNetwork/QNetworkDiskCache>
 
 #include <shared/GlobalAppProperties.h>

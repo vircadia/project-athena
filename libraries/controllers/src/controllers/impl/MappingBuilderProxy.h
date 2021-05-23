@@ -11,13 +11,15 @@
 
 #include <QtCore/QObject>
 #include <QtCore/QString>
+#include <QtCore/QSharedPointer>
 
 #include "Mapping.h"
 #include "Endpoint.h"
 
 class QJSValue;
-class QScriptValue;
 class QJsonValue;
+class ScriptValue;
+using ScriptValuePointer = QSharedPointer<ScriptValue>;
 
 namespace controller {
 
@@ -165,7 +167,7 @@ public:
      *     of the route data. If a function, it must return a number or a {@link Pose} value as the route data.
      * @returns {RouteObject} A route ready for mapping to an action or function using {@link RouteObject} methods.
      */
-    Q_INVOKABLE QObject* from(const QScriptValue& source);
+    Q_INVOKABLE QObject* from(const ScriptValuePointer& source);
 
     /*@jsdoc
      * Creates a new {@link RouteObject} from two numeric {@link Controller.Hardware} outputs, one applied in the negative 
@@ -187,7 +189,7 @@ public:
      *     Controller.disableMapping(MAPPING_NAME);
      * });
      */
-    Q_INVOKABLE QObject* makeAxis(const QScriptValue& source1, const QScriptValue& source2);
+    Q_INVOKABLE QObject* makeAxis(const ScriptValuePointer& source1, const ScriptValuePointer& source2);
 
     /*@jsdoc
      * Enables or disables the mapping. When enabled, the routes in the mapping take effect.

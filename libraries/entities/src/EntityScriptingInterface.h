@@ -19,13 +19,15 @@
 #include <QtCore/QStringList>
 #include <QtQml/QJSValue>
 #include <QtQml/QJSValueList>
+#include <QtCore/QSharedPointer>
 
 #include <DependencyManager.h>
 #include <Octree.h>
 #include <OctreeScriptingInterface.h>
 #include <RegisteredMetaTypes.h>
-#include <PointerEvent.h>
+#include "PointerEvent.h"
 #include <PickFilter.h>
+#include "ScriptManager.h"
 
 #include "PolyVoxEntityItem.h"
 #include "LineEntityItem.h"
@@ -36,10 +38,12 @@
 #include "EntitiesScriptEngineProvider.h"
 #include "EntityItemProperties.h"
 
-#include "BaseScriptEngine.h"
-
 class EntityTree;
 class MeshProxy;
+class ScriptContext;
+class ScriptEngine;
+class ScriptValue;
+using ScriptValuePointer = QSharedPointer<ScriptValue>;
 
 extern const QString GRABBABLE_USER_DATA;
 extern const QString NOT_GRABBABLE_USER_DATA;
@@ -50,11 +54,11 @@ extern const QString NOT_GRABBABLE_USER_DATA;
 // problems with their own Entity scripts.
 class EntityPropertyMetadataRequest {
 public:
-    EntityPropertyMetadataRequest(BaseScriptEngine* engine) : _engine(engine) {};
-    bool script(EntityItemID entityID, QScriptValue handler);
-    bool serverScripts(EntityItemID entityID, QScriptValue handler);
+    EntityPropertyMetadataRequest(ScriptManager* manager) : _manager(manager == nullptr ? nullptr : manager){};
+    bool script(EntityItemID entityID, ScriptValuePointer handler);
+    bool serverScripts(EntityItemID entityID, ScriptValuePointer handler);
 private:
-    QPointer<BaseScriptEngine> _engine;
+    QPointer<ScriptManager> _manager;
 };
 
 /*@jsdoc
@@ -85,8 +89,8 @@ public:
     QVariantMap extraInfo;
 };
 Q_DECLARE_METATYPE(RayToEntityIntersectionResult)
-QScriptValue RayToEntityIntersectionResultToScriptValue(QScriptEngine* engine, const RayToEntityIntersectionResult& results);
-void RayToEntityIntersectionResultFromScriptValue(const QScriptValue& object, RayToEntityIntersectionResult& results);
+ScriptValuePointer RayToEntityIntersectionResultToScriptValue(ScriptEngine* engine, const RayToEntityIntersectionResult& results);
+void RayToEntityIntersectionResultFromScriptValue(const ScriptValuePointer& object, RayToEntityIntersectionResult& results);
 
 class ParabolaToEntityIntersectionResult {
 public:
@@ -181,8 +185,8 @@ public:
 
     void setEntityTree(EntityTreePointer modelTree);
     EntityTreePointer getEntityTree() { return _entityTree; }
-    void setPersistentEntitiesScriptEngine(QSharedPointer<EntitiesScriptEngineProvider> engine);
-    void setNonPersistentEntitiesScriptEngine(QSharedPointer<EntitiesScriptEngineProvider> engine);
+    void setPersistentEntitiesScriptEngine(QSharedPointer<EntitiesScriptEngineProvider> manager);
+    void setNonPersistentEntitiesScriptEngine(QSharedPointer<EntitiesScriptEngineProvider> manager);
 
     void resetActivityTracking();
     ActivityTracking getActivityTracking() const { return _activityTracking; }
@@ -208,8 +212,8 @@ public:
      * var propertySets = Entities.getMultipleEntityProperties(entityIDs, "name");
      * print("Nearby entity names: " + JSON.stringify(propertySets));
     */
-    static QScriptValue getMultipleEntityProperties(QScriptContext* context, QScriptEngine* engine);
-    QScriptValue getMultipleEntityPropertiesInternal(QScriptEngine* engine, QVector<QUuid> entityIDs, const QScriptValue& extendedDesiredProperties);
+    static ScriptValuePointer getMultipleEntityProperties(ScriptContext* context, ScriptEngine* engine);
+    ScriptValuePointer getMultipleEntityPropertiesInternal(ScriptEngine* engine, QVector<QUuid> entityIDs, const ScriptValuePointer& extendedDesiredProperties);
 
     QUuid addEntityInternal(const EntityItemProperties& properties, entity::HostType entityHostType);
 
@@ -834,7 +838,7 @@ public slots:
     /// may be inaccurate if the engine is unable to access the visible entities, in which case result.accurate
     /// will be false.
     Q_INVOKABLE RayToEntityIntersectionResult findRayIntersection(const PickRay& ray, bool precisionPicking = false,
-            const QScriptValue& entityIdsToInclude = QScriptValue(), const QScriptValue& entityIdsToDiscard = QScriptValue(),
+            const ScriptValuePointer& entityIdsToInclude = ScriptValuePointer(), const ScriptValuePointer& entityIdsToDiscard = ScriptValuePointer(),
             bool visibleOnly = false, bool collidableOnly = false) const;
 
     /*@jsdoc
@@ -863,7 +867,7 @@ public slots:
      * @param {string} errorInfo - <code>""</code> if there is a server entity script running, otherwise it may contain extra 
      *     information on the error.
      */
-    Q_INVOKABLE bool getServerScriptStatus(const QUuid& entityID, QScriptValue callback);
+    Q_INVOKABLE bool getServerScriptStatus(const QUuid& entityID, ScriptValuePointer callback);
 
     /*@jsdoc
      * Gets metadata for certain entity properties such as <code>script</code> and <code>serverScripts</code>.
@@ -893,8 +897,8 @@ public slots:
      * @param {object} result - The metadata for the requested entity property if there was no error, otherwise
      *     <code>undefined</code>.
      */
-    Q_INVOKABLE bool queryPropertyMetadata(const QUuid& entityID, QScriptValue property, QScriptValue scopeOrCallback,
-        QScriptValue methodOrName = QScriptValue());
+    Q_INVOKABLE bool queryPropertyMetadata(const QUuid& entityID, ScriptValuePointer property, ScriptValuePointer scopeOrCallback,
+        ScriptValuePointer methodOrName = ScriptValuePointer());
 
 
     /*@jsdoc
@@ -1907,7 +1911,7 @@ public slots:
       *     {@link Graphics} API instead. 
       */
     // FIXME move to a renderable entity interface
-    Q_INVOKABLE void getMeshes(const QUuid& entityID, QScriptValue callback);
+    Q_INVOKABLE void getMeshes(const QUuid& entityID, ScriptValuePointer callback);
 
     /*@jsdoc
      * Gets the object to world transform, excluding scale, of an entity.
@@ -2532,7 +2536,7 @@ protected:
         auto entity = getEntityTree()->findEntityByEntityItemID(id);
         if (entity) {
             std::lock_guard<std::recursive_mutex> lock(_entitiesScriptEngineLock);
-            function((entity->isLocalEntity() || entity->isMyAvatarEntity()) ? _persistentEntitiesScriptEngine : _nonPersistentEntitiesScriptEngine);
+            function((entity->isLocalEntity() || entity->isMyAvatarEntity()) ? _persistentEntitiesScriptManager : _nonPersistentEntitiesScriptManager);
         }
     };
 
@@ -2563,8 +2567,8 @@ private:
     EntityTreePointer _entityTree;
 
     std::recursive_mutex _entitiesScriptEngineLock;
-    QSharedPointer<EntitiesScriptEngineProvider> _persistentEntitiesScriptEngine;
-    QSharedPointer<EntitiesScriptEngineProvider> _nonPersistentEntitiesScriptEngine;
+    QSharedPointer<EntitiesScriptEngineProvider> _persistentEntitiesScriptManager;
+    QSharedPointer<EntitiesScriptEngineProvider> _nonPersistentEntitiesScriptManager;
 
     bool _bidOnSimulationOwnership { false };
 

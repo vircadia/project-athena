@@ -16,9 +16,11 @@
 
 #include <QVector>
 #include <QTouchEvent>
+#include <QtCore/QSharedPointer>
 
-class QScriptValue;
-class QScriptEngine;
+class ScriptEngine;
+class ScriptValue;
+using ScriptValuePointer = QSharedPointer<ScriptValue>;
 
 class TouchEvent {
 public:
@@ -26,8 +28,8 @@ public:
     TouchEvent(const QTouchEvent& event);
     TouchEvent(const QTouchEvent& event, const TouchEvent& other);
     
-    static QScriptValue toScriptValue(QScriptEngine* engine, const TouchEvent& event);
-    static void fromScriptValue(const QScriptValue& object, TouchEvent& event);
+    static ScriptValuePointer toScriptValue(ScriptEngine* engine, const TouchEvent& event);
+    static void fromScriptValue(const ScriptValuePointer& object, TouchEvent& event);
     
     float x;
     float y;

@@ -13,9 +13,14 @@
 #define hifi_WebSocketServerClass_h
 
 #include <QObject>
-#include <QScriptEngine>
 #include <QWebSocketServer>
 #include "WebSocketClass.h"
+#include <QtCore/QSharedPointer>
+
+class ScriptContext;
+class ScriptEngine;
+class ScriptValue;
+using ScriptValuePointer = QSharedPointer<ScriptValue>;
 
 /*@jsdoc
  * Manages {@link WebSocket}s in server entity and assignment client scripts.
@@ -80,14 +85,14 @@ class WebSocketServerClass : public QObject {
     Q_PROPERTY(bool listening READ isListening)
 
 public:
-    WebSocketServerClass(QScriptEngine* engine, const QString& serverName, const quint16 port);
+    WebSocketServerClass(ScriptEngine* engine, const QString& serverName, const quint16 port);
     ~WebSocketServerClass();
 
     QString getURL() { return _webSocketServer.serverUrl().toDisplayString(); }
     quint16 getPort() { return _webSocketServer.serverPort(); }
     bool isListening() { return _webSocketServer.isListening(); }
 
-    static QScriptValue constructor(QScriptContext* context, QScriptEngine* engine);
+    static ScriptValuePointer constructor(ScriptContext* context, ScriptEngine* engine);
 
 public slots:
 
@@ -99,7 +104,7 @@ public slots:
 
 private:
     QWebSocketServer _webSocketServer;
-    QScriptEngine* _engine;
+    ScriptEngine* _engine;
     QList<WebSocketClass*> _clients;
 
 private slots:

@@ -20,8 +20,8 @@ const float RingGizmoPropertyGroup::MAX_ALPHA = 1.0f;
 const float RingGizmoPropertyGroup::MIN_RADIUS = 0.0f;
 const float RingGizmoPropertyGroup::MAX_RADIUS = 0.5f;
 
-void RingGizmoPropertyGroup::copyToScriptValue(const EntityPropertyFlags& desiredProperties, QScriptValue& properties,
-                                          QScriptEngine* engine, bool skipDefaults,
+void RingGizmoPropertyGroup::copyToScriptValue(const EntityPropertyFlags& desiredProperties, ScriptValuePointer& properties,
+                                          ScriptEngine* engine, bool skipDefaults,
                                           EntityItemProperties& defaultEntityProperties) const {
     COPY_GROUP_PROPERTY_TO_QSCRIPTVALUE(PROP_START_ANGLE, Ring, ring, StartAngle, startAngle);
     COPY_GROUP_PROPERTY_TO_QSCRIPTVALUE(PROP_END_ANGLE, Ring, ring, EndAngle, endAngle);
@@ -46,7 +46,7 @@ void RingGizmoPropertyGroup::copyToScriptValue(const EntityPropertyFlags& desire
     COPY_GROUP_PROPERTY_TO_QSCRIPTVALUE_TYPED(PROP_MINOR_TICK_MARKS_COLOR, Ring, ring, MinorTickMarksColor, minorTickMarksColor, u8vec3Color);
 }
 
-void RingGizmoPropertyGroup::copyFromScriptValue(const QScriptValue& object, bool& _defaultSettings) {
+void RingGizmoPropertyGroup::copyFromScriptValue(const ScriptValuePointer& object, bool& _defaultSettings) {
     COPY_GROUP_PROPERTY_FROM_QSCRIPTVALUE(ring, startAngle, float, setStartAngle);
     COPY_GROUP_PROPERTY_FROM_QSCRIPTVALUE(ring, endAngle, float, setEndAngle);
     COPY_GROUP_PROPERTY_FROM_QSCRIPTVALUE(ring, innerRadius, float, setInnerRadius);

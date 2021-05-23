@@ -12,10 +12,15 @@
 #include "DataViewPrototype.h"
 
 #include <QDebug>
+#include <QtCore/QDataStream>
+#include <QtScript/QScriptEngine>
+#include <QtScript/QScriptValue>
 
 #include <glm/glm.hpp>
 
-#include "DataViewClass.h"
+#include <SharedUtil.h>
+
+#include "ArrayBufferViewClass.h"
 
 Q_DECLARE_METATYPE(QByteArray*)
 

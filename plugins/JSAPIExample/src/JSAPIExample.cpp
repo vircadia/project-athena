@@ -18,12 +18,15 @@
 #include <QtCore/QLoggingCategory>
 #include <QtCore/QThread>
 #include <QtCore/QTimer>
-#include <QtScript/QScriptEngine>
-#include <QtScript/QScriptable>
 
 #include <SettingHelpers.h>  // for ::settingsFilename()
 #include <SharedUtil.h>      // for ::usecTimestampNow()
 #include <shared/ScriptInitializerMixin.h>
+#include <ScriptContext.h>
+#include <ScriptEngine.h>
+#include <ScriptManager.h>
+#include <ScriptValue.h>
+#include <Scriptable.h>
 
 // NOTE: replace this with your own namespace when starting a new plugin (to avoid .so/.dll symbol clashes)
 namespace REPLACE_ME_WITH_UNIQUE_NAME {
@@ -33,9 +36,9 @@ namespace REPLACE_ME_WITH_UNIQUE_NAME {
 
     QLoggingCategory logger { "jsapiexample" };
 
-    inline QVariant raiseScriptingError(QScriptContext* context, const QString& message, const QVariant& returnValue = QVariant()) {
+    inline QVariant raiseScriptingError(ScriptContext* context, const QString& message, const QVariant& returnValue = QVariant()) {
         if (context) {
-            // when a QScriptContext is available throw an actual JS Exception (which can be caught using try/catch on JS side)
+            // when a ScriptContext is available throw an actual JS Exception (which can be caught using try/catch on JS side)
             context->throwError(message);
         } else {
             // otherwise just log the error
@@ -46,7 +49,7 @@ namespace REPLACE_ME_WITH_UNIQUE_NAME {
 
     QObject* createScopedSettings(const QString& scope, QObject* parent, QString& error);
 
-    class JSAPIExample : public QObject, public QScriptable {
+    class JSAPIExample : public QObject, public Scriptable {
         Q_OBJECT
         Q_PLUGIN_METADATA(IID "JSAPIExample" FILE "plugin.json")
         Q_PROPERTY(QString version MEMBER _version CONSTANT)
@@ -59,9 +62,9 @@ namespace REPLACE_ME_WITH_UNIQUE_NAME {
                 return;
             }
             qCWarning(logger) << "registering w/ScriptInitializerMixin..." << scriptInit.data();
-            scriptInit->registerScriptInitializer([this](QScriptEngine* engine) {
-                auto value = engine->newQObject(this, QScriptEngine::QtOwnership, QScriptEngine::ExcludeDeleteLater);
-                engine->globalObject().setProperty(objectName(), value);
+            scriptInit->registerScriptInitializer([this](ScriptEngine* engine) {
+                auto value = engine->newQObject(this, ScriptEngine::QtOwnership, ScriptEngine::ExcludeDeleteLater);
+                engine->globalObject()->setProperty(objectName(), value);
                 // qCDebug(logger) << "setGlobalInstance" << objectName() << engine->property("fileName");
             });
             // qCInfo(logger) << "plugin loaded" << qApp << toString() << QThread::currentThread();
@@ -69,7 +72,7 @@ namespace REPLACE_ME_WITH_UNIQUE_NAME {
 
         // NOTES: everything within the "public slots:" section below will be available from JS via overall plugin QObject
         //    also, to demonstrate future-proofing JS API code, QVariant's are used throughout most of these examples --
-        //    which still makes them very Qt-specific, but avoids depending directly on deprecated QtScript/QScriptValue APIs.
+        //    which still makes them very Qt-specific, but avoids depending directly on deprecated ScriptValuePointer APIs.
         //    (as such this plugin class and its methods remain forward-compatible with other engines like QML's QJSEngine)
 
     public slots:
@@ -145,7 +148,7 @@ namespace REPLACE_ME_WITH_UNIQUE_NAME {
 
         /**
           * Example of exposing a custom "managed" C++ QObject to JS
-          * The lifecycle of the created QObject* instance becomes managed by the invoking QScriptEngine --
+          * The lifecycle of the created QObject* instance becomes managed by the invoking ScriptEngine --
           * it will be automatically cleaned up once no longer reachable from any JS variables/closures.
           * @example <caption>access persistent settings stored in separate .json files</caption>
           * var settings = JSAPIExample.getScopedSettings("example");
@@ -156,18 +159,22 @@ namespace REPLACE_ME_WITH_UNIQUE_NAME {
           * print("all example::* keys", settings.allKeys());
           * settings = null; // optional best pratice; allows the object to be reclaimed ASAP by the JS garbage collector
           */
-        QScriptValue getScopedSettings(const QString& scope) {
-            auto engine = QScriptable::engine();
+        ScriptValuePointer getScopedSettings(const QString& scope) {
+            auto engine = Scriptable::engine();
             if (!engine) {
-                return QScriptValue::NullValue;
+                return ScriptValuePointer();
+            }
+            auto manager = engine->manager();
+            if (!manager) {
+                return ScriptValuePointer();
             }
             QString error;
-            auto cppValue = createScopedSettings(scope, engine, error);
+            auto cppValue = createScopedSettings(scope, manager, error);
             if (!cppValue) {
                 raiseScriptingError(context(), "error creating scoped settings instance: " + error);
-                return QScriptValue::NullValue;
+                return engine->nullValue();
             }
-            return engine->newQObject(cppValue, QScriptEngine::ScriptOwnership, QScriptEngine::ExcludeDeleteLater);
+            return engine->newQObject(cppValue, ScriptEngine::ScriptOwnership, ScriptEngine::ExcludeDeleteLater);
         }
 
     private:

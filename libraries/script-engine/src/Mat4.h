@@ -16,10 +16,10 @@
 
 #include <QObject>
 #include <QString>
-#include <QtScript/QScriptable>
 #include <QVector>
 #include <glm/glm.hpp>
 #include "RegisteredMetaTypes.h"
+#include "Scriptable.h"
 
 /*@jsdoc
  * The <code>Mat4</code> API provides facilities for generating and using 4 x 4 matrices. These matrices are typically used to 
@@ -37,7 +37,7 @@
  */
 
 /// Scriptable Mat4 object.  Used exclusively in the JavaScript API
-class Mat4 : public QObject, protected QScriptable {
+class Mat4 : public QObject, protected Scriptable {
     Q_OBJECT
 
 public slots:

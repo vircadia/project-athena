@@ -13,14 +13,16 @@
 #define hifi_AccountServicesScriptingInterface_h
 
 #include <QObject>
-#include <QScriptContext>
-#include <QScriptEngine>
-#include <QScriptValue>
 #include <QString>
 #include <QStringList>
+#include <QtCore/QSharedPointer>
 
 #include <AccountManager.h>
 #include <DiscoverabilityManager.h>
+
+class ScriptEngine;
+class ScriptValue;
+using ScriptValuePointer = QSharedPointer<ScriptValue>;
 
 class DownloadInfoResult {
 public:
@@ -31,8 +33,8 @@ public:
 
 Q_DECLARE_METATYPE(DownloadInfoResult)
 
-QScriptValue DownloadInfoResultToScriptValue(QScriptEngine* engine, const DownloadInfoResult& result);
-void DownloadInfoResultFromScriptValue(const QScriptValue& object, DownloadInfoResult& result);
+ScriptValuePointer DownloadInfoResultToScriptValue(ScriptEngine* engine, const DownloadInfoResult& result);
+void DownloadInfoResultFromScriptValue(const ScriptValuePointer& object, DownloadInfoResult& result);
 
 class AccountServicesScriptingInterface : public QObject {
     Q_OBJECT

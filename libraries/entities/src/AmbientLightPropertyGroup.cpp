@@ -19,14 +19,14 @@
 
 const float AmbientLightPropertyGroup::DEFAULT_AMBIENT_LIGHT_INTENSITY = 0.5f;
 
-void AmbientLightPropertyGroup::copyToScriptValue(const EntityPropertyFlags& desiredProperties, QScriptValue& properties,
-    QScriptEngine* engine, bool skipDefaults, EntityItemProperties& defaultEntityProperties) const {
+void AmbientLightPropertyGroup::copyToScriptValue(const EntityPropertyFlags& desiredProperties, ScriptValuePointer& properties,
+    ScriptEngine* engine, bool skipDefaults, EntityItemProperties& defaultEntityProperties) const {
     
     COPY_GROUP_PROPERTY_TO_QSCRIPTVALUE(PROP_AMBIENT_LIGHT_INTENSITY, AmbientLight, ambientLight, AmbientIntensity, ambientIntensity);
     COPY_GROUP_PROPERTY_TO_QSCRIPTVALUE(PROP_AMBIENT_LIGHT_URL, AmbientLight, ambientLight, AmbientURL, ambientURL);
 }
 
-void AmbientLightPropertyGroup::copyFromScriptValue(const QScriptValue& object, bool& _defaultSettings) {
+void AmbientLightPropertyGroup::copyFromScriptValue(const ScriptValuePointer& object, bool& _defaultSettings) {
     COPY_GROUP_PROPERTY_FROM_QSCRIPTVALUE(ambientLight, ambientIntensity, float, setAmbientIntensity);
     COPY_GROUP_PROPERTY_FROM_QSCRIPTVALUE(ambientLight, ambientURL, QString, setAmbientURL);
     

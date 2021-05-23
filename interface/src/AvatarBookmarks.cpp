@@ -49,12 +49,12 @@ void addAvatarEntities(const QVariantList& avatarEntities) {
     EntitySimulationPointer entitySimulation = entityTree->getSimulation();
     PhysicalEntitySimulationPointer physicalEntitySimulation = std::static_pointer_cast<PhysicalEntitySimulation>(entitySimulation);
     EntityEditPacketSender* entityPacketSender = physicalEntitySimulation->getPacketSender();
-    QScriptEngine scriptEngine;
+    ScriptEnginePointer scriptEngine = newScriptEngine();
     for (int index = 0; index < avatarEntities.count(); index++) {
         const QVariantMap& avatarEntityProperties = avatarEntities.at(index).toMap();
         QVariant variantProperties = avatarEntityProperties["properties"];
         QVariantMap asMap = variantProperties.toMap();
-        QScriptValue scriptProperties = variantMapToScriptValue(asMap, scriptEngine);
+        ScriptValuePointer scriptProperties = variantMapToScriptValue(asMap, *scriptEngine);
         EntityItemProperties entityProperties;
         EntityItemPropertiesFromScriptValueIgnoreReadOnly(scriptProperties, entityProperties);
 
@@ -298,7 +298,7 @@ QVariantMap AvatarBookmarks::getAvatarDataToBookmark() {
     EntityTreePointer entityTree = treeRenderer ? treeRenderer->getTree() : nullptr;
 
     if (entityTree) {
-        QScriptEngine scriptEngine;
+        ScriptEnginePointer scriptEngine = newScriptEngine();
         auto avatarEntities = myAvatar->getAvatarEntityDataNonDefault();
         for (auto entityID : avatarEntities.keys()) {
             auto entity = entityTree->findEntityByID(entityID);
@@ -318,8 +318,8 @@ QVariantMap AvatarBookmarks::getAvatarDataToBookmark() {
             desiredProperties -= PROP_JOINT_TRANSLATIONS;
 
             EntityItemProperties entityProperties = entity->getProperties(desiredProperties);
-            QScriptValue scriptProperties = EntityItemPropertiesToScriptValue(&scriptEngine, entityProperties);
-            avatarEntityData["properties"] = scriptProperties.toVariant();
+            ScriptValuePointer scriptProperties = EntityItemPropertiesToScriptValue(scriptEngine.get(), entityProperties);
+            avatarEntityData["properties"] = scriptProperties->toVariant();
             wearableEntities.append(QVariant(avatarEntityData));
         }
     }

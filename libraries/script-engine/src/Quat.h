@@ -18,9 +18,10 @@
 
 #include <QObject>
 #include <QString>
-#include <QtScript/QScriptable>
 
 #include <GLMHelpers.h>
+
+#include "Scriptable.h"
 
 /*@jsdoc
  * A quaternion value. See also the {@link Quat(0)|Quat} API.
@@ -53,7 +54,7 @@
  */
 
 /// Scriptable interface a Quaternion helper class object. Used exclusively in the JavaScript API
-class Quat : public QObject, protected QScriptable {
+class Quat : public QObject, protected Scriptable {
     Q_OBJECT
     Q_PROPERTY(glm::quat IDENTITY READ IDENTITY CONSTANT)
 

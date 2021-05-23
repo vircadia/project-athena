@@ -35,11 +35,15 @@
 #include <StreamUtils.h>
 #include <UUID.h>
 #include <shared/JSONHelpers.h>
+#include <ScriptEngine.h>
+#include <ScriptEngineCast.h>
+#include <ScriptValueIterator.h>
 #include <ShapeInfo.h>
 #include <AudioHelpers.h>
 #include <Profile.h>
 #include <VariantMapToScriptValue.h>
 #include <BitVectorHelpers.h>
+#include <ScriptValueUtils.h>
 
 #include "AvatarLogging.h"
 #include "AvatarTraits.h"
@@ -2534,69 +2538,69 @@ QDataStream& operator>>(QDataStream& in, AttachmentData& attachment) {
 }
 
 void AttachmentDataObject::setModelURL(const QString& modelURL) {
-    AttachmentData data = qscriptvalue_cast<AttachmentData>(thisObject());
+    AttachmentData data = scriptvalue_cast<AttachmentData>(thisObject());
     data.modelURL = modelURL;
     thisObject() = engine()->toScriptValue(data);
 }
 
 QString AttachmentDataObject::getModelURL() const {
-    return qscriptvalue_cast<AttachmentData>(thisObject()).modelURL.toString();
+    return scriptvalue_cast<AttachmentData>(thisObject()).modelURL.toString();
 }
 
 void AttachmentDataObject::setJointName(const QString& jointName) {
-    AttachmentData data = qscriptvalue_cast<AttachmentData>(thisObject());
+    AttachmentData data = scriptvalue_cast<AttachmentData>(thisObject());
     data.jointName = jointName;
     thisObject() = engine()->toScriptValue(data);
 }
 
 QString AttachmentDataObject::getJointName() const {
-    return qscriptvalue_cast<AttachmentData>(thisObject()).jointName;
+    return scriptvalue_cast<AttachmentData>(thisObject()).jointName;
 }
 
 void AttachmentDataObject::setTranslation(const glm::vec3& translation) {
-    AttachmentData data = qscriptvalue_cast<AttachmentData>(thisObject());
+    AttachmentData data = scriptvalue_cast<AttachmentData>(thisObject());
     data.translation = translation;
     thisObject() = engine()->toScriptValue(data);
 }
 
 glm::vec3 AttachmentDataObject::getTranslation() const {
-    return qscriptvalue_cast<AttachmentData>(thisObject()).translation;
+    return scriptvalue_cast<AttachmentData>(thisObject()).translation;
 }
 
 void AttachmentDataObject::setRotation(const glm::quat& rotation) {
-    AttachmentData data = qscriptvalue_cast<AttachmentData>(thisObject());
+    AttachmentData data = scriptvalue_cast<AttachmentData>(thisObject());
     data.rotation = rotation;
     thisObject() = engine()->toScriptValue(data);
 }
 
 glm::quat AttachmentDataObject::getRotation() const {
-    return qscriptvalue_cast<AttachmentData>(thisObject()).rotation;
+    return scriptvalue_cast<AttachmentData>(thisObject()).rotation;
 }
 
 void AttachmentDataObject::setScale(float scale) {
-    AttachmentData data = qscriptvalue_cast<AttachmentData>(thisObject());
+    AttachmentData data = scriptvalue_cast<AttachmentData>(thisObject());
     data.scale = scale;
     thisObject() = engine()->toScriptValue(data);
 }
 
 float AttachmentDataObject::getScale() const {
-    return qscriptvalue_cast<AttachmentData>(thisObject()).scale;
+    return scriptvalue_cast<AttachmentData>(thisObject()).scale;
 }
 
 void AttachmentDataObject::setIsSoft(bool isSoft) {
-    AttachmentData data = qscriptvalue_cast<AttachmentData>(thisObject());
+    AttachmentData data = scriptvalue_cast<AttachmentData>(thisObject());
     data.isSoft = isSoft;
     thisObject() = engine()->toScriptValue(data);
 }
 
 bool AttachmentDataObject::getIsSoft() const {
-    return qscriptvalue_cast<AttachmentData>(thisObject()).isSoft;
+    return scriptvalue_cast<AttachmentData>(thisObject()).isSoft;
 }
 
-void registerAvatarTypes(QScriptEngine* engine) {
-    qScriptRegisterSequenceMetaType<QVector<AttachmentData> >(engine);
+void registerAvatarTypes(ScriptEngine* engine) {
+    scriptRegisterSequenceMetaType<QVector<AttachmentData> >(engine);
     engine->setDefaultPrototype(qMetaTypeId<AttachmentData>(), engine->newQObject(
-        new AttachmentDataObject(), QScriptEngine::ScriptOwnership));
+        new AttachmentDataObject(), ScriptEngine::ScriptOwnership));
 }
 
 void AvatarData::setRecordingBasis(std::shared_ptr<Transform> recordingBasis) {
@@ -3140,40 +3144,40 @@ glm::mat4 AvatarData::getControllerRightHandMatrix() const {
  * @property {SubmeshIntersection} extraInfo - Extra information on the mesh intersected if mesh was picked against, 
  *     <code>{}</code> if it wasn't.
  */
-QScriptValue RayToAvatarIntersectionResultToScriptValue(QScriptEngine* engine, const RayToAvatarIntersectionResult& value) {
-    QScriptValue obj = engine->newObject();
-    obj.setProperty("intersects", value.intersects);
-    QScriptValue avatarIDValue = quuidToScriptValue(engine, value.avatarID);
-    obj.setProperty("avatarID", avatarIDValue);
-    obj.setProperty("distance", value.distance);
-    obj.setProperty("face", boxFaceToString(value.face));
-    QScriptValue intersection = vec3ToScriptValue(engine, value.intersection);
+ScriptValuePointer RayToAvatarIntersectionResultToScriptValue(ScriptEngine* engine, const RayToAvatarIntersectionResult& value) {
+    ScriptValuePointer obj = engine->newObject();
+    obj->setProperty("intersects", value.intersects);
+    ScriptValuePointer avatarIDValue = quuidToScriptValue(engine, value.avatarID);
+    obj->setProperty("avatarID", avatarIDValue);
+    obj->setProperty("distance", value.distance);
+    obj->setProperty("face", boxFaceToString(value.face));
+    ScriptValuePointer intersection = vec3ToScriptValue(engine, value.intersection);
 
-    obj.setProperty("intersection", intersection);
-    QScriptValue surfaceNormal = vec3ToScriptValue(engine, value.surfaceNormal);
-    obj.setProperty("surfaceNormal", surfaceNormal);
-    obj.setProperty("jointIndex", value.jointIndex);
-    obj.setProperty("extraInfo", engine->toScriptValue(value.extraInfo));
+    obj->setProperty("intersection", intersection);
+    ScriptValuePointer surfaceNormal = vec3ToScriptValue(engine, value.surfaceNormal);
+    obj->setProperty("surfaceNormal", surfaceNormal);
+    obj->setProperty("jointIndex", value.jointIndex);
+    obj->setProperty("extraInfo", engine->toScriptValue(value.extraInfo));
     return obj;
 }
 
-void RayToAvatarIntersectionResultFromScriptValue(const QScriptValue& object, RayToAvatarIntersectionResult& value) {
-    value.intersects = object.property("intersects").toVariant().toBool();
-    QScriptValue avatarIDValue = object.property("avatarID");
+void RayToAvatarIntersectionResultFromScriptValue(const ScriptValuePointer& object, RayToAvatarIntersectionResult& value) {
+    value.intersects = object->property("intersects")->toVariant().toBool();
+    ScriptValuePointer avatarIDValue = object->property("avatarID");
     quuidFromScriptValue(avatarIDValue, value.avatarID);
-    value.distance = object.property("distance").toVariant().toFloat();
-    value.face = boxFaceFromString(object.property("face").toVariant().toString());
+    value.distance = object->property("distance")->toVariant().toFloat();
+    value.face = boxFaceFromString(object->property("face")->toVariant().toString());
 
-    QScriptValue intersection = object.property("intersection");
-    if (intersection.isValid()) {
+    ScriptValuePointer intersection = object->property("intersection");
+    if (intersection->isValid()) {
         vec3FromScriptValue(intersection, value.intersection);
     }
-    QScriptValue surfaceNormal = object.property("surfaceNormal");
-    if (surfaceNormal.isValid()) {
+    ScriptValuePointer surfaceNormal = object->property("surfaceNormal");
+    if (surfaceNormal->isValid()) {
         vec3FromScriptValue(surfaceNormal, value.surfaceNormal);
     }
-    value.jointIndex = object.property("jointIndex").toInt32();
-    value.extraInfo = object.property("extraInfo").toVariant().toMap();
+    value.jointIndex = object->property("jointIndex")->toInt32();
+    value.extraInfo = object->property("extraInfo")->toVariant().toMap();
 }
 
 // these coefficients can be changed via JS for experimental tuning
@@ -3186,8 +3190,8 @@ float AvatarData::_avatarSortCoefficientAge { 1.0f };
  * An object with the UUIDs of avatar entities as keys and avatar entity properties objects as values.
  * @typedef {Object.<Uuid, Entities.EntityProperties>} AvatarEntityMap
  */
-QScriptValue AvatarEntityMapToScriptValue(QScriptEngine* engine, const AvatarEntityMap& value) {
-    QScriptValue obj = engine->newObject();
+ScriptValuePointer AvatarEntityMapToScriptValue(ScriptEngine* engine, const AvatarEntityMap& value) {
+    ScriptValuePointer obj = engine->newObject();
     for (auto entityID : value.keys()) {
         QByteArray entityProperties = value.value(entityID);
         QJsonDocument jsonEntityProperties = QJsonDocument::fromBinaryData(entityProperties);
@@ -3197,22 +3201,22 @@ QScriptValue AvatarEntityMapToScriptValue(QScriptEngine* engine, const AvatarEnt
 
         QVariant variantEntityProperties = jsonEntityProperties.toVariant();
         QVariantMap entityPropertiesMap = variantEntityProperties.toMap();
-        QScriptValue scriptEntityProperties = variantMapToScriptValue(entityPropertiesMap, *engine);
+        ScriptValuePointer scriptEntityProperties = variantMapToScriptValue(entityPropertiesMap, *engine);
 
         QString key = entityID.toString();
-        obj.setProperty(key, scriptEntityProperties);
+        obj->setProperty(key, scriptEntityProperties);
     }
     return obj;
 }
 
-void AvatarEntityMapFromScriptValue(const QScriptValue& object, AvatarEntityMap& value) {
-    QScriptValueIterator itr(object);
-    while (itr.hasNext()) {
-        itr.next();
-        QUuid EntityID = QUuid(itr.name());
+void AvatarEntityMapFromScriptValue(const ScriptValuePointer& object, AvatarEntityMap& value) {
+    ScriptValueIteratorPointer itr(object->newIterator());
+    while (itr->hasNext()) {
+        itr->next();
+        QUuid EntityID = QUuid(itr->name());
 
-        QScriptValue scriptEntityProperties = itr.value();
-        QVariant variantEntityProperties = scriptEntityProperties.toVariant();
+        ScriptValuePointer scriptEntityProperties = itr->value();
+        QVariant variantEntityProperties = scriptEntityProperties->toVariant();
         QJsonDocument jsonEntityProperties = QJsonDocument::fromVariant(variantEntityProperties);
         QByteArray binaryEntityProperties = jsonEntityProperties.toBinaryData();
 

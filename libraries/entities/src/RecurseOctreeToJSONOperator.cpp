@@ -11,8 +11,9 @@
 
 #include "RecurseOctreeToJSONOperator.h"
 #include "EntityItemProperties.h"
+#include <ScriptValue.h>
 
-RecurseOctreeToJSONOperator::RecurseOctreeToJSONOperator(const OctreeElementPointer&, QScriptEngine* engine,
+RecurseOctreeToJSONOperator::RecurseOctreeToJSONOperator(const OctreeElementPointer&, ScriptEngine* engine,
     QString jsonPrefix, bool skipDefaults, bool skipThoseWithBadParents):
     _engine(engine),
     _json(jsonPrefix),
@@ -34,7 +35,7 @@ void RecurseOctreeToJSONOperator::processEntity(const EntityItemPointer& entity)
         return;  // we weren't able to resolve a parent from _parentID, so don't save this entity.
     }
 
-    QScriptValue qScriptValues = _skipDefaults
+    ScriptValuePointer qScriptValues = _skipDefaults
         ? EntityItemNonDefaultPropertiesToScriptValue(_engine, entity->getProperties())
         : EntityItemPropertiesToScriptValue(_engine, entity->getProperties());
 
@@ -45,6 +46,6 @@ void RecurseOctreeToJSONOperator::processEntity(const EntityItemPointer& entity)
     _json += "\n    ";
 
     // Override default toString():
-    qScriptValues.setProperty("toString", _toStringMethod);
-    _json += qScriptValues.toString();
+    qScriptValues->setProperty("toString", _toStringMethod);
+    _json += qScriptValues->toString();
 }

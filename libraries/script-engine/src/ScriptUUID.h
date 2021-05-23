@@ -16,7 +16,8 @@
 
 #include <QUuid>
 #include <QObject>
-#include <QtScript/QScriptable>
+
+#include "Scriptable.h"
 
 /*@jsdoc
  * The <code>Uuid</code> API provides facilities for working with UUIDs.
@@ -34,7 +35,7 @@
  */
 
 /// Scriptable interface for a UUID helper class object. Used exclusively in the JavaScript API
-class ScriptUUID : public QObject, protected QScriptable {
+class ScriptUUID : public QObject, protected Scriptable {
     Q_OBJECT
     Q_PROPERTY(QString NULL READ NULL_UUID CONSTANT) // String for use in scripts.
 

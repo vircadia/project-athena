@@ -13,9 +13,14 @@
 #define hifi_ModelScriptingInterface_h
 
 #include <QtCore/QObject>
+#include <QtCore/QSharedPointer>
 
 #include <RegisteredMetaTypes.h>
-class QScriptEngine;
+
+class ScriptEngine;
+class ScriptValue;
+using ScriptEnginePointer = QSharedPointer<ScriptEngine>;
+using ScriptValuePointer = QSharedPointer<ScriptValue>;
 
 /*@jsdoc
  * The <code>Model</code> API provides the ability to manipulate meshes. You can get the meshes for an entity using 
@@ -52,7 +57,7 @@ public:
      * @param {MeshProxy[]} meshes - The meshes to combine.
      * @returns {MeshProxy} The combined mesh.
      */
-    Q_INVOKABLE QScriptValue appendMeshes(MeshProxyList in);
+    Q_INVOKABLE ScriptValuePointer appendMeshes(MeshProxyList in);
 
     /*@jsdoc
      * Transforms the vertices in a mesh.
@@ -61,7 +66,7 @@ public:
      * @param {MeshProxy} mesh - The mesh to apply the transform to.
      * @returns {MeshProxy|boolean} The transformed mesh, if valid. <code>false</code> if an error.
      */
-    Q_INVOKABLE QScriptValue transformMesh(glm::mat4 transform, MeshProxy* meshProxy);
+    Q_INVOKABLE ScriptValuePointer transformMesh(glm::mat4 transform, MeshProxy* meshProxy);
 
     /*@jsdoc
      * Creates a new mesh.
@@ -71,7 +76,7 @@ public:
      * @param {MeshFace[]} faces - The faces in the mesh.
      * @returns {MeshProxy} A new mesh.
      */
-    Q_INVOKABLE QScriptValue newMesh(const QVector<glm::vec3>& vertices,
+    Q_INVOKABLE ScriptValuePointer newMesh(const QVector<glm::vec3>& vertices,
                                      const QVector<glm::vec3>& normals,
                                      const QVector<MeshFace>& faces);
 
@@ -81,7 +86,7 @@ public:
      * @param {MeshProxy} mesh - The mesh to count the vertices in.
      * @returns {number|boolean} The number of vertices in the mesh, if valid. <code>false</code> if an error.
      */
-    Q_INVOKABLE QScriptValue getVertexCount(MeshProxy* meshProxy);
+    Q_INVOKABLE ScriptValuePointer getVertexCount(MeshProxy* meshProxy);
 
     /*@jsdoc
      * Gets the position of a vertex in a mesh.
@@ -90,10 +95,10 @@ public:
      * @param {number} index - The index of the vertex to get.
      * @returns {Vec3|boolean} The local position of the vertex relative to the mesh, if valid. <code>false</code> if an error.
      */
-    Q_INVOKABLE QScriptValue getVertex(MeshProxy* meshProxy, int vertexIndex);
+    Q_INVOKABLE ScriptValuePointer getVertex(MeshProxy* meshProxy, int vertexIndex);
 
 private:
-    QScriptEngine* _modelScriptEngine { nullptr };
+    ScriptEnginePointer _modelScriptEngine { nullptr };
 };
 
 #endif // hifi_ModelScriptingInterface_h

@@ -3,7 +3,7 @@ if (NOT APPLE)
 set(TARGET_NAME controllers-test)
  
 # This is not a testcase -- just set it up as a regular hifi project
-setup_hifi_project(Script Qml)
+setup_hifi_project(Qml)
 set_target_properties(${TARGET_NAME} PROPERTIES FOLDER "Tests/manual-tests/")
 
 setup_memory_debugger()

@@ -1,6 +1,6 @@
 set(TARGET_NAME assignment-client)
 
-setup_hifi_project(Core Gui Network Script Quick WebSockets)
+setup_hifi_project(Core Gui Network Quick WebSockets)
 
 # Fix up the rpath so macdeployqt works
 if (APPLE)

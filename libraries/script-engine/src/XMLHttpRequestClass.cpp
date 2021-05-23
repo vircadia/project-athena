@@ -23,12 +23,16 @@
 #include <MetaverseAPI.h>
 
 #include "ResourceRequestObserver.h"
+#include "ScriptContext.h"
 #include "ScriptEngine.h"
+#include "ScriptValue.h"
 
 Q_DECLARE_METATYPE(QByteArray*)
 
-XMLHttpRequestClass::XMLHttpRequestClass(QScriptEngine* engine) :
+XMLHttpRequestClass::XMLHttpRequestClass(ScriptEngine* engine) :
     _engine(engine),
+    _onTimeout(engine->nullValue()),
+    _onReadyStateChange(engine->nullValue()),
     _timer(this) {
 
     _request.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
@@ -39,15 +43,15 @@ XMLHttpRequestClass::~XMLHttpRequestClass() {
     if (_reply) { _reply->deleteLater(); }
 }
 
-QScriptValue XMLHttpRequestClass::constructor(QScriptContext* context, QScriptEngine* engine) {
-    return engine->newQObject(new XMLHttpRequestClass(engine), QScriptEngine::ScriptOwnership);
+ScriptValuePointer XMLHttpRequestClass::constructor(ScriptContext* context, ScriptEngine* engine) {
+    return engine->newQObject(new XMLHttpRequestClass(engine), ScriptEngine::ScriptOwnership);
 }
 
-QScriptValue XMLHttpRequestClass::getStatus() const {
+ScriptValuePointer XMLHttpRequestClass::getStatus() const {
     if (_reply) {
-        return QScriptValue(_reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt());
+        return _engine->newValue(_reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt());
     } 
-    return QScriptValue(0);
+    return ScriptValuePointer(0);
 }
 
 QString XMLHttpRequestClass::getStatusText() const {
@@ -87,7 +91,7 @@ void XMLHttpRequestClass::requestDownloadProgress(qint64 bytesReceived, qint64 b
     }
 }
 
-QScriptValue XMLHttpRequestClass::getAllResponseHeaders() const {
+ScriptValuePointer XMLHttpRequestClass::getAllResponseHeaders() const {
     if (_reply) {
         QList<QNetworkReply::RawHeaderPair> headerList = _reply->rawHeaderPairs();
         QByteArray headers;
@@ -97,16 +101,16 @@ QScriptValue XMLHttpRequestClass::getAllResponseHeaders() const {
             headers.append(headerList[i].second);
             headers.append("\n");
         }
-        return QString(headers.data());
+        return _engine->newValue(QString(headers.data()));
     }
-    return QScriptValue("");
+    return _engine->newValue("");
 }
 
-QScriptValue XMLHttpRequestClass::getResponseHeader(const QString& name) const {
+ScriptValuePointer XMLHttpRequestClass::getResponseHeader(const QString& name) const {
     if (_reply && _reply->hasRawHeader(name.toLatin1())) {
-        return QScriptValue(QString(_reply->rawHeader(name.toLatin1())));
+        return _engine->newValue(QString(_reply->rawHeader(name.toLatin1())));
     }
-    return QScriptValue::NullValue;
+    return _engine->nullValue();
 }
 
 /*@jsdoc
@@ -116,8 +120,8 @@ QScriptValue XMLHttpRequestClass::getResponseHeader(const QString& name) const {
 void XMLHttpRequestClass::setReadyState(ReadyState readyState) {
     if (readyState != _readyState) {
         _readyState = readyState;
-        if (_onReadyStateChange.isFunction()) {
-            _onReadyStateChange.call(QScriptValue::NullValue);
+        if (_onReadyStateChange->isFunction()) {
+            _onReadyStateChange->call(_onReadyStateChange->engine()->nullValue());
         }
     }
 }
@@ -153,17 +157,17 @@ void XMLHttpRequestClass::open(const QString& method, const QString& url, bool a
 }
 
 void XMLHttpRequestClass::send() {
-    send(QScriptValue::NullValue);
+    send(_engine->nullValue());
 }
 
-void XMLHttpRequestClass::send(const QScriptValue& data) {
+void XMLHttpRequestClass::send(const ScriptValuePointer& data) {
     if (_readyState == OPENED && !_reply) {
 
         if (!data.isNull()) {
-            if (data.isObject()) {
-                _sendData = qscriptvalue_cast<QByteArray>(data);
+            if (data->isObject()) {
+                _sendData = scriptvalue_cast<QByteArray>(data);
             } else {
-                _sendData = data.toString().toUtf8();
+                _sendData = data->toString().toUtf8();
             }
         }
 
@@ -193,8 +197,8 @@ void XMLHttpRequestClass::doSend() {
  * @callback XMLHttpRequest~onTimeoutCallback 
  */
 void XMLHttpRequestClass::requestTimeout() {
-    if (_onTimeout.isFunction()) {
-        _onTimeout.call(QScriptValue::NullValue);
+    if (_onTimeout->isFunction()) {
+        _onTimeout->call(_engine->nullValue());
     }
     abortRequest();
     _errorCode = QNetworkReply::TimeoutError;
@@ -215,15 +219,14 @@ void XMLHttpRequestClass::requestFinished() {
 
         if (_responseType == "json") {
             _responseData = _engine->evaluate("(" + QString(_rawResponseData.data()) + ")");
-            if (_responseData.isError()) {
+            if (_responseData->isError()) {
                 _engine->clearExceptions();
-                _responseData = QScriptValue::NullValue;
+                _responseData = _engine->nullValue();
             }
         } else if (_responseType == "arraybuffer") {
-            QScriptValue data = _engine->newVariant(QVariant::fromValue(_rawResponseData));
-            _responseData = _engine->newObject(reinterpret_cast<ScriptEngine*>(_engine)->getArrayBufferClass(), data);
+            _responseData = _engine->newArrayBuffer(_rawResponseData);
         } else {
-            _responseData = QScriptValue(QString(_rawResponseData.data()));
+            _responseData = _engine->newValue(QString(_rawResponseData.data()));
         }
     }
 

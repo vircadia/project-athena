@@ -11,8 +11,7 @@
 #include <glm/gtx/norm.hpp>
 #include <glm/gtx/transform.hpp>
 
-#include <BaseScriptEngine.h>
-#include <QtScript/QScriptValue>
+#include <ScriptValue.h>
 #include <RegisteredMetaTypes.h>
 #include <graphics/BufferViewHelpers.h>
 #include <graphics/GpuHelpers.h>
@@ -78,12 +77,12 @@ QVariantList scriptable::ScriptableMeshPart::queryVertexAttributes(QVariant sele
     return parentMesh->queryVertexAttributes(selector);
 }
 
-glm::uint32 scriptable::ScriptableMeshPart::forEachVertex(QScriptValue _callback) {
+glm::uint32 scriptable::ScriptableMeshPart::forEachVertex(ScriptValuePointer _callback) {
     // TODO: limit to vertices within the part's indexed range?
     return isValid() ? parentMesh->forEachVertex(_callback) : 0;
 }
 
-glm::uint32 scriptable::ScriptableMeshPart::updateVertexAttributes(QScriptValue _callback) {
+glm::uint32 scriptable::ScriptableMeshPart::updateVertexAttributes(ScriptValuePointer _callback) {
     // TODO: limit to vertices within the part's indexed range?
     return isValid() ? parentMesh->updateVertexAttributes(_callback) : 0;
 }

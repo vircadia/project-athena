@@ -17,6 +17,7 @@
 #include "MappingBuilderProxy.h"
 #include "../ScriptingInterface.h"
 #include "../Logging.h"
+#include <ScriptValue.h>
 
 #include "filters/ClampFilter.h"
 #include "filters/ConstrainToIntegerFilter.h"
@@ -43,8 +44,8 @@ void RouteBuilderProxy::toQml(const QJSValue& destination) {
     return to(destinationEndpoint);
 }
 
-void RouteBuilderProxy::to(const QScriptValue& destination) {
-    qCDebug(controllers) << "Completing route " << destination.toString();
+void RouteBuilderProxy::to(const ScriptValuePointer& destination) {
+    qCDebug(controllers) << "Completing route " << destination->toString();
     auto destinationEndpoint = _parent.endpointFor(destination);
     return to(destinationEndpoint);
 }
@@ -65,7 +66,7 @@ QObject* RouteBuilderProxy::peek(bool enable) {
     return this;
 }
 
-QObject* RouteBuilderProxy::when(const QScriptValue& expression) {
+QObject* RouteBuilderProxy::when(const ScriptValuePointer& expression) {
     // FIXME: Support "!" conditional in simple expression and array expression.
     // Note that "!" is supported when parsing a JSON file, in UserInputMapper::parseConditional().
     auto newConditional = _parent.conditionalFor(expression);

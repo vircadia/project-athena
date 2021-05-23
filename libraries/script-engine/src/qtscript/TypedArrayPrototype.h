@@ -12,7 +12,9 @@
 #ifndef hifi_TypedArrayPrototype_h
 #define hifi_TypedArrayPrototype_h
 
-#include "ArrayBufferViewClass.h"
+#include <QtCore/QObject>
+#include <QtScript/QScriptable>
+#include <QtScript/QScriptValue>
 
 class TypedArrayPrototype : public QObject, public QScriptable {
     Q_OBJECT

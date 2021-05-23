@@ -17,15 +17,16 @@
 #include "ScriptableMeshPart.h"
 #include <GeometryUtil.h>
 #include <QUuid>
-#include <QtScript/QScriptEngine>
-#include <QtScript/QScriptValue>
-#include <QtScript/QScriptValueIterator>
+#include <ScriptEngine.h>
+#include <ScriptEngineCast.h>
+#include <ScriptValue.h>
+#include <ScriptValueUtils.h>
 #include <graphics/BufferViewHelpers.h>
 #include <graphics/GpuHelpers.h>
 #include <shared/QtHelpers.h>
 #include <SpatiallyNestable.h>
 
-GraphicsScriptingInterface::GraphicsScriptingInterface(QObject* parent) : QObject(parent), QScriptable() {
+GraphicsScriptingInterface::GraphicsScriptingInterface(QObject* parent) : QObject(parent), Scriptable() {
 }
 
 void GraphicsScriptingInterface::jsThrowError(const QString& error) {
@@ -314,18 +315,18 @@ namespace {
 }
 
 namespace scriptable {
-    template <typename T> int registerQPointerMetaType(QScriptEngine* engine) {
-        qScriptRegisterSequenceMetaType<QVector<QPointer<T>>>(engine);
-        return qScriptRegisterMetaType<QPointer<T>>(
+    template <typename T> int registerQPointerMetaType(ScriptEngine* engine) {
+        scriptRegisterSequenceMetaType<QVector<QPointer<T>>>(engine);
+        return scriptRegisterMetaType<QPointer<T>>(
             engine,
-            [](QScriptEngine* engine, const QPointer<T>& object) -> QScriptValue {
+            [](ScriptEngine* engine, const QPointer<T>& object) -> ScriptValuePointer {
                 if (!object) {
-                    return QScriptValue::NullValue;
+                    return engine->nullValue();
                 }
-                return engine->newQObject(object, QScriptEngine::QtOwnership, QScriptEngine::ExcludeDeleteLater | QScriptEngine::AutoCreateDynamicProperties);
+                return engine->newQObject(object, ScriptEngine::QtOwnership, ScriptEngine::ExcludeDeleteLater | ScriptEngine::AutoCreateDynamicProperties);
             },
-            [](const QScriptValue& value, QPointer<T>& out) {
-                auto obj = value.toQObject();
+            [](const ScriptValuePointer& value, QPointer<T>& out) {
+                auto obj = value->toQObject();
 #ifdef SCRIPTABLE_MESH_DEBUG
                 qCInfo(graphics_scripting) << "qpointer_qobject_cast" << obj << value.toString();
 #endif
@@ -347,12 +348,12 @@ namespace scriptable {
         );
     }
 
-    QScriptValue qVectorScriptableMaterialLayerToScriptValue(QScriptEngine* engine, const QVector<scriptable::ScriptableMaterialLayer>& vector) {
-        return qScriptValueFromSequence(engine, vector);
+    ScriptValuePointer qVectorScriptableMaterialLayerToScriptValue(ScriptEngine* engine, const QVector<scriptable::ScriptableMaterialLayer>& vector) {
+        return scriptValueFromSequence(engine, vector);
     }
 
-    void qVectorScriptableMaterialLayerFromScriptValue(const QScriptValue& array, QVector<scriptable::ScriptableMaterialLayer>& result) {
-        qScriptValueToSequence(array, result);
+    void qVectorScriptableMaterialLayerFromScriptValue(const ScriptValuePointer& array, QVector<scriptable::ScriptableMaterialLayer>& result) {
+        scriptValueToSequence(array, result);
     }
 
     /*@jsdoc
@@ -469,204 +470,204 @@ namespace scriptable {
      * @property {boolean} defaultFallthrough - <code>true</code> if all properties fall through to the material below unless 
      *     they are set, <code>false</code> if properties respect their individual fall-through settings.
      */
-    QScriptValue scriptableMaterialToScriptValue(QScriptEngine* engine, const scriptable::ScriptableMaterial &material) {
-        QScriptValue obj = engine->newObject();
-        obj.setProperty("name", material.name);
-        obj.setProperty("model", material.model);
+    ScriptValuePointer scriptableMaterialToScriptValue(ScriptEngine* engine, const scriptable::ScriptableMaterial &material) {
+        ScriptValuePointer obj = engine->newObject();
+        obj->setProperty("name", material.name);
+        obj->setProperty("model", material.model);
 
         bool hasPropertyFallthroughs = !material.propertyFallthroughs.empty();
 
-        const QScriptValue FALLTHROUGH("fallthrough");
+        const ScriptValuePointer FALLTHROUGH(engine->newValue("fallthrough"));
         if (hasPropertyFallthroughs && material.propertyFallthroughs.at(graphics::MaterialKey::OPACITY_VAL_BIT)) {
-            obj.setProperty("opacity", FALLTHROUGH);
+            obj->setProperty("opacity", FALLTHROUGH);
         } else if (material.key.isTranslucentFactor()) {
-            obj.setProperty("opacity", material.opacity);
+            obj->setProperty("opacity", material.opacity);
         }
 
         if (hasPropertyFallthroughs && material.propertyFallthroughs.at(graphics::MaterialKey::ALBEDO_VAL_BIT)) {
-            obj.setProperty("albedo", FALLTHROUGH);
+            obj->setProperty("albedo", FALLTHROUGH);
         } else if (material.key.isAlbedo()) {
-            obj.setProperty("albedo", vec3ColorToScriptValue(engine, material.albedo));
+            obj->setProperty("albedo", vec3ColorToScriptValue(engine, material.albedo));
         }
 
         if (material.model.toStdString() == graphics::Material::HIFI_PBR) {
             if (hasPropertyFallthroughs && material.propertyFallthroughs.at(graphics::MaterialKey::OPACITY_CUTOFF_VAL_BIT)) {
-                obj.setProperty("opacityCutoff", FALLTHROUGH);
+                obj->setProperty("opacityCutoff", FALLTHROUGH);
             } else if (material.key.isOpacityCutoff()) {
-                obj.setProperty("opacityCutoff", material.opacityCutoff);
+                obj->setProperty("opacityCutoff", material.opacityCutoff);
             }
 
             if (hasPropertyFallthroughs && material.propertyFallthroughs.at(graphics::MaterialKey::OPACITY_MAP_MODE_BIT)) {
-                obj.setProperty("opacityMapMode", FALLTHROUGH);
+                obj->setProperty("opacityMapMode", FALLTHROUGH);
             } else if (material.key.isOpacityMapMode()) {
-                obj.setProperty("opacityMapMode", material.opacityMapMode);
+                obj->setProperty("opacityMapMode", material.opacityMapMode);
             }
 
             if (hasPropertyFallthroughs && material.propertyFallthroughs.at(graphics::MaterialKey::GLOSSY_VAL_BIT)) {
-                obj.setProperty("roughness", FALLTHROUGH);
+                obj->setProperty("roughness", FALLTHROUGH);
             } else if (material.key.isGlossy()) {
-                obj.setProperty("roughness", material.roughness);
+                obj->setProperty("roughness", material.roughness);
             }
 
             if (hasPropertyFallthroughs && material.propertyFallthroughs.at(graphics::MaterialKey::METALLIC_VAL_BIT)) {
-                obj.setProperty("metallic", FALLTHROUGH);
+                obj->setProperty("metallic", FALLTHROUGH);
             } else if (material.key.isMetallic()) {
-                obj.setProperty("metallic", material.metallic);
+                obj->setProperty("metallic", material.metallic);
             }
 
             if (hasPropertyFallthroughs && material.propertyFallthroughs.at(graphics::MaterialKey::SCATTERING_VAL_BIT)) {
-                obj.setProperty("scattering", FALLTHROUGH);
+                obj->setProperty("scattering", FALLTHROUGH);
             } else if (material.key.isScattering()) {
-                obj.setProperty("scattering", material.scattering);
+                obj->setProperty("scattering", material.scattering);
             }
 
             if (hasPropertyFallthroughs && material.propertyFallthroughs.at(graphics::MaterialKey::UNLIT_VAL_BIT)) {
-                obj.setProperty("unlit", FALLTHROUGH);
+                obj->setProperty("unlit", FALLTHROUGH);
             } else if (material.key.isUnlit()) {
-                obj.setProperty("unlit", material.unlit);
+                obj->setProperty("unlit", material.unlit);
             }
 
             if (hasPropertyFallthroughs && material.propertyFallthroughs.at(graphics::MaterialKey::EMISSIVE_VAL_BIT)) {
-                obj.setProperty("emissive", FALLTHROUGH);
+                obj->setProperty("emissive", FALLTHROUGH);
             } else if (material.key.isEmissive()) {
-                obj.setProperty("emissive", vec3ColorToScriptValue(engine, material.emissive));
+                obj->setProperty("emissive", vec3ColorToScriptValue(engine, material.emissive));
             }
 
             if (hasPropertyFallthroughs && material.propertyFallthroughs.at(graphics::MaterialKey::EMISSIVE_MAP_BIT)) {
-                obj.setProperty("emissiveMap", FALLTHROUGH);
+                obj->setProperty("emissiveMap", FALLTHROUGH);
             } else if (!material.emissiveMap.isEmpty()) {
-                obj.setProperty("emissiveMap", material.emissiveMap);
+                obj->setProperty("emissiveMap", material.emissiveMap);
             }
 
             if (hasPropertyFallthroughs && material.propertyFallthroughs.at(graphics::MaterialKey::ALBEDO_MAP_BIT)) {
-                obj.setProperty("albedoMap", FALLTHROUGH);
+                obj->setProperty("albedoMap", FALLTHROUGH);
             } else if (!material.albedoMap.isEmpty()) {
-                obj.setProperty("albedoMap", material.albedoMap);
+                obj->setProperty("albedoMap", material.albedoMap);
             }
 
             if (!material.opacityMap.isEmpty()) {
-                obj.setProperty("opacityMap", material.opacityMap);
+                obj->setProperty("opacityMap", material.opacityMap);
             }
 
             if (hasPropertyFallthroughs && material.propertyFallthroughs.at(graphics::MaterialKey::OCCLUSION_MAP_BIT)) {
-                obj.setProperty("occlusionMap", FALLTHROUGH);
+                obj->setProperty("occlusionMap", FALLTHROUGH);
             } else if (!material.occlusionMap.isEmpty()) {
-                obj.setProperty("occlusionMap", material.occlusionMap);
+                obj->setProperty("occlusionMap", material.occlusionMap);
             }
 
             if (hasPropertyFallthroughs && material.propertyFallthroughs.at(graphics::MaterialKey::LIGHT_MAP_BIT)) {
-                obj.setProperty("lightMap", FALLTHROUGH);
+                obj->setProperty("lightMap", FALLTHROUGH);
             } else if (!material.lightMap.isEmpty()) {
-                obj.setProperty("lightMap", material.lightMap);
+                obj->setProperty("lightMap", material.lightMap);
             }
 
             if (hasPropertyFallthroughs && material.propertyFallthroughs.at(graphics::MaterialKey::SCATTERING_MAP_BIT)) {
-                obj.setProperty("scatteringMap", FALLTHROUGH);
+                obj->setProperty("scatteringMap", FALLTHROUGH);
             } else if (!material.scatteringMap.isEmpty()) {
-                obj.setProperty("scatteringMap", material.scatteringMap);
+                obj->setProperty("scatteringMap", material.scatteringMap);
             }
 
             // Only set one of each of these
             if (hasPropertyFallthroughs && material.propertyFallthroughs.at(graphics::MaterialKey::METALLIC_MAP_BIT)) {
-                obj.setProperty("metallicMap", FALLTHROUGH);
+                obj->setProperty("metallicMap", FALLTHROUGH);
             } else if (!material.metallicMap.isEmpty()) {
-                obj.setProperty("metallicMap", material.metallicMap);
+                obj->setProperty("metallicMap", material.metallicMap);
             } else if (!material.specularMap.isEmpty()) {
-                obj.setProperty("specularMap", material.specularMap);
+                obj->setProperty("specularMap", material.specularMap);
             }
 
             if (hasPropertyFallthroughs && material.propertyFallthroughs.at(graphics::MaterialKey::ROUGHNESS_MAP_BIT)) {
-                obj.setProperty("roughnessMap", FALLTHROUGH);
+                obj->setProperty("roughnessMap", FALLTHROUGH);
             } else if (!material.roughnessMap.isEmpty()) {
-                obj.setProperty("roughnessMap", material.roughnessMap);
+                obj->setProperty("roughnessMap", material.roughnessMap);
             } else if (!material.glossMap.isEmpty()) {
-                obj.setProperty("glossMap", material.glossMap);
+                obj->setProperty("glossMap", material.glossMap);
             }
 
             if (hasPropertyFallthroughs && material.propertyFallthroughs.at(graphics::MaterialKey::NORMAL_MAP_BIT)) {
-                obj.setProperty("normalMap", FALLTHROUGH);
+                obj->setProperty("normalMap", FALLTHROUGH);
             } else if (!material.normalMap.isEmpty()) {
-                obj.setProperty("normalMap", material.normalMap);
+                obj->setProperty("normalMap", material.normalMap);
             } else if (!material.bumpMap.isEmpty()) {
-                obj.setProperty("bumpMap", material.bumpMap);
+                obj->setProperty("bumpMap", material.bumpMap);
             }
 
             if (hasPropertyFallthroughs && material.propertyFallthroughs.at(graphics::Material::TEXCOORDTRANSFORM0)) {
-                obj.setProperty("texCoordTransform0", FALLTHROUGH);
+                obj->setProperty("texCoordTransform0", FALLTHROUGH);
             } else if (material.texCoordTransforms[0] != mat4()) {
-                obj.setProperty("texCoordTransform0", mat4toScriptValue(engine, material.texCoordTransforms[0]));
+                obj->setProperty("texCoordTransform0", mat4toScriptValue(engine, material.texCoordTransforms[0]));
             }
             if (hasPropertyFallthroughs && material.propertyFallthroughs.at(graphics::Material::TEXCOORDTRANSFORM1)) {
-                obj.setProperty("texCoordTransform1", FALLTHROUGH);
+                obj->setProperty("texCoordTransform1", FALLTHROUGH);
             } else if (material.texCoordTransforms[1] != mat4()) {
-                obj.setProperty("texCoordTransform1", mat4toScriptValue(engine, material.texCoordTransforms[1]));
+                obj->setProperty("texCoordTransform1", mat4toScriptValue(engine, material.texCoordTransforms[1]));
             }
 
             // These need to be implemented, but set the fallthrough for now
             if (hasPropertyFallthroughs && material.propertyFallthroughs.at(graphics::Material::LIGHTMAP_PARAMS)) {
-                obj.setProperty("lightmapParams", FALLTHROUGH);
+                obj->setProperty("lightmapParams", FALLTHROUGH);
             }
             if (hasPropertyFallthroughs && material.propertyFallthroughs.at(graphics::Material::MATERIAL_PARAMS)) {
-                obj.setProperty("materialParams", FALLTHROUGH);
+                obj->setProperty("materialParams", FALLTHROUGH);
             }
 
             if (hasPropertyFallthroughs && material.propertyFallthroughs.at(graphics::Material::CULL_FACE_MODE)) {
-                obj.setProperty("cullFaceMode", FALLTHROUGH);
+                obj->setProperty("cullFaceMode", FALLTHROUGH);
             } else if (!material.cullFaceMode.isEmpty()) {
-                obj.setProperty("cullFaceMode", material.cullFaceMode);
+                obj->setProperty("cullFaceMode", material.cullFaceMode);
             }
         } else if (material.model.toStdString() == graphics::Material::HIFI_SHADER_SIMPLE) {
-            obj.setProperty("procedural", material.procedural);
+            obj->setProperty("procedural", material.procedural);
         }
 
-        obj.setProperty("defaultFallthrough", material.defaultFallthrough);
+        obj->setProperty("defaultFallthrough", material.defaultFallthrough);
 
         return obj;
     }
 
-    void scriptableMaterialFromScriptValue(const QScriptValue &object, scriptable::ScriptableMaterial& material) {
-        // No need to convert from QScriptValue to ScriptableMaterial
+    void scriptableMaterialFromScriptValue(const ScriptValuePointer &object, scriptable::ScriptableMaterial& material) {
+        // No need to convert from ScriptValuePointer to ScriptableMaterial
     }
 
-    QScriptValue scriptableMaterialLayerToScriptValue(QScriptEngine* engine, const scriptable::ScriptableMaterialLayer &materialLayer) {
-        QScriptValue obj = engine->newObject();
-        obj.setProperty("material", scriptableMaterialToScriptValue(engine, materialLayer.material));
-        obj.setProperty("priority", materialLayer.priority);
+    ScriptValuePointer scriptableMaterialLayerToScriptValue(ScriptEngine* engine, const scriptable::ScriptableMaterialLayer &materialLayer) {
+        ScriptValuePointer obj = engine->newObject();
+        obj->setProperty("material", scriptableMaterialToScriptValue(engine, materialLayer.material));
+        obj->setProperty("priority", materialLayer.priority);
         return obj;
     }
 
-    void scriptableMaterialLayerFromScriptValue(const QScriptValue &object, scriptable::ScriptableMaterialLayer& materialLayer) {
-        // No need to convert from QScriptValue to ScriptableMaterialLayer
+    void scriptableMaterialLayerFromScriptValue(const ScriptValuePointer &object, scriptable::ScriptableMaterialLayer& materialLayer) {
+        // No need to convert from ScriptValuePointer to ScriptableMaterialLayer
     }
 
-    QScriptValue multiMaterialMapToScriptValue(QScriptEngine* engine, const scriptable::MultiMaterialMap& map) {
-        QScriptValue obj = engine->newObject();
+    ScriptValuePointer multiMaterialMapToScriptValue(ScriptEngine* engine, const scriptable::MultiMaterialMap& map) {
+        ScriptValuePointer obj = engine->newObject();
         for (auto key : map.keys()) {
-            obj.setProperty(key, qVectorScriptableMaterialLayerToScriptValue(engine, map[key]));
+            obj->setProperty(key, qVectorScriptableMaterialLayerToScriptValue(engine, map[key]));
         }
         return obj;
     }
 
-    void multiMaterialMapFromScriptValue(const QScriptValue& map, scriptable::MultiMaterialMap& result) {
-        // No need to convert from QScriptValue to MultiMaterialMap
+    void multiMaterialMapFromScriptValue(const ScriptValuePointer& map, scriptable::MultiMaterialMap& result) {
+        // No need to convert from ScriptValuePointer to MultiMaterialMap
     }
 
-    template <typename T> int registerDebugEnum(QScriptEngine* engine, const DebugEnums<T>& debugEnums) {
+    template <typename T> int registerDebugEnum(ScriptEngine* engine, const DebugEnums<T>& debugEnums) {
         static const DebugEnums<T>& instance = debugEnums;
-        return qScriptRegisterMetaType<T>(
+        return scriptRegisterMetaType<T>(
             engine,
-            [](QScriptEngine* engine, const T& topology) -> QScriptValue {
-                return instance.value(topology);
+            [](ScriptEngine* engine, const T& topology) -> ScriptValuePointer {
+                return engine->newValue(instance.value(topology));
             },
-            [](const QScriptValue& value, T& topology) {
-                topology = instance.key(value.toString());
+            [](const ScriptValuePointer& value, T& topology) {
+                topology = instance.key(value->toString());
             }
         );
     }
 }
 
-void GraphicsScriptingInterface::registerMetaTypes(QScriptEngine* engine) {
-    qScriptRegisterSequenceMetaType<QVector<scriptable::ScriptableMaterialLayer>>(engine);
+void GraphicsScriptingInterface::registerMetaTypes(ScriptEngine* engine) {
+    scriptRegisterSequenceMetaType<QVector<scriptable::ScriptableMaterialLayer>>(engine);
 
     scriptable::registerQPointerMetaType<scriptable::ScriptableModel>(engine);
     scriptable::registerQPointerMetaType<scriptable::ScriptableMesh>(engine);
@@ -677,10 +678,10 @@ void GraphicsScriptingInterface::registerMetaTypes(QScriptEngine* engine) {
     scriptable::registerDebugEnum<gpu::Semantic>(engine, gpu::SEMANTICS);
     scriptable::registerDebugEnum<gpu::Dimension>(engine, gpu::DIMENSIONS);
 
-    qScriptRegisterMetaType(engine, scriptable::scriptableMaterialToScriptValue, scriptable::scriptableMaterialFromScriptValue);
-    qScriptRegisterMetaType(engine, scriptable::scriptableMaterialLayerToScriptValue, scriptable::scriptableMaterialLayerFromScriptValue);
-    qScriptRegisterMetaType(engine, scriptable::qVectorScriptableMaterialLayerToScriptValue, scriptable::qVectorScriptableMaterialLayerFromScriptValue);
-    qScriptRegisterMetaType(engine, scriptable::multiMaterialMapToScriptValue, scriptable::multiMaterialMapFromScriptValue);
+    scriptRegisterMetaType(engine, scriptable::scriptableMaterialToScriptValue, scriptable::scriptableMaterialFromScriptValue);
+    scriptRegisterMetaType(engine, scriptable::scriptableMaterialLayerToScriptValue, scriptable::scriptableMaterialLayerFromScriptValue);
+    scriptRegisterMetaType(engine, scriptable::qVectorScriptableMaterialLayerToScriptValue, scriptable::qVectorScriptableMaterialLayerFromScriptValue);
+    scriptRegisterMetaType(engine, scriptable::multiMaterialMapToScriptValue, scriptable::multiMaterialMapFromScriptValue);
 
     Q_UNUSED(metaTypeIds);
 }

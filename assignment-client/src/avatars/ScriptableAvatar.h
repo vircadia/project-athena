@@ -220,7 +220,7 @@ private:
     QHash<QString, int> _fstJointIndices; ///< 1-based, since zero is returned for missing keys
     QStringList _fstJointNames; ///< in order of depth-first traversal
     QUrl _skeletonFBXURL;
-    mutable QScriptEngine _scriptEngine;
+    mutable ScriptEnginePointer _scriptEngine;
     std::map<QUuid, EntityItemPointer> _entities;
 
     /// Loads the joint indices, names from the FST file (if any)

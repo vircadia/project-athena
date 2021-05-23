@@ -12,8 +12,6 @@
 
 #include <limits>
 
-#include <QtScript/QScriptValueIterator>
-
 #include <shared/QtHelpers.h>
 #include <OffscreenUi.h>
 #include <render/Scene.h>
@@ -30,6 +28,8 @@
 #include <PointerManager.h>
 #include <raypick/MouseTransformNode.h>
 #include <PickManager.h>
+#include <ScriptEngine.h>
+#include <ScriptEngineCast.h>
 
 #include <RenderableWebEntityItem.h>
 #include "VariantMapToScriptValue.h"
@@ -42,7 +42,7 @@ Q_LOGGING_CATEGORY(trace_render_overlays, "trace.render.overlays")
 std::unordered_map<QString, QString> Overlays::_entityToOverlayTypes;
 std::unordered_map<QString, QString> Overlays::_overlayToEntityTypes;
 
-Overlays::Overlays() {
+Overlays::Overlays() : _scriptEngine(newScriptEngine()) {
     ADD_TYPE_MAP(Box, cube);
     ADD_TYPE_MAP(Sphere, sphere);
     _overlayToEntityTypes["rectangle3d"] = "Shape";
@@ -632,16 +632,16 @@ EntityItemProperties Overlays::convertOverlayToEntityProperties(QVariantMap& ove
         }
     }
 
-    QScriptEngine scriptEngine;
-    QScriptValue props = variantMapToScriptValue(overlayProps, scriptEngine);
+    ScriptEnginePointer scriptEngine = newScriptEngine();
+    ScriptValuePointer props = variantMapToScriptValue(overlayProps, *scriptEngine);
     EntityItemProperties toReturn;
     EntityItemPropertiesFromScriptValueHonorReadOnly(props, toReturn);
     return toReturn;
 }
 
 QVariantMap Overlays::convertEntityToOverlayProperties(const EntityItemProperties& properties) {
-    QScriptEngine scriptEngine;
-    QVariantMap overlayProps = EntityItemPropertiesToScriptValue(&scriptEngine, properties).toVariant().toMap();
+    ScriptEnginePointer scriptEngine = newScriptEngine();
+    QVariantMap overlayProps = EntityItemPropertiesToScriptValue(scriptEngine.data(), properties)->toVariant().toMap();
 
     QString type = overlayProps["type"].toString();
     overlayProps["type"] = entityToOverlayType(type);
@@ -740,7 +740,7 @@ QVariantMap Overlays::convertEntityToOverlayProperties(const EntityItemPropertie
         GROUP_ENTITY_TO_OVERLAY_PROP(ring, majorTickMarksColor, majorTickMarksColor);
         GROUP_ENTITY_TO_OVERLAY_PROP(ring, minorTickMarksColor, minorTickMarksColor);
     } else if (type == "PolyLine") {
-        QVector<glm::vec3> points = qVectorVec3FromScriptValue(scriptEngine.newVariant(overlayProps["linePoints"]));
+        QVector<glm::vec3> points = qVectorVec3FromScriptValue(scriptEngine->newVariant(overlayProps["linePoints"]));
         glm::vec3 position = vec3FromVariant(overlayProps["position"]);
         if (points.length() > 1) {
             overlayProps["p1"] = vec3toVariant(points[0] + position);
@@ -755,7 +755,7 @@ QVariantMap Overlays::convertEntityToOverlayProperties(const EntityItemPropertie
         RENAME_PROP(p2, endPoint);
         RENAME_PROP(p2, end);
 
-        QVector<float> widths = qVectorFloatFromScriptValue(scriptEngine.newVariant(overlayProps["strokeWidths"]));
+        QVector<float> widths = qVectorFloatFromScriptValue(scriptEngine->newVariant(overlayProps["strokeWidths"]));
         if (widths.length() > 0) {
             overlayProps["lineWidth"] = widths[0];
         }
@@ -1041,8 +1041,8 @@ QVariantMap Overlays::getOverlaysProperties(const QVariant& propertiesById) {
 }
 
 RayToOverlayIntersectionResult Overlays::findRayIntersection(const PickRay& ray, bool precisionPicking,
-                                                             const QScriptValue& overlayIDsToInclude,
-                                                             const QScriptValue& overlayIDsToDiscard,
+                                                             const ScriptValuePointer& overlayIDsToInclude,
+                                                             const ScriptValuePointer& overlayIDsToDiscard,
                                                              bool visibleOnly, bool collidableOnly) {
     const QVector<EntityItemID> include = qVectorEntityItemIDFromScriptValue(overlayIDsToInclude);
     const QVector<EntityItemID> discard = qVectorEntityItemIDFromScriptValue(overlayIDsToDiscard);
@@ -1110,38 +1110,38 @@ ParabolaToOverlayIntersectionResult Overlays::findParabolaIntersectionVector(con
     return overlayResult;
 }
 
-QScriptValue RayToOverlayIntersectionResultToScriptValue(QScriptEngine* engine, const RayToOverlayIntersectionResult& value) {
-    QScriptValue obj = engine->newObject();
-    obj.setProperty("intersects", value.intersects);
-    QScriptValue overlayIDValue = quuidToScriptValue(engine, value.overlayID);
-    obj.setProperty("overlayID", overlayIDValue);
-    obj.setProperty("distance", value.distance);
-    obj.setProperty("face", boxFaceToString(value.face));
+ScriptValuePointer RayToOverlayIntersectionResultToScriptValue(ScriptEngine* engine, const RayToOverlayIntersectionResult& value) {
+    ScriptValuePointer obj = engine->newObject();
+    obj->setProperty("intersects", value.intersects);
+    ScriptValuePointer overlayIDValue = quuidToScriptValue(engine, value.overlayID);
+    obj->setProperty("overlayID", overlayIDValue);
+    obj->setProperty("distance", value.distance);
+    obj->setProperty("face", boxFaceToString(value.face));
 
-    QScriptValue intersection = vec3ToScriptValue(engine, value.intersection);
-    obj.setProperty("intersection", intersection);
-    QScriptValue surfaceNormal = vec3ToScriptValue(engine, value.surfaceNormal);
-    obj.setProperty("surfaceNormal", surfaceNormal);
-    obj.setProperty("extraInfo", engine->toScriptValue(value.extraInfo));
+    ScriptValuePointer intersection = vec3ToScriptValue(engine, value.intersection);
+    obj->setProperty("intersection", intersection);
+    ScriptValuePointer surfaceNormal = vec3ToScriptValue(engine, value.surfaceNormal);
+    obj->setProperty("surfaceNormal", surfaceNormal);
+    obj->setProperty("extraInfo", engine->toScriptValue(value.extraInfo));
     return obj;
 }
 
-void RayToOverlayIntersectionResultFromScriptValue(const QScriptValue& object, RayToOverlayIntersectionResult& value) {
-    value.intersects = object.property("intersects").toVariant().toBool();
-    QScriptValue overlayIDValue = object.property("overlayID");
+void RayToOverlayIntersectionResultFromScriptValue(const ScriptValuePointer& object, RayToOverlayIntersectionResult& value) {
+    value.intersects = object->property("intersects")->toVariant().toBool();
+    ScriptValuePointer overlayIDValue = object->property("overlayID");
     quuidFromScriptValue(overlayIDValue, value.overlayID);
-    value.distance = object.property("distance").toVariant().toFloat();
-    value.face = boxFaceFromString(object.property("face").toVariant().toString());
+    value.distance = object->property("distance")->toVariant().toFloat();
+    value.face = boxFaceFromString(object->property("face")->toVariant().toString());
 
-    QScriptValue intersection = object.property("intersection");
-    if (intersection.isValid()) {
+    ScriptValuePointer intersection = object->property("intersection");
+    if (intersection->isValid()) {
         vec3FromScriptValue(intersection, value.intersection);
     }
-    QScriptValue surfaceNormal = object.property("surfaceNormal");
-    if (surfaceNormal.isValid()) {
+    ScriptValuePointer surfaceNormal = object->property("surfaceNormal");
+    if (surfaceNormal->isValid()) {
         vec3FromScriptValue(surfaceNormal, value.surfaceNormal);
     }
-    value.extraInfo = object.property("extraInfo").toVariant().toMap();
+    value.extraInfo = object->property("extraInfo")->toVariant().toMap();
 }
 
 bool Overlays::isLoaded(const QUuid& id) {

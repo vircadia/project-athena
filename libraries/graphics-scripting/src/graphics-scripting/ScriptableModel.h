@@ -10,8 +10,6 @@
 #include "Forward.h"
 #include "GraphicsScriptingUtil.h"
 
-class QScriptValue;
-
 namespace scriptable {
 
     using ScriptableMeshes = QVector<scriptable::ScriptableMeshPointer>;

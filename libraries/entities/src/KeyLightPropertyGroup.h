@@ -17,7 +17,7 @@
 
 #include <glm/glm.hpp>
 
-#include <QtScript/QScriptEngine>
+#include <QtCore/QSharedPointer>
 #include "EntityItemPropertiesMacros.h"
 #include "PropertyGroup.h"
 
@@ -26,6 +26,9 @@ class EncodeBitstreamParams;
 class OctreePacketData;
 class EntityTreeElementExtraEncodeData;
 class ReadBitstreamToTreeParams;
+class ScriptEngine;
+class ScriptValue;
+using ScriptValuePointer = QSharedPointer<ScriptValue>;
 
 /*@jsdoc
  * A key light is defined by the following properties:
@@ -45,10 +48,10 @@ class ReadBitstreamToTreeParams;
 class KeyLightPropertyGroup : public PropertyGroup {
 public:
     // EntityItemProperty related helpers
-    virtual void copyToScriptValue(const EntityPropertyFlags& desiredProperties, QScriptValue& properties,
-                                   QScriptEngine* engine, bool skipDefaults,
+    virtual void copyToScriptValue(const EntityPropertyFlags& desiredProperties, ScriptValuePointer& properties,
+                                   ScriptEngine* engine, bool skipDefaults,
                                    EntityItemProperties& defaultEntityProperties) const override;
-    virtual void copyFromScriptValue(const QScriptValue& object, bool& _defaultSettings) override;
+    virtual void copyFromScriptValue(const ScriptValuePointer& object, bool& _defaultSettings) override;
 
     void merge(const KeyLightPropertyGroup& other);
 

@@ -25,8 +25,8 @@ const bool KeyLightPropertyGroup::DEFAULT_KEYLIGHT_CAST_SHADOWS { false };
 const float KeyLightPropertyGroup::DEFAULT_KEYLIGHT_SHADOW_BIAS { 0.5f };
 const float KeyLightPropertyGroup::DEFAULT_KEYLIGHT_SHADOW_MAX_DISTANCE { 40.0f };
 
-void KeyLightPropertyGroup::copyToScriptValue(const EntityPropertyFlags& desiredProperties, QScriptValue& properties, 
-    QScriptEngine* engine, bool skipDefaults, EntityItemProperties& defaultEntityProperties) const {
+void KeyLightPropertyGroup::copyToScriptValue(const EntityPropertyFlags& desiredProperties, ScriptValuePointer& properties, 
+    ScriptEngine* engine, bool skipDefaults, EntityItemProperties& defaultEntityProperties) const {
         
     COPY_GROUP_PROPERTY_TO_QSCRIPTVALUE_TYPED(PROP_KEYLIGHT_COLOR, KeyLight, keyLight, Color, color, u8vec3Color);
     COPY_GROUP_PROPERTY_TO_QSCRIPTVALUE(PROP_KEYLIGHT_INTENSITY, KeyLight, keyLight, Intensity, intensity);
@@ -36,7 +36,7 @@ void KeyLightPropertyGroup::copyToScriptValue(const EntityPropertyFlags& desired
     COPY_GROUP_PROPERTY_TO_QSCRIPTVALUE(PROP_KEYLIGHT_SHADOW_MAX_DISTANCE, KeyLight, keyLight, ShadowMaxDistance, shadowMaxDistance);
 }
 
-void KeyLightPropertyGroup::copyFromScriptValue(const QScriptValue& object, bool& _defaultSettings) {
+void KeyLightPropertyGroup::copyFromScriptValue(const ScriptValuePointer& object, bool& _defaultSettings) {
     COPY_GROUP_PROPERTY_FROM_QSCRIPTVALUE(keyLight, color, u8vec3Color, setColor);
     COPY_GROUP_PROPERTY_FROM_QSCRIPTVALUE(keyLight, intensity, float, setIntensity);
     COPY_GROUP_PROPERTY_FROM_QSCRIPTVALUE(keyLight, direction, vec3, setDirection);

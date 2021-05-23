@@ -18,6 +18,7 @@
 #include "baking/TextureFileNamer.h"
 
 #include <procedural/ProceduralMaterialCache.h>
+#include <ScriptEngine.h>
 
 static const QString BAKED_MATERIAL_EXTENSION = ".baked.json";
 
@@ -67,7 +68,7 @@ private:
     QString _textureOutputDir;
     QString _bakedMaterialData;
 
-    QScriptEngine _scriptEngine;
+    ScriptEnginePointer _scriptEngine;
     static std::function<QThread*()> _getNextOvenWorkerThreadOperator;
     TextureFileNamer _textureFileNamer;
 

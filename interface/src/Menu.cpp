@@ -22,6 +22,7 @@
 #include <thread>
 
 #include <AddressManager.h>
+#include <AssetClient.h>
 #include <AudioClient.h>
 #include <CrashHelpers.h>
 #include <DependencyManager.h>

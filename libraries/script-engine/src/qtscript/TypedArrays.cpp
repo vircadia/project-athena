@@ -13,12 +13,17 @@
 
 #include <glm/glm.hpp>
 
-#include "ScriptEngine.h"
+#include <QtCore/QDataStream>
+
+#include <SharedUtil.h>
+
+#include "ArrayBufferClass.h"
+#include "ScriptEngineQtScript.h"
 #include "TypedArrayPrototype.h"
 
 Q_DECLARE_METATYPE(QByteArray*)
 
-TypedArray::TypedArray(ScriptEngine* scriptEngine, QString name) : ArrayBufferViewClass(scriptEngine) {
+TypedArray::TypedArray(ScriptEngineQtScript* scriptEngine, QString name) : ArrayBufferViewClass(scriptEngine) {
     _bytesPerElementName = engine()->toStringHandle(BYTES_PER_ELEMENT_PROPERTY_NAME.toLatin1());
     _lengthName = engine()->toStringHandle(LENGTH_PROPERTY_NAME.toLatin1());
     _name = engine()->toStringHandle(name.toLatin1());
@@ -229,7 +234,7 @@ void setPropertyHelper(QByteArray* arrayBuffer, const QScriptString& name, uint 
     }
 }
 
-Int8ArrayClass::Int8ArrayClass(ScriptEngine* scriptEngine) : TypedArray(scriptEngine, INT_8_ARRAY_CLASS_NAME) {
+Int8ArrayClass::Int8ArrayClass(ScriptEngineQtScript* scriptEngine) : TypedArray(scriptEngine, INT_8_ARRAY_CLASS_NAME) {
     setBytesPerElement(sizeof(qint8));
 }
 
@@ -245,7 +250,7 @@ void Int8ArrayClass::setProperty(QScriptValue &object, const QScriptString &name
     setPropertyHelper<qint8>(ba, name, id, value);
 }
 
-Uint8ArrayClass::Uint8ArrayClass(ScriptEngine* scriptEngine) : TypedArray(scriptEngine, UINT_8_ARRAY_CLASS_NAME) {
+Uint8ArrayClass::Uint8ArrayClass(ScriptEngineQtScript* scriptEngine) : TypedArray(scriptEngine, UINT_8_ARRAY_CLASS_NAME) {
     setBytesPerElement(sizeof(quint8));
 }
 
@@ -261,7 +266,7 @@ void Uint8ArrayClass::setProperty(QScriptValue& object, const QScriptString& nam
     setPropertyHelper<quint8>(ba, name, id, value);
 }
 
-Uint8ClampedArrayClass::Uint8ClampedArrayClass(ScriptEngine* scriptEngine) : TypedArray(scriptEngine, UINT_8_CLAMPED_ARRAY_CLASS_NAME) {
+Uint8ClampedArrayClass::Uint8ClampedArrayClass(ScriptEngineQtScript* scriptEngine) : TypedArray(scriptEngine, UINT_8_CLAMPED_ARRAY_CLASS_NAME) {
     setBytesPerElement(sizeof(quint8));
 }
 
@@ -287,7 +292,7 @@ void Uint8ClampedArrayClass::setProperty(QScriptValue& object, const QScriptStri
     }
 }
 
-Int16ArrayClass::Int16ArrayClass(ScriptEngine* scriptEngine) : TypedArray(scriptEngine, INT_16_ARRAY_CLASS_NAME) {
+Int16ArrayClass::Int16ArrayClass(ScriptEngineQtScript* scriptEngine) : TypedArray(scriptEngine, INT_16_ARRAY_CLASS_NAME) {
     setBytesPerElement(sizeof(qint16));
 }
 
@@ -303,7 +308,7 @@ void Int16ArrayClass::setProperty(QScriptValue& object, const QScriptString& nam
     setPropertyHelper<qint16>(ba, name, id, value);
 }
 
-Uint16ArrayClass::Uint16ArrayClass(ScriptEngine* scriptEngine) : TypedArray(scriptEngine, UINT_16_ARRAY_CLASS_NAME) {
+Uint16ArrayClass::Uint16ArrayClass(ScriptEngineQtScript* scriptEngine) : TypedArray(scriptEngine, UINT_16_ARRAY_CLASS_NAME) {
     setBytesPerElement(sizeof(quint16));
 }
 
@@ -319,7 +324,7 @@ void Uint16ArrayClass::setProperty(QScriptValue& object, const QScriptString& na
     setPropertyHelper<quint16>(ba, name, id, value);
 }
 
-Int32ArrayClass::Int32ArrayClass(ScriptEngine* scriptEngine) : TypedArray(scriptEngine, INT_32_ARRAY_CLASS_NAME) {
+Int32ArrayClass::Int32ArrayClass(ScriptEngineQtScript* scriptEngine) : TypedArray(scriptEngine, INT_32_ARRAY_CLASS_NAME) {
     setBytesPerElement(sizeof(qint32));
 }
 
@@ -335,7 +340,7 @@ void Int32ArrayClass::setProperty(QScriptValue& object, const QScriptString& nam
     setPropertyHelper<qint32>(ba, name, id, value);
 }
 
-Uint32ArrayClass::Uint32ArrayClass(ScriptEngine* scriptEngine) : TypedArray(scriptEngine, UINT_32_ARRAY_CLASS_NAME) {
+Uint32ArrayClass::Uint32ArrayClass(ScriptEngineQtScript* scriptEngine) : TypedArray(scriptEngine, UINT_32_ARRAY_CLASS_NAME) {
     setBytesPerElement(sizeof(quint32));
 }
 
@@ -352,7 +357,7 @@ void Uint32ArrayClass::setProperty(QScriptValue& object, const QScriptString& na
     setPropertyHelper<quint32>(ba, name, id, value);
 }
 
-Float32ArrayClass::Float32ArrayClass(ScriptEngine* scriptEngine) : TypedArray(scriptEngine, FLOAT_32_ARRAY_CLASS_NAME) {
+Float32ArrayClass::Float32ArrayClass(ScriptEngineQtScript* scriptEngine) : TypedArray(scriptEngine, FLOAT_32_ARRAY_CLASS_NAME) {
     setBytesPerElement(sizeof(float));
 }
 
@@ -389,7 +394,7 @@ void Float32ArrayClass::setProperty(QScriptValue& object, const QScriptString& n
     }
 }
 
-Float64ArrayClass::Float64ArrayClass(ScriptEngine* scriptEngine) : TypedArray(scriptEngine, FLOAT_64_ARRAY_CLASS_NAME) {
+Float64ArrayClass::Float64ArrayClass(ScriptEngineQtScript* scriptEngine) : TypedArray(scriptEngine, FLOAT_64_ARRAY_CLASS_NAME) {
     setBytesPerElement(sizeof(double));
 }
 

@@ -10,9 +10,11 @@
 #pragma once
 #ifndef hifi_controllers_Pose_h
 #define hifi_controllers_Pose_h
+#include <QtCore/QSharedPointer>
 
-class QScriptEngine;
-class QScriptValue;
+class ScriptEngine;
+class ScriptValue;
+using ScriptValuePointer = QSharedPointer<ScriptValue>;
 
 #include <GLMHelpers.h>
 
@@ -44,8 +46,8 @@ namespace controller {
         Pose transform(const glm::mat4& mat) const;
         Pose postTransform(const glm::mat4& mat) const;
 
-        static QScriptValue toScriptValue(QScriptEngine* engine, const Pose& event);
-        static void fromScriptValue(const QScriptValue& object, Pose& event);
+        static ScriptValuePointer toScriptValue(ScriptEngine* engine, const Pose& event);
+        static void fromScriptValue(const ScriptValuePointer& object, Pose& event);
     };
 }
 

@@ -12,6 +12,7 @@
 
 #include <DependencyManager.h>
 #include <PickManager.h>
+#include <Quat.h>
 #include "PickScriptingInterface.h"
 #include "RayPick.h"
 

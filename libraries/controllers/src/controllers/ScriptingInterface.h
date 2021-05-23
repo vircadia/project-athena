@@ -29,7 +29,6 @@
 #include <QMutex>
 
 #include <QtQml/QJSValue>
-#include <QtScript/QScriptValue>
 
 #include <DependencyManager.h>
 #include <StreamUtils.h>

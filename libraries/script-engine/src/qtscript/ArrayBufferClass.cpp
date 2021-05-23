@@ -15,7 +15,7 @@
 
 #include "ArrayBufferPrototype.h"
 #include "DataViewClass.h"
-#include "ScriptEngine.h"
+#include "ScriptEngineQtScript.h"
 #include "TypedArrays.h"
 
 
@@ -28,7 +28,7 @@ Q_DECLARE_METATYPE(QByteArray*)
 int qScriptClassPointerMetaTypeId = qRegisterMetaType<QScriptClass*>();
 int qByteArrayPointerMetaTypeId = qRegisterMetaType<QByteArray*>();
 
-ArrayBufferClass::ArrayBufferClass(ScriptEngine* scriptEngine) :
+ArrayBufferClass::ArrayBufferClass(ScriptEngineQtScript* scriptEngine) :
 QObject(scriptEngine),
 QScriptClass(scriptEngine) {
     qScriptRegisterMetaType<QByteArray>(engine(), toScriptValue, fromScriptValue);

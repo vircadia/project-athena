@@ -13,10 +13,9 @@
 
 #include <glm/glm.hpp>
 
-#include <QBuffer>
-#include <QImage>
-
-#include "ArrayBufferClass.h"
+#include <QtCore/QBuffer>
+#include <QtGui/QImage>
+#include <QtScript/QScriptEngine>
 
 static const int QCOMPRESS_HEADER_POSITION = 0;
 static const int QCOMPRESS_HEADER_SIZE = 4;

@@ -17,10 +17,14 @@
 #include <glm/gtx/quaternion.hpp>
 #include <map>
 #include <set>
-#include <QScriptValue>
 #include <StreamUtils.h>
 #include <GLMHelpers.h>
 #include "AnimationLogging.h"
+#include <QtCore/QSharedPointer>
+
+class ScriptEngine;
+class ScriptValue;
+using ScriptValuePointer = QSharedPointer<ScriptValue>;
 
 class AnimVariant {
 public:
@@ -229,9 +233,9 @@ public:
     }
 
     // Answer a Plain Old Javascript Object (for the given engine) all of our values set as properties.
-    QScriptValue animVariantMapToScriptValue(QScriptEngine* engine, const QStringList& names, bool useNames) const;
+    ScriptValuePointer animVariantMapToScriptValue(ScriptEngine* engine, const QStringList& names, bool useNames) const;
     // Side-effect us with the value of object's own properties. (No inherited properties.)
-    void animVariantMapFromScriptValue(const QScriptValue& object);
+    void animVariantMapFromScriptValue(const ScriptValuePointer& object);
     void copyVariantsFrom(const AnimVariantMap& other);
 
     // For stat debugging.
@@ -274,7 +278,7 @@ protected:
     glm::quat _rigToGeometryRot;
 };
 
-typedef std::function<void(QScriptValue)> AnimVariantResultHandler;
+typedef std::function<void(ScriptValuePointer)> AnimVariantResultHandler;
 Q_DECLARE_METATYPE(AnimVariantResultHandler);
 Q_DECLARE_METATYPE(AnimVariantMap)
 

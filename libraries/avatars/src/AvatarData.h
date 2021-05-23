@@ -31,9 +31,8 @@
 #include <QUuid>
 #include <QVariantMap>
 #include <QVector>
-#include <QtScript/QScriptable>
-#include <QtScript/QScriptValueIterator>
 #include <QReadWriteLock>
+#include <QtCore/QSharedPointer>
 
 #include <AvatarConstants.h>
 #include <JointData.h>
@@ -49,11 +48,16 @@
 #include <ViewFrustum.h>
 #include <shared/RateCounter.h>
 #include <udt/SequenceNumber.h>
+#include "Scriptable.h"
 
 #include "AABox.h"
 #include "AvatarTraits.h"
 #include "HeadData.h"
 #include "PathUtils.h"
+
+class ScriptEngine;
+class ScriptValue;
+using ScriptValuePointer = QSharedPointer<ScriptValue>;
 
 using AvatarSharedPointer = std::shared_ptr<AvatarData>;
 using AvatarWeakPointer = std::weak_ptr<AvatarData>;
@@ -1924,7 +1928,7 @@ Q_DECLARE_METATYPE(AttachmentData)
 Q_DECLARE_METATYPE(QVector<AttachmentData>)
 
 /// Scriptable wrapper for attachments.
-class AttachmentDataObject : public QObject, protected QScriptable {
+class AttachmentDataObject : public QObject, protected Scriptable {
     Q_OBJECT
     Q_PROPERTY(QString modelURL READ getModelURL WRITE setModelURL)
     Q_PROPERTY(QString jointName READ getJointName WRITE setJointName)
@@ -1954,7 +1958,7 @@ public:
     Q_INVOKABLE bool getIsSoft() const;
 };
 
-void registerAvatarTypes(QScriptEngine* engine);
+void registerAvatarTypes(ScriptEngine* engine);
 
 class RayToAvatarIntersectionResult {
 public:
@@ -1968,8 +1972,8 @@ public:
     QVariantMap extraInfo;
 };
 Q_DECLARE_METATYPE(RayToAvatarIntersectionResult)
-QScriptValue RayToAvatarIntersectionResultToScriptValue(QScriptEngine* engine, const RayToAvatarIntersectionResult& results);
-void RayToAvatarIntersectionResultFromScriptValue(const QScriptValue& object, RayToAvatarIntersectionResult& results);
+ScriptValuePointer RayToAvatarIntersectionResultToScriptValue(ScriptEngine* engine, const RayToAvatarIntersectionResult& results);
+void RayToAvatarIntersectionResultFromScriptValue(const ScriptValuePointer& object, RayToAvatarIntersectionResult& results);
 
 // No JSDoc because it's not provided as a type to the script engine.
 class ParabolaToAvatarIntersectionResult {
@@ -1986,8 +1990,8 @@ public:
 
 Q_DECLARE_METATYPE(AvatarEntityMap)
 
-QScriptValue AvatarEntityMapToScriptValue(QScriptEngine* engine, const AvatarEntityMap& value);
-void AvatarEntityMapFromScriptValue(const QScriptValue& object, AvatarEntityMap& value);
+ScriptValuePointer AvatarEntityMapToScriptValue(ScriptEngine* engine, const AvatarEntityMap& value);
+void AvatarEntityMapFromScriptValue(const ScriptValuePointer& object, AvatarEntityMap& value);
 
 // faux joint indexes (-1 means invalid)
 const int NO_JOINT_INDEX = 65535; // -1

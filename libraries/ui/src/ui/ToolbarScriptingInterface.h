@@ -12,7 +12,6 @@
 #include <mutex>
 
 #include <QtCore/QObject>
-#include <QtScript/QScriptValue>
 
 #include <DependencyManager.h>
 #include "QmlWrapper.h"

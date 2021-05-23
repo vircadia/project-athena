@@ -15,13 +15,11 @@
 #define hifi_AssetMappingsScriptingInterface_h
 
 #include <QtCore/QObject>
-#include <QtScript/QScriptValue>
 
 #include <AssetClient.h>
 #include <QSortFilterProxyModel>
 
 #include "DependencyManager.h"
-
 
 class AssetMappingModel : public QStandardItemModel {
     Q_OBJECT

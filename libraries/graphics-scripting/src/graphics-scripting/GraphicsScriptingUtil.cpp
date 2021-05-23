@@ -7,11 +7,12 @@
 
 #include "GraphicsScriptingUtil.h"
 
-#include <BaseScriptEngine.h>
-
 #include <graphics/BufferViewHelpers.h>
 #include <AABox.h>
 #include <Extents.h>
+#include "ScriptContext.h"
+#include "ScriptEngine.h"
+#include "ScriptValue.h"
 
 using buffer_helpers::glmVecToVariant;
 
@@ -77,27 +78,27 @@ QVariant toVariant(const gpu::Element& element) {
      };
 }
 
-QScriptValue jsBindCallback(QScriptValue value) {
-    if (value.isObject() && value.property("callback").isFunction()) {
+ScriptValuePointer jsBindCallback(ScriptValuePointer value) {
+    if (value->isObject() && value->property("callback")->isFunction()) {
         // value is already a bound callback
         return value;
     }
-    auto engine = value.engine();
+    auto engine = value->engine();
     auto context = engine ? engine->currentContext() : nullptr;
     auto length = context ? context->argumentCount() : 0;
-    QScriptValue scope = context ? context->thisObject() : QScriptValue::NullValue;
-    QScriptValue method;
+    ScriptValuePointer scope = context ? context->thisObject() : engine->nullValue();
+    ScriptValuePointer method;
 #ifdef SCRIPTABLE_MESH_DEBUG
     qCInfo(graphics_scripting) << "jsBindCallback" << engine << length << scope.toQObject() << method.toString();
 #endif
 
     // find position in the incoming JS Function.arguments array (so we can test for the two-argument case)
     for (int i = 0; context && i < length; i++) {
-        if (context->argument(i).strictlyEquals(value)) {
+        if (context->argument(i)->strictlyEquals(value)) {
             method = context->argument(i+1);
         }
     }
-    if (method.isFunction() || method.isString()) {
+    if (method->isFunction() || method->isString()) {
         // interpret as `API.func(..., scope, function callback(){})` or `API.func(..., scope, "methodName")`
         scope = value;
     } else {
@@ -111,9 +112,9 @@ QScriptValue jsBindCallback(QScriptValue value) {
 }
 
 template <typename T>
-T this_qobject_cast(QScriptEngine* engine) {
+T this_qobject_cast(ScriptEngine* engine) {
     auto context = engine ? engine->currentContext() : nullptr;
-    return qscriptvalue_cast<T>(context ? context->thisObject() : QScriptValue::NullValue);
+    return scriptvalue_cast<T>(context ? context->thisObject() : ScriptValuePointer::NullValue);
 }
 QString toDebugString(QObject* tmp) {
     QString s;

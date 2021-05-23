@@ -18,6 +18,7 @@
 #include <Sound.h>
 
 class ScriptAudioInjector;
+class ScriptEngine;
 
 class AudioScriptingInterface : public QObject, public Dependency {
     Q_OBJECT
@@ -287,6 +288,6 @@ private:
     AbstractAudioInterface* _localAudioInterface { nullptr };
 };
 
-void registerAudioMetaTypes(QScriptEngine* engine);
+void registerAudioMetaTypes(ScriptEngine* engine);
 
 #endif // hifi_AudioScriptingInterface_h

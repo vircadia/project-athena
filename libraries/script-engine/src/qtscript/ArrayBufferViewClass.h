@@ -12,7 +12,7 @@
 #ifndef hifi_ArrayBufferViewClass_h
 #define hifi_ArrayBufferViewClass_h
 
-#include <QScriptClass>
+#include <QtScript/QScriptClass>
 #include <QtCore/QObject>
 #include <QtScript/QScriptClass>
 #include <QtScript/QScriptContext>
@@ -20,7 +20,7 @@
 #include <QtScript/QScriptString>
 #include <QtScript/QScriptValue>
 
-#include "ScriptEngine.h"
+class ScriptEngineQtScript;
 
 static const QString BUFFER_PROPERTY_NAME = "buffer";
 static const QString BYTE_OFFSET_PROPERTY_NAME = "byteOffset";
@@ -29,9 +29,9 @@ static const QString BYTE_LENGTH_PROPERTY_NAME = "byteLength";
 class ArrayBufferViewClass : public QObject, public QScriptClass {
     Q_OBJECT
 public:
-    ArrayBufferViewClass(ScriptEngine* scriptEngine);
+    ArrayBufferViewClass(ScriptEngineQtScript* scriptEngine);
 
-    ScriptEngine* getScriptEngine() { return _scriptEngine; }
+    ScriptEngineQtScript* getScriptEngine() { return _scriptEngine; }
 
     virtual QueryFlags queryProperty(const QScriptValue& object,
                                      const QScriptString& name,
@@ -46,7 +46,7 @@ protected:
     QScriptString _byteOffsetName;
     QScriptString _byteLengthName;
 
-    ScriptEngine* _scriptEngine;
+    ScriptEngineQtScript* _scriptEngine;
 };
 
 #endif // hifi_ArrayBufferViewClass_h

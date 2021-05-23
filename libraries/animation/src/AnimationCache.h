@@ -13,8 +13,6 @@
 #define hifi_AnimationCache_h
 
 #include <QtCore/QRunnable>
-#include <QtScript/QScriptEngine>
-#include <QtScript/QScriptValue>
 
 #include <DependencyManager.h>
 #include <hfm/HFM.h>

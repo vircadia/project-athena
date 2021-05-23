@@ -22,7 +22,6 @@ using ModelPointer = std::shared_ptr<Model>;
 namespace gpu {
     class BufferView;
 }
-class QScriptEngine;
 
 namespace scriptable {
     using Mesh = graphics::Mesh;

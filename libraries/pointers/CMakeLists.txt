@@ -2,4 +2,4 @@ set(TARGET_NAME pointers)
 setup_hifi_library()
 GroupSources(src)
 link_hifi_libraries(shared controllers)
-
+include_hifi_library_headers(script-engine)

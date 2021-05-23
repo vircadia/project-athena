@@ -18,12 +18,12 @@
 
 const glm::u8vec3 SkyboxPropertyGroup::DEFAULT_COLOR = { 0, 0, 0 };
 
-void SkyboxPropertyGroup::copyToScriptValue(const EntityPropertyFlags& desiredProperties, QScriptValue& properties, QScriptEngine* engine, bool skipDefaults, EntityItemProperties& defaultEntityProperties) const {
+void SkyboxPropertyGroup::copyToScriptValue(const EntityPropertyFlags& desiredProperties, ScriptValuePointer& properties, ScriptEngine* engine, bool skipDefaults, EntityItemProperties& defaultEntityProperties) const {
     COPY_GROUP_PROPERTY_TO_QSCRIPTVALUE_TYPED(PROP_SKYBOX_COLOR, Skybox, skybox, Color, color, u8vec3Color);
     COPY_GROUP_PROPERTY_TO_QSCRIPTVALUE(PROP_SKYBOX_URL, Skybox, skybox, URL, url);
 }
 
-void SkyboxPropertyGroup::copyFromScriptValue(const QScriptValue& object, bool& _defaultSettings) {
+void SkyboxPropertyGroup::copyFromScriptValue(const ScriptValuePointer& object, bool& _defaultSettings) {
     COPY_GROUP_PROPERTY_FROM_QSCRIPTVALUE(skybox, color, u8vec3Color, setColor);
     COPY_GROUP_PROPERTY_FROM_QSCRIPTVALUE(skybox, url, QString, setURL);
 }

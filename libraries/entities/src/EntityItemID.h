@@ -17,8 +17,12 @@
 #include <QDebug>
 #include <QObject>
 #include <QHash>
-#include <QScriptEngine>
+#include <QtCore/QSharedPointer>
 #include <QUuid>
+
+class ScriptEngine;
+class ScriptValue;
+using ScriptValuePointer = QSharedPointer<ScriptValue>;
 
 const QUuid UNKNOWN_ENTITY_ID; // null uuid
 
@@ -29,7 +33,7 @@ public:
     EntityItemID(const QUuid& id);
     // EntityItemID(const EntityItemID& other);
     static EntityItemID readEntityItemIDFromBuffer(const unsigned char* data, int bytesLeftToRead);
-    QScriptValue toScriptValue(QScriptEngine* engine) const;
+    ScriptValuePointer toScriptValue(ScriptEngine* engine) const;
 
     bool isInvalidID() const { return *this == UNKNOWN_ENTITY_ID; }
 };
@@ -41,9 +45,9 @@ inline QDebug operator<<(QDebug debug, const EntityItemID& id) {
 
 Q_DECLARE_METATYPE(EntityItemID);
 Q_DECLARE_METATYPE(QVector<EntityItemID>);
-QScriptValue EntityItemIDtoScriptValue(QScriptEngine* engine, const EntityItemID& properties);
-void EntityItemIDfromScriptValue(const QScriptValue &object, EntityItemID& properties);
-QVector<EntityItemID> qVectorEntityItemIDFromScriptValue(const QScriptValue& array);
+ScriptValuePointer EntityItemIDtoScriptValue(ScriptEngine* engine, const EntityItemID& properties);
+void EntityItemIDfromScriptValue(const ScriptValuePointer &object, EntityItemID& properties);
+QVector<EntityItemID> qVectorEntityItemIDFromScriptValue(const ScriptValuePointer& array);
 
 // Allow the use of std::unordered_map with QUuid keys
 namespace std { template<> struct hash<EntityItemID> { size_t operator()(const EntityItemID& id) const; }; }

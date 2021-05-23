@@ -10,6 +10,8 @@
 
 #include <QtCore/QThread>
 
+#include <ScriptValue.h>
+
 using namespace controller;
 
 bool ScriptConditional::satisfied() {
@@ -23,5 +25,5 @@ void ScriptConditional::updateValue() {
         return;
     }
 
-    _lastValue = _callable.call().toBool();
+    _lastValue = _callable->call()->toBool();
 }

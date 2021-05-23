@@ -16,11 +16,13 @@
 #include <shared/QtHelpers.h>
 
 #include "ScriptAudioInjector.h"
+#include "ScriptEngine.h"
+#include "ScriptEngineCast.h"
 #include "ScriptEngineLogging.h"
 
-void registerAudioMetaTypes(QScriptEngine* engine) {
-    qScriptRegisterMetaType(engine, injectorOptionsToScriptValue, injectorOptionsFromScriptValue);
-    qScriptRegisterMetaType(engine, soundSharedPointerToScriptValue, soundSharedPointerFromScriptValue);
+void registerAudioMetaTypes(ScriptEngine* engine) {
+    scriptRegisterMetaType(engine, injectorOptionsToScriptValue, injectorOptionsFromScriptValue);
+    scriptRegisterMetaType(engine, soundSharedPointerToScriptValue, soundSharedPointerFromScriptValue);
 }
 
 

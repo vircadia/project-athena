@@ -13,19 +13,21 @@
 #define hifi_MouseEvent_h
 
 #include <QMouseEvent>
-#include <QScriptValue>
+#include <QtCore/QSharedPointer>
 
-class QScriptEngine;
+class ScriptEngine;
+class ScriptValue;
+using ScriptValuePointer = QSharedPointer<ScriptValue>;
 
 class MouseEvent {
 public:
     MouseEvent();
     MouseEvent(const QMouseEvent& event);
     
-    static QScriptValue toScriptValue(QScriptEngine* engine, const MouseEvent& event);
-    static void fromScriptValue(const QScriptValue& object, MouseEvent& event);
+    static ScriptValuePointer toScriptValue(ScriptEngine* engine, const MouseEvent& event);
+    static void fromScriptValue(const ScriptValuePointer& object, MouseEvent& event);
 
-    QScriptValue toScriptValue(QScriptEngine* engine) const { return MouseEvent::toScriptValue(engine, *this); }
+    ScriptValuePointer toScriptValue(ScriptEngine* engine) const { return MouseEvent::toScriptValue(engine, *this); }
     
     int x;
     int y;

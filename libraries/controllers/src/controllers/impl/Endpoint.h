@@ -20,8 +20,6 @@
 #include "../Input.h"
 #include "../Pose.h"
 
-class QScriptValue;
-
 namespace controller {
     /*
     * Encapsulates a particular input / output,

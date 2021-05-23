@@ -6,4 +6,4 @@ macro (SETUP_TESTCASE_DEPENDENCIES)
   package_libraries_for_deployment()
 endmacro ()
 
-setup_hifi_testcase(Script)
+setup_hifi_testcase()

@@ -2,7 +2,7 @@
 set(TARGET_NAME "entities-test")
 
 # This is not a testcase -- just set it up as a regular hifi project
-setup_hifi_project(Network Script)
+setup_hifi_project(Network)
 setup_memory_debugger()
 setup_thread_debugger()
 set_target_properties(${TARGET_NAME} PROPERTIES FOLDER "Tests/manual-tests/")

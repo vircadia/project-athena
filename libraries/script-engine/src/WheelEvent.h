@@ -14,17 +14,19 @@
 
 #include <QString>
 #include <QWheelEvent>
+#include <QtCore/QSharedPointer>
 
-class QScriptValue;
-class QScriptEngine;
+class ScriptEngine;
+class ScriptValue;
+using ScriptValuePointer = QSharedPointer<ScriptValue>;
 
 class WheelEvent {
 public:
     WheelEvent();
     WheelEvent(const QWheelEvent& event);
     
-    static QScriptValue toScriptValue(QScriptEngine* engine, const WheelEvent& event);
-    static void fromScriptValue(const QScriptValue& object, WheelEvent& event);
+    static ScriptValuePointer toScriptValue(ScriptEngine* engine, const WheelEvent& event);
+    static void fromScriptValue(const ScriptValuePointer& object, WheelEvent& event);
     
     int x;
     int y;

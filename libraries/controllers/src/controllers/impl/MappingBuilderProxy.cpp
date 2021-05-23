@@ -17,6 +17,7 @@
 #include "RouteBuilderProxy.h"
 #include "../ScriptingInterface.h"
 #include "../Logging.h"
+#include <ScriptValue.h>
 
 using namespace controller;
 
@@ -26,8 +27,8 @@ QObject* MappingBuilderProxy::fromQml(const QJSValue& source) {
     return from(sourceEndpoint);
 }
 
-QObject* MappingBuilderProxy::from(const QScriptValue& source) {
-    qCDebug(controllers) << "Creating new Route builder proxy from " << source.toString();
+QObject* MappingBuilderProxy::from(const ScriptValuePointer& source) {
+    qCDebug(controllers) << "Creating new Route builder proxy from " << source->toString();
     auto sourceEndpoint = _parent.endpointFor(source);
     return from(sourceEndpoint);
 }
@@ -49,7 +50,7 @@ QObject* MappingBuilderProxy::makeAxisQml(const QJSValue& source1, const QJSValu
     return from(_parent.compositeEndpointFor(source1Endpoint, source2Endpoint));
 }
 
-QObject* MappingBuilderProxy::makeAxis(const QScriptValue& source1, const QScriptValue& source2) {
+QObject* MappingBuilderProxy::makeAxis(const ScriptValuePointer& source1, const ScriptValuePointer& source2) {
     auto source1Endpoint = _parent.endpointFor(source1);
     auto source2Endpoint = _parent.endpointFor(source2);
     return from(_parent.compositeEndpointFor(source1Endpoint, source2Endpoint));

@@ -11,8 +11,11 @@
 
 #include <QtCore/QObject>
 #include <QtCore/QVariant>
-#include <QtScript/QScriptValue>
-#include <QtScript/QScriptEngine>
+#include <QtCore/QSharedPointer>
+
+class ScriptEngine;
+class ScriptValue;
+using ScriptValuePointer = QSharedPointer<ScriptValue>;
 
 class QmlWrapper : public QObject {
     Q_OBJECT
@@ -29,16 +32,16 @@ protected:
 };
 
 template <typename T>
-QScriptValue wrapperToScriptValue(QScriptEngine* engine, T* const &in) {
+ScriptValuePointer wrapperToScriptValue(ScriptEngine* engine, T* const &in) {
     if (!in) {
         return engine->undefinedValue();
     }
-    return engine->newQObject(in, QScriptEngine::QtOwnership, QScriptEngine::ExcludeDeleteLater | QScriptEngine::ExcludeChildObjects);
+    return engine->newQObject(in, ScriptEngine::QtOwnership, ScriptEngine::ExcludeDeleteLater | ScriptEngine::ExcludeChildObjects);
 }
 
 template <typename T>
-void wrapperFromScriptValue(const QScriptValue& value, T* &out) {
-    out = qobject_cast<T*>(value.toQObject());
+void wrapperFromScriptValue(const ScriptValuePointer& value, T* &out) {
+    out = qobject_cast<T*>(value->toQObject());
 }
 
 #endif

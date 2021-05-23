@@ -18,6 +18,7 @@
 
 #include "ScriptEngineLogging.h"
 #include "ScriptEngine.h"
+#include "ScriptManager.h"
 
 quat Quat::normalize(const glm::quat& q) {
     return glm::normalize(q);
@@ -123,8 +124,8 @@ void Quat::print(const QString& label, const glm::quat& q, bool asDegrees) {
         message = message.arg(glm::to_string(glm::dquat(q)).c_str());
     }
     qCDebug(scriptengine) << message;
-    if (ScriptEngine* scriptEngine = qobject_cast<ScriptEngine*>(engine())) {
-        scriptEngine->print(message);
+    if (ScriptManager* scriptManager = engine()->manager()) {
+        scriptManager->print(message);
     }
 }
 

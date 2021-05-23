@@ -98,7 +98,7 @@ endif ()
 
 find_package(
   Qt5 COMPONENTS
-  Gui Widgets Multimedia Network Qml Quick Script Svg
+  Gui Widgets Multimedia Network Qml Quick Svg
   ${PLATFORM_QT_COMPONENTS}
   WebChannel WebSockets
 )
@@ -230,7 +230,7 @@ link_hifi_libraries(
   shared workload task octree ktx gpu gl procedural graphics graphics-scripting render
   pointers recording hfm model-serializers networking material-networking
   model-networking model-baker entities avatars
-  audio audio-client animation script-engine physics
+  audio audio-client animation physics
   render-utils entities-renderer avatars-renderer ui qml auto-updater midi
   controllers plugins image platform
   ui-plugins display-plugins input-plugins
@@ -240,6 +240,7 @@ link_hifi_libraries(
   ${PLATFORM_PLUGIN_LIBRARIES}
   shaders
 )
+include_hifi_library_headers(script-engine)
 
 # include the binary directory of render-utils for shader includes
 target_include_directories(${TARGET_NAME} PRIVATE "${CMAKE_BINARY_DIR}/libraries/render-utils")
@@ -304,7 +305,7 @@ endif ()
 target_link_libraries(
   ${TARGET_NAME}
   Qt5::Gui Qt5::Network Qt5::Multimedia Qt5::Widgets
-  Qt5::Qml Qt5::Quick Qt5::Script Qt5::Svg
+  Qt5::Qml Qt5::Quick Qt5::Svg
   Qt5::WebChannel
   ${PLATFORM_QT_LIBRARIES}
 )

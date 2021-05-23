@@ -16,9 +16,9 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <QtCore/QSharedPointer>
 
 #include <QtQml/QJSValue>
-#include <QtScript/QScriptValue>
 
 #include <DependencyManager.h>
 #include <RegisteredMetaTypes.h>
@@ -31,6 +31,10 @@
 #include "StandardControls.h"
 #include "Actions.h"
 #include "StateController.h"
+
+class ScriptEngine;
+class ScriptValue;
+using ScriptValuePointer = QSharedPointer<ScriptValue>;
 
 namespace controller {
 
@@ -64,7 +68,7 @@ namespace controller {
         virtual ~UserInputMapper();
 
 
-        static void registerControllerTypes(QScriptEngine* engine);
+        static void registerControllerTypes(ScriptEngine* engine);
 
         void registerDevice(InputDevice::Pointer device);
         InputDevice::Pointer getDevice(const Input& input);
@@ -164,10 +168,10 @@ namespace controller {
         void enableMapping(const MappingPointer& mapping);
         void disableMapping(const MappingPointer& mapping);
         EndpointPointer endpointFor(const QJSValue& endpoint);
-        EndpointPointer endpointFor(const QScriptValue& endpoint);
+        EndpointPointer endpointFor(const ScriptValuePointer& endpoint);
         EndpointPointer compositeEndpointFor(EndpointPointer first, EndpointPointer second);
         ConditionalPointer conditionalFor(const QJSValue& endpoint);
-        ConditionalPointer conditionalFor(const QScriptValue& endpoint);
+        ConditionalPointer conditionalFor(const ScriptValuePointer& endpoint);
         ConditionalPointer conditionalFor(const Input& endpoint) const;
 
         MappingPointer parseMapping(const QJsonValue& json);

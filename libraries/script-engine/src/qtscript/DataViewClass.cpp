@@ -17,7 +17,7 @@ Q_DECLARE_METATYPE(QByteArray*)
 
 static const QString DATA_VIEW_NAME = "DataView";
 
-DataViewClass::DataViewClass(ScriptEngine* scriptEngine) : ArrayBufferViewClass(scriptEngine) {
+DataViewClass::DataViewClass(ScriptEngineQtScript* scriptEngine) : ArrayBufferViewClass(scriptEngine) {
     QScriptValue global = engine()->globalObject();
     
     // Save string handles for quick lookup

@@ -11,10 +11,10 @@
 
 #include "PointerEvent.h"
 
-#include <qscriptengine.h>
-#include <qscriptvalue.h>
-
 #include "RegisteredMetaTypes.h"
+#include "ScriptEngine.h"
+#include "ScriptValue.h"
+#include "ScriptValueUtils.h"
 
 static bool areFlagsSet(uint32_t flags, uint32_t mask) {
     return (flags & mask) != 0;
@@ -125,97 +125,97 @@ void PointerEvent::setButton(Button button) {
  * </table>
  * @typedef {number} KeyboardModifiers
  */
-QScriptValue PointerEvent::toScriptValue(QScriptEngine* engine, const PointerEvent& event) {
-    QScriptValue obj = engine->newObject();
+ScriptValuePointer PointerEvent::toScriptValue(ScriptEngine* engine, const PointerEvent& event) {
+    ScriptValuePointer obj = engine->newObject();
 
     switch (event._type) {
     case Press:
-        obj.setProperty("type", "Press");
+        obj->setProperty("type", "Press");
         break;
     case DoublePress:
-        obj.setProperty("type", "DoublePress");
+        obj->setProperty("type", "DoublePress");
         break;
     case Release:
-        obj.setProperty("type", "Release");
+        obj->setProperty("type", "Release");
         break;
     default:
     case Move:
-        obj.setProperty("type", "Move");
+        obj->setProperty("type", "Move");
         break;
     };
 
-    obj.setProperty("id", event._id);
+    obj->setProperty("id", event._id);
 
-    QScriptValue pos2D = engine->newObject();
-    pos2D.setProperty("x", event._pos2D.x);
-    pos2D.setProperty("y", event._pos2D.y);
-    obj.setProperty("pos2D", pos2D);
+    ScriptValuePointer pos2D = engine->newObject();
+    pos2D->setProperty("x", event._pos2D.x);
+    pos2D->setProperty("y", event._pos2D.y);
+    obj->setProperty("pos2D", pos2D);
 
-    QScriptValue pos3D = engine->newObject();
-    pos3D.setProperty("x", event._pos3D.x);
-    pos3D.setProperty("y", event._pos3D.y);
-    pos3D.setProperty("z", event._pos3D.z);
-    obj.setProperty("pos3D", pos3D);
+    ScriptValuePointer pos3D = engine->newObject();
+    pos3D->setProperty("x", event._pos3D.x);
+    pos3D->setProperty("y", event._pos3D.y);
+    pos3D->setProperty("z", event._pos3D.z);
+    obj->setProperty("pos3D", pos3D);
 
-    QScriptValue normal = engine->newObject();
-    normal.setProperty("x", event._normal.x);
-    normal.setProperty("y", event._normal.y);
-    normal.setProperty("z", event._normal.z);
-    obj.setProperty("normal", normal);
+    ScriptValuePointer normal = engine->newObject();
+    normal->setProperty("x", event._normal.x);
+    normal->setProperty("y", event._normal.y);
+    normal->setProperty("z", event._normal.z);
+    obj->setProperty("normal", normal);
 
-    QScriptValue direction = engine->newObject();
-    direction.setProperty("x", event._direction.x);
-    direction.setProperty("y", event._direction.y);
-    direction.setProperty("z", event._direction.z);
-    obj.setProperty("direction", direction);
+    ScriptValuePointer direction = engine->newObject();
+    direction->setProperty("x", event._direction.x);
+    direction->setProperty("y", event._direction.y);
+    direction->setProperty("z", event._direction.z);
+    obj->setProperty("direction", direction);
 
     bool isPrimaryButton = false;
     bool isSecondaryButton = false;
     bool isTertiaryButton = false;
     switch (event._button) {
     case NoButtons:
-        obj.setProperty("button", "None");
+        obj->setProperty("button", "None");
         break;
     case PrimaryButton:
-        obj.setProperty("button", "Primary");
+        obj->setProperty("button", "Primary");
         isPrimaryButton = true;
         break;
     case SecondaryButton:
-        obj.setProperty("button", "Secondary");
+        obj->setProperty("button", "Secondary");
         isSecondaryButton = true;
         break;
     case TertiaryButton:
-        obj.setProperty("button", "Tertiary");
+        obj->setProperty("button", "Tertiary");
         isTertiaryButton = true;
         break;
     }
 
     if (isPrimaryButton) {
-        obj.setProperty("isPrimaryButton", isPrimaryButton);
-        obj.setProperty("isLeftButton", isPrimaryButton);
+        obj->setProperty("isPrimaryButton", isPrimaryButton);
+        obj->setProperty("isLeftButton", isPrimaryButton);
     }
     if (isSecondaryButton) {
-        obj.setProperty("isSecondaryButton", isSecondaryButton);
-        obj.setProperty("isRightButton", isSecondaryButton);
+        obj->setProperty("isSecondaryButton", isSecondaryButton);
+        obj->setProperty("isRightButton", isSecondaryButton);
     }
     if (isTertiaryButton) {
-        obj.setProperty("isTertiaryButton", isTertiaryButton);
-        obj.setProperty("isMiddleButton", isTertiaryButton);
+        obj->setProperty("isTertiaryButton", isTertiaryButton);
+        obj->setProperty("isMiddleButton", isTertiaryButton);
     }
 
-    obj.setProperty("isPrimaryHeld", areFlagsSet(event._buttons, PrimaryButton));
-    obj.setProperty("isSecondaryHeld", areFlagsSet(event._buttons, SecondaryButton));
-    obj.setProperty("isTertiaryHeld", areFlagsSet(event._buttons, TertiaryButton));
+    obj->setProperty("isPrimaryHeld", areFlagsSet(event._buttons, PrimaryButton));
+    obj->setProperty("isSecondaryHeld", areFlagsSet(event._buttons, SecondaryButton));
+    obj->setProperty("isTertiaryHeld", areFlagsSet(event._buttons, TertiaryButton));
 
-    obj.setProperty("keyboardModifiers", QScriptValue(event.getKeyboardModifiers()));
+    obj->setProperty("keyboardModifiers", engine->newValue(event.getKeyboardModifiers()));
 
     return obj;
 }
 
-void PointerEvent::fromScriptValue(const QScriptValue& object, PointerEvent& event) {
-    if (object.isObject()) {
-        QScriptValue type = object.property("type");
-        QString typeStr = type.isString() ? type.toString() : "Move";
+void PointerEvent::fromScriptValue(const ScriptValuePointer& object, PointerEvent& event) {
+    if (object->isObject()) {
+        ScriptValuePointer type = object->property("type");
+        QString typeStr = type->isString() ? type->toString() : "Move";
         if (typeStr == "Press") {
             event._type = Press;
         } else if (typeStr == "DoublePress") {
@@ -226,16 +226,16 @@ void PointerEvent::fromScriptValue(const QScriptValue& object, PointerEvent& eve
             event._type = Move;
         }
 
-        QScriptValue id = object.property("id");
-        event._id = id.isNumber() ? (uint32_t)id.toNumber() : 0;
+        ScriptValuePointer id = object->property("id");
+        event._id = id->isNumber() ? (uint32_t)id->toNumber() : 0;
 
-        vec2FromScriptValue(object.property("pos2D"), event._pos2D);
-        vec3FromScriptValue(object.property("pos3D"), event._pos3D);
-        vec3FromScriptValue(object.property("normal"), event._normal);
-        vec3FromScriptValue(object.property("direction"), event._direction);
+        vec2FromScriptValue(object->property("pos2D"), event._pos2D);
+        vec3FromScriptValue(object->property("pos3D"), event._pos3D);
+        vec3FromScriptValue(object->property("normal"), event._normal);
+        vec3FromScriptValue(object->property("direction"), event._direction);
 
-        QScriptValue button = object.property("button");
-        QString buttonStr = type.isString() ? button.toString() : "NoButtons";
+        ScriptValuePointer button = object->property("button");
+        QString buttonStr = type->isString() ? button->toString() : "NoButtons";
 
         if (buttonStr == "Primary") {
             event._button = PrimaryButton;
@@ -247,9 +247,9 @@ void PointerEvent::fromScriptValue(const QScriptValue& object, PointerEvent& eve
             event._button = NoButtons;
         }
 
-        bool primary = object.property("isPrimaryHeld").toBool();
-        bool secondary = object.property("isSecondaryHeld").toBool();
-        bool tertiary = object.property("isTertiaryHeld").toBool();
+        bool primary = object->property("isPrimaryHeld")->toBool();
+        bool secondary = object->property("isSecondaryHeld")->toBool();
+        bool tertiary = object->property("isTertiaryHeld")->toBool();
         event._buttons = 0;
         if (primary) {
             event._buttons |= PrimaryButton;
@@ -261,7 +261,7 @@ void PointerEvent::fromScriptValue(const QScriptValue& object, PointerEvent& eve
             event._buttons |= TertiaryButton;
         }
 
-        event._keyboardModifiers = (Qt::KeyboardModifiers)(object.property("keyboardModifiers").toUInt32());
+        event._keyboardModifiers = (Qt::KeyboardModifiers)(object->property("keyboardModifiers")->toUInt32());
     }
 }
 

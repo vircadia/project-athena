@@ -20,15 +20,18 @@
 
 #include <QMouseEvent>
 #include <QReadWriteLock>
-#include <QScriptValue>
 
 #include <PointerEvent.h>
+#include <QtCore/QSharedPointer>
 
 #include "Overlay.h"
 
 #include <EntityScriptingInterface.h>
 
 class PickRay;
+class ScriptEngine;
+class ScriptValue;
+using ScriptValuePointer = QSharedPointer<ScriptValue>;
 
 /*@jsdoc
  * The result of a {@link PickRay} search using {@link Overlays.findRayIntersection|findRayIntersection}.
@@ -52,8 +55,8 @@ public:
     QVariantMap extraInfo;
 };
 Q_DECLARE_METATYPE(RayToOverlayIntersectionResult);
-QScriptValue RayToOverlayIntersectionResultToScriptValue(QScriptEngine* engine, const RayToOverlayIntersectionResult& value);
-void RayToOverlayIntersectionResultFromScriptValue(const QScriptValue& object, RayToOverlayIntersectionResult& value);
+ScriptValuePointer RayToOverlayIntersectionResultToScriptValue(ScriptEngine* engine, const RayToOverlayIntersectionResult& value);
+void RayToOverlayIntersectionResultFromScriptValue(const ScriptValuePointer& object, RayToOverlayIntersectionResult& value);
 
 class ParabolaToOverlayIntersectionResult {
 public:
@@ -120,7 +123,7 @@ public:
 
     void cleanupAllOverlays();
 
-    mutable QScriptEngine _scriptEngine;
+    mutable ScriptEnginePointer _scriptEngine;
 
 public slots:
     /*@jsdoc
@@ -411,8 +414,8 @@ public slots:
      */
     RayToOverlayIntersectionResult findRayIntersection(const PickRay& ray,
                                                        bool precisionPicking = false,
-                                                       const QScriptValue& include = QScriptValue(),
-                                                       const QScriptValue& discard = QScriptValue(),
+                                                       const ScriptValuePointer& include = ScriptValuePointer(),
+                                                       const ScriptValuePointer& discard = ScriptValuePointer(),
                                                        bool visibleOnly = false,
                                                        bool collidableOnly = false);
 

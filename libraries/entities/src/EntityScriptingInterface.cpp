@@ -41,6 +41,9 @@
 #include <EntityScriptClient.h>
 #include <Profile.h>
 #include "GrabPropertyGroup.h"
+#include <ScriptContext.h>
+#include <ScriptEngineCast.h>
+#include <ScriptValue.h>
 
 const QString GRABBABLE_USER_DATA = "{\"grabbableKey\":{\"grabbable\":true}}";
 const QString NOT_GRABBABLE_USER_DATA = "{\"grabbableKey\":{\"grabbable\":false}}";
@@ -672,21 +675,21 @@ struct EntityPropertiesResult {
 
 // Static method to make sure that we have the right script engine.
 // Using sender() or QtScriptable::engine() does not work for classes used by multiple threads (script-engines)
-QScriptValue EntityScriptingInterface::getMultipleEntityProperties(QScriptContext* context, QScriptEngine* engine) {
+ScriptValuePointer EntityScriptingInterface::getMultipleEntityProperties(ScriptContext* context, ScriptEngine* engine) {
     const int ARGUMENT_ENTITY_IDS = 0;
     const int ARGUMENT_EXTENDED_DESIRED_PROPERTIES = 1;
 
     auto entityScriptingInterface = DependencyManager::get<EntityScriptingInterface>();
-    const auto entityIDs = qscriptvalue_cast<QVector<QUuid>>(context->argument(ARGUMENT_ENTITY_IDS));
+    const auto entityIDs = scriptvalue_cast<QVector<QUuid>>(context->argument(ARGUMENT_ENTITY_IDS));
     return entityScriptingInterface->getMultipleEntityPropertiesInternal(engine, entityIDs, context->argument(ARGUMENT_EXTENDED_DESIRED_PROPERTIES));
 }
 
-QScriptValue EntityScriptingInterface::getMultipleEntityPropertiesInternal(QScriptEngine* engine, QVector<QUuid> entityIDs, const QScriptValue& extendedDesiredProperties) {
+ScriptValuePointer EntityScriptingInterface::getMultipleEntityPropertiesInternal(ScriptEngine* engine, QVector<QUuid> entityIDs, const ScriptValuePointer& extendedDesiredProperties) {
     PROFILE_RANGE(script_entities, __FUNCTION__);
 
     EntityPsuedoPropertyFlags psuedoPropertyFlags;
-    const auto readExtendedPropertyStringValue = [&](QScriptValue extendedProperty) {
-        const auto extendedPropertyString = extendedProperty.toString();
+    const auto readExtendedPropertyStringValue = [&](ScriptValuePointer extendedProperty) {
+        const auto extendedPropertyString = extendedProperty->toString();
         if (extendedPropertyString == "id") {
             psuedoPropertyFlags.set(EntityPsuedoPropertyFlag::ID);
         } else if (extendedPropertyString == "type") {
@@ -716,18 +719,18 @@ QScriptValue EntityScriptingInterface::getMultipleEntityPropertiesInternal(QScri
         }
     };
 
-    if (extendedDesiredProperties.isString()) {
+    if (extendedDesiredProperties->isString()) {
         readExtendedPropertyStringValue(extendedDesiredProperties);
         psuedoPropertyFlags.set(EntityPsuedoPropertyFlag::FlagsActive);
-    } else if (extendedDesiredProperties.isArray()) {
-        const quint32 length = extendedDesiredProperties.property("length").toInt32();
+    } else if (extendedDesiredProperties->isArray()) {
+        const quint32 length = extendedDesiredProperties->property("length")->toInt32();
         for (quint32 i = 0; i < length; i++) {
-            readExtendedPropertyStringValue(extendedDesiredProperties.property(i));
+            readExtendedPropertyStringValue(extendedDesiredProperties->property(i));
         }
         psuedoPropertyFlags.set(EntityPsuedoPropertyFlag::FlagsActive);
     }
 
-    EntityPropertyFlags desiredProperties = qscriptvalue_cast<EntityPropertyFlags>(extendedDesiredProperties);
+    EntityPropertyFlags desiredProperties = scriptvalue_cast<EntityPropertyFlags>(extendedDesiredProperties);
     bool needsScriptSemantics = desiredProperties.getHasProperty(PROP_POSITION) ||
         desiredProperties.getHasProperty(PROP_ROTATION) ||
         desiredProperties.getHasProperty(PROP_LOCAL_POSITION) ||
@@ -774,18 +777,18 @@ QScriptValue EntityScriptingInterface::getMultipleEntityPropertiesInternal(QScri
             });
         }
     }
-    QScriptValue finalResult = engine->newArray(resultProperties.size());
+    ScriptValuePointer finalResult = engine->newArray(resultProperties.size());
     quint32 i = 0;
     if (needsScriptSemantics) {
         PROFILE_RANGE(script_entities, "EntityScriptingInterface::getMultipleEntityProperties>Script Semantics");
         foreach(const auto& result, resultProperties) {
-            finalResult.setProperty(i++, convertPropertiesToScriptSemantics(result.properties, result.scalesWithParent)
+            finalResult->setProperty(i++, convertPropertiesToScriptSemantics(result.properties, result.scalesWithParent)
                 .copyToScriptValue(engine, false, false, false, psuedoPropertyFlags));
         }
     } else {
         PROFILE_RANGE(script_entities, "EntityScriptingInterface::getMultipleEntityProperties>Skip Script Semantics");
         foreach(const auto& result, resultProperties) {
-            finalResult.setProperty(i++, result.properties.copyToScriptValue(engine, false, false, false, psuedoPropertyFlags));
+            finalResult->setProperty(i++, result.properties.copyToScriptValue(engine, false, false, false, psuedoPropertyFlags));
         }
     }
     return finalResult;
@@ -1060,14 +1063,14 @@ QSizeF EntityScriptingInterface::textSize(const QUuid& id, const QString& text) 
     return EntityTree::textSize(id, text);
 }
 
-void EntityScriptingInterface::setPersistentEntitiesScriptEngine(QSharedPointer<EntitiesScriptEngineProvider> engine) {
+void EntityScriptingInterface::setPersistentEntitiesScriptEngine(QSharedPointer<EntitiesScriptEngineProvider> manager) {
     std::lock_guard<std::recursive_mutex> lock(_entitiesScriptEngineLock);
-    _persistentEntitiesScriptEngine = engine;
+    _persistentEntitiesScriptManager = manager;
 }
 
-void EntityScriptingInterface::setNonPersistentEntitiesScriptEngine(QSharedPointer<EntitiesScriptEngineProvider> engine) {
+void EntityScriptingInterface::setNonPersistentEntitiesScriptEngine(QSharedPointer<EntitiesScriptEngineProvider> manager) {
     std::lock_guard<std::recursive_mutex> lock(_entitiesScriptEngineLock);
-    _nonPersistentEntitiesScriptEngine = engine;
+    _nonPersistentEntitiesScriptManager = manager;
 }
 
 void EntityScriptingInterface::callEntityMethod(const QUuid& id, const QString& method, const QStringList& params) {
@@ -1076,7 +1079,7 @@ void EntityScriptingInterface::callEntityMethod(const QUuid& id, const QString& 
     auto entity = getEntityTree()->findEntityByEntityItemID(id);
     if (entity) {
         std::lock_guard<std::recursive_mutex> lock(_entitiesScriptEngineLock);
-        auto& scriptEngine = (entity->isLocalEntity() || entity->isMyAvatarEntity()) ? _persistentEntitiesScriptEngine : _nonPersistentEntitiesScriptEngine;
+        auto& scriptEngine = (entity->isLocalEntity() || entity->isMyAvatarEntity()) ? _persistentEntitiesScriptManager : _nonPersistentEntitiesScriptManager;
         if (scriptEngine) {
             scriptEngine->callEntityScriptMethod(id, method, params);
         }
@@ -1124,7 +1127,7 @@ void EntityScriptingInterface::handleEntityScriptCallMethodPacket(QSharedPointer
         auto entity = getEntityTree()->findEntityByEntityItemID(entityID);
         if (entity) {
             std::lock_guard<std::recursive_mutex> lock(_entitiesScriptEngineLock);
-            auto& scriptEngine = (entity->isLocalEntity() || entity->isMyAvatarEntity()) ? _persistentEntitiesScriptEngine : _nonPersistentEntitiesScriptEngine;
+            auto& scriptEngine = (entity->isLocalEntity() || entity->isMyAvatarEntity()) ? _persistentEntitiesScriptManager : _nonPersistentEntitiesScriptManager;
             if (scriptEngine) {
                 scriptEngine->callEntityScriptMethod(entityID, method, params, senderNode->getUUID());
             }
@@ -1258,7 +1261,7 @@ QVector<QUuid> EntityScriptingInterface::findEntitiesByName(const QString entity
 }
 
 RayToEntityIntersectionResult EntityScriptingInterface::findRayIntersection(const PickRay& ray, bool precisionPicking,
-        const QScriptValue& entityIdsToInclude, const QScriptValue& entityIdsToDiscard, bool visibleOnly, bool collidableOnly) const {
+        const ScriptValuePointer& entityIdsToInclude, const ScriptValuePointer& entityIdsToDiscard, bool visibleOnly, bool collidableOnly) const {
     PROFILE_RANGE(script_entities, __FUNCTION__);
     QVector<EntityItemID> entitiesToInclude = qVectorEntityItemIDFromScriptValue(entityIdsToInclude);
     QVector<EntityItemID> entitiesToDiscard = qVectorEntityItemIDFromScriptValue(entityIdsToDiscard);
@@ -1334,21 +1337,21 @@ bool EntityScriptingInterface::reloadServerScripts(const QUuid& entityID) {
     return client->reloadServerScript(entityID);
 }
 
-bool EntityPropertyMetadataRequest::script(EntityItemID entityID, QScriptValue handler) {
+bool EntityPropertyMetadataRequest::script(EntityItemID entityID, ScriptValuePointer handler) {
     using LocalScriptStatusRequest = QFutureWatcher<QVariant>;
 
     LocalScriptStatusRequest* request = new LocalScriptStatusRequest;
-    QObject::connect(request, &LocalScriptStatusRequest::finished, _engine, [=]() mutable {
+    QObject::connect(request, &LocalScriptStatusRequest::finished, _manager, [=]() mutable {
         auto details = request->result().toMap();
-        QScriptValue err, result;
+        ScriptValuePointer err, result;
         if (details.contains("isError")) {
             if (!details.contains("message")) {
                 details["message"] = details["errorInfo"];
             }
-            err = _engine->makeError(_engine->toScriptValue(details));
+            err = _manager->engine()->makeError(_manager->engine()->toScriptValue(details));
         } else {
             details["success"] = true;
-            result = _engine->toScriptValue(details);
+            result = _manager->engine()->toScriptValue(details);
         }
         callScopedHandlerObject(handler, err, result);
         request->deleteLater();
@@ -1361,19 +1364,20 @@ bool EntityPropertyMetadataRequest::script(EntityItemID entityID, QScriptValue h
     }, entityID);
     if (!request->isStarted()) {
         request->deleteLater();
-        callScopedHandlerObject(handler, _engine->makeError("Entities Scripting Provider unavailable", "InternalError"), QScriptValue());
+        auto engine = handler->engine();
+        callScopedHandlerObject(handler, engine->makeError(engine->newValue("Entities Scripting Provider unavailable"), "InternalError"), ScriptValuePointer());
         return false;
     }
     return true;
 }
 
-bool EntityPropertyMetadataRequest::serverScripts(EntityItemID entityID, QScriptValue handler) {
+bool EntityPropertyMetadataRequest::serverScripts(EntityItemID entityID, ScriptValuePointer handler) {
     auto client = DependencyManager::get<EntityScriptClient>();
     auto request = client->createScriptStatusRequest(entityID);
-    QPointer<BaseScriptEngine> engine = _engine;
-    QObject::connect(request, &GetScriptStatusRequest::finished, _engine, [=](GetScriptStatusRequest* request) mutable {
-        auto engine = _engine;
-        if (!engine) {
+    QPointer<ScriptManager> manager = _manager;
+    QObject::connect(request, &GetScriptStatusRequest::finished, _manager, [=](GetScriptStatusRequest* request) mutable {
+        auto manager = _manager;
+        if (!manager) {
             qCDebug(entities) << __FUNCTION__ << " -- engine destroyed while inflight" << entityID;
             return;
         }
@@ -1383,7 +1387,7 @@ bool EntityPropertyMetadataRequest::serverScripts(EntityItemID entityID, QScript
         details["status"] = EntityScriptStatus_::valueToKey(request->getStatus()).toLower();
         details["errorInfo"] = request->getErrorInfo();
 
-        QScriptValue err, result;
+        ScriptValuePointer err, result;
         if (!details["success"].toBool()) {
             if (!details.contains("message") && details.contains("errorInfo")) {
                 details["message"] = details["errorInfo"];
@@ -1391,9 +1395,9 @@ bool EntityPropertyMetadataRequest::serverScripts(EntityItemID entityID, QScript
             if (details["message"].toString().isEmpty()) {
                 details["message"] = "entity server script details not found";
             }
-            err = engine->makeError(engine->toScriptValue(details));
+            err = manager->engine()->makeError(manager->engine()->toScriptValue(details));
         } else {
-            result = engine->toScriptValue(details);
+            result = manager->engine()->toScriptValue(details);
         }
         callScopedHandlerObject(handler, err, result);
         request->deleteLater();
@@ -1402,22 +1406,23 @@ bool EntityPropertyMetadataRequest::serverScripts(EntityItemID entityID, QScript
     return true;
 }
 
-bool EntityScriptingInterface::queryPropertyMetadata(const QUuid& entityID, QScriptValue property, QScriptValue scopeOrCallback, QScriptValue methodOrName) {
-    auto name = property.toString();
+bool EntityScriptingInterface::queryPropertyMetadata(const QUuid& entityID, ScriptValuePointer property, ScriptValuePointer scopeOrCallback, ScriptValuePointer methodOrName) {
+    auto name = property->toString();
     auto handler = makeScopedHandlerObject(scopeOrCallback, methodOrName);
-    QPointer<BaseScriptEngine> engine = dynamic_cast<BaseScriptEngine*>(handler.engine());
-    if (!engine) {
-        qCDebug(entities) << "queryPropertyMetadata without detectable engine" << entityID << name;
+    QPointer<ScriptManager> manager = handler->engine()->manager();
+    if (!manager) {
+        qCDebug(entities) << "queryPropertyMetadata without detectable script manager" << entityID << name;
         return false;
     }
+    auto engine = manager->engine();
 #ifdef DEBUG_ENGINE_STATE
     connect(engine, &QObject::destroyed, this, [=]() {
         qDebug() << "queryPropertyMetadata -- engine destroyed!" << (!engine ? "nullptr" : "engine");
     });
 #endif
-    if (!handler.property("callback").isFunction()) {
-        qDebug() << "!handler.callback.isFunction" << engine;
-        engine->raiseException(engine->makeError("callback is not a function", "TypeError"));
+    if (!handler->property("callback")->isFunction()) {
+        qDebug() << "!handler.callback.isFunction" << manager;
+        engine->raiseException(engine->makeError(engine->newValue("callback is not a function"), "TypeError"));
         return false;
     }
 
@@ -1433,26 +1438,36 @@ bool EntityScriptingInterface::queryPropertyMetadata(const QUuid& entityID, QScr
 
     // This is an async callback pattern -- so if needed C++ can easily throttle or restrict queries later.
 
-    EntityPropertyMetadataRequest request(engine);
+    EntityPropertyMetadataRequest request(manager);
 
     if (name == "script") {
         return request.script(entityID, handler);
     } else if (name == "serverScripts") {
         return request.serverScripts(entityID, handler);
     } else {
-        engine->raiseException(engine->makeError("metadata for property " + name + " is not yet queryable"));
+        engine->raiseException(engine->makeError(engine->newValue("metadata for property " + name + " is not yet queryable")));
         engine->maybeEmitUncaughtException(__FUNCTION__);
         return false;
     }
 }
 
-bool EntityScriptingInterface::getServerScriptStatus(const QUuid& entityID, QScriptValue callback) {
+bool EntityScriptingInterface::getServerScriptStatus(const QUuid& entityID, ScriptValuePointer callback) {
     auto client = DependencyManager::get<EntityScriptClient>();
     auto request = client->createScriptStatusRequest(entityID);
-    connect(request, &GetScriptStatusRequest::finished, callback.engine(), [callback](GetScriptStatusRequest* request) mutable {
-        QString statusString = EntityScriptStatus_::valueToKey(request->getStatus());;
-        QScriptValueList args { request->getResponseReceived(), request->getIsRunning(), statusString.toLower(), request->getErrorInfo() };
-        callback.call(QScriptValue(), args);
+
+    auto engine = callback->engine();
+    auto manager = engine->manager();
+    if (!manager) {
+        engine->raiseException(engine->makeError(engine->newValue("This script does not belong to a ScriptManager")));
+        engine->maybeEmitUncaughtException(__FUNCTION__);
+        return false;
+    }
+
+    connect(request, &GetScriptStatusRequest::finished, manager, [callback](GetScriptStatusRequest* request) mutable {
+        QString statusString = EntityScriptStatus_::valueToKey(request->getStatus());
+        auto engine = callback->engine();
+        ScriptValueList args { engine->newValue(request->getResponseReceived()), engine->newValue(request->getIsRunning()), engine->newValue(statusString.toLower()), engine->newValue(request->getErrorInfo()) };
+        callback->call(ScriptValuePointer(), args);
         request->deleteLater();
     });
     request->start();
@@ -1483,40 +1498,40 @@ bool EntityScriptingInterface::getDrawZoneBoundaries() const {
     return ZoneEntityItem::getDrawZoneBoundaries();
 }
 
-QScriptValue RayToEntityIntersectionResultToScriptValue(QScriptEngine* engine, const RayToEntityIntersectionResult& value) {
-    QScriptValue obj = engine->newObject();
-    obj.setProperty("intersects", value.intersects);
-    obj.setProperty("accurate", value.accurate);
-    QScriptValue entityItemValue = EntityItemIDtoScriptValue(engine, value.entityID);
-    obj.setProperty("entityID", entityItemValue);
-    obj.setProperty("distance", value.distance);
-    obj.setProperty("face", boxFaceToString(value.face));
+ScriptValuePointer RayToEntityIntersectionResultToScriptValue(ScriptEngine* engine, const RayToEntityIntersectionResult& value) {
+    ScriptValuePointer obj = engine->newObject();
+    obj->setProperty("intersects", value.intersects);
+    obj->setProperty("accurate", value.accurate);
+    ScriptValuePointer entityItemValue = EntityItemIDtoScriptValue(engine, value.entityID);
+    obj->setProperty("entityID", entityItemValue);
+    obj->setProperty("distance", value.distance);
+    obj->setProperty("face", boxFaceToString(value.face));
 
-    QScriptValue intersection = vec3ToScriptValue(engine, value.intersection);
-    obj.setProperty("intersection", intersection);
-    QScriptValue surfaceNormal = vec3ToScriptValue(engine, value.surfaceNormal);
-    obj.setProperty("surfaceNormal", surfaceNormal);
-    obj.setProperty("extraInfo", engine->toScriptValue(value.extraInfo));
+    ScriptValuePointer intersection = vec3ToScriptValue(engine, value.intersection);
+    obj->setProperty("intersection", intersection);
+    ScriptValuePointer surfaceNormal = vec3ToScriptValue(engine, value.surfaceNormal);
+    obj->setProperty("surfaceNormal", surfaceNormal);
+    obj->setProperty("extraInfo", engine->toScriptValue(value.extraInfo));
     return obj;
 }
 
-void RayToEntityIntersectionResultFromScriptValue(const QScriptValue& object, RayToEntityIntersectionResult& value) {
-    value.intersects = object.property("intersects").toVariant().toBool();
-    value.accurate = object.property("accurate").toVariant().toBool();
-    QScriptValue entityIDValue = object.property("entityID");
+void RayToEntityIntersectionResultFromScriptValue(const ScriptValuePointer& object, RayToEntityIntersectionResult& value) {
+    value.intersects = object->property("intersects")->toVariant().toBool();
+    value.accurate = object->property("accurate")->toVariant().toBool();
+    ScriptValuePointer entityIDValue = object->property("entityID");
     quuidFromScriptValue(entityIDValue, value.entityID);
-    value.distance = object.property("distance").toVariant().toFloat();
-    value.face = boxFaceFromString(object.property("face").toVariant().toString());
+    value.distance = object->property("distance")->toVariant().toFloat();
+    value.face = boxFaceFromString(object->property("face")->toVariant().toString());
 
-    QScriptValue intersection = object.property("intersection");
-    if (intersection.isValid()) {
+    ScriptValuePointer intersection = object->property("intersection");
+    if (intersection->isValid()) {
         vec3FromScriptValue(intersection, value.intersection);
     }
-    QScriptValue surfaceNormal = object.property("surfaceNormal");
-    if (surfaceNormal.isValid()) {
+    ScriptValuePointer surfaceNormal = object->property("surfaceNormal");
+    if (surfaceNormal->isValid()) {
         vec3FromScriptValue(surfaceNormal, value.surfaceNormal);
     }
-    value.extraInfo = object.property("extraInfo").toVariant().toMap();
+    value.extraInfo = object->property("extraInfo")->toVariant().toMap();
 }
 
 bool EntityScriptingInterface::polyVoxWorker(QUuid entityID, std::function<bool(PolyVoxEntityItem&)> actor) {
@@ -2237,14 +2252,15 @@ bool EntityScriptingInterface::AABoxIntersectsCapsule(const glm::vec3& low, cons
     return aaBox.findCapsulePenetration(start, end, radius, penetration);
 }
 
-void EntityScriptingInterface::getMeshes(const QUuid& entityID, QScriptValue callback) {
+void EntityScriptingInterface::getMeshes(const QUuid& entityID, ScriptValuePointer callback) {
     PROFILE_RANGE(script_entities, __FUNCTION__);
+    auto engine = callback->engine();
 
     EntityItemPointer entity = static_cast<EntityItemPointer>(_entityTree->findEntityByEntityItemID(entityID));
     if (!entity) {
         qCDebug(entities) << "EntityScriptingInterface::getMeshes no entity with ID" << entityID;
-        QScriptValueList args { callback.engine()->undefinedValue(), false };
-        callback.call(QScriptValue(), args);
+        ScriptValueList args { engine->undefinedValue(), false };
+        callback->call(ScriptValuePointer(), args);
         return;
     }
 
@@ -2252,12 +2268,12 @@ void EntityScriptingInterface::getMeshes(const QUuid& entityID, QScriptValue cal
     bool success = entity->getMeshes(result);
 
     if (success) {
-        QScriptValue resultAsScriptValue = meshesToScriptValue(callback.engine(), result);
-        QScriptValueList args { resultAsScriptValue, true };
-        callback.call(QScriptValue(), args);
+        ScriptValuePointer resultAsScriptValue = meshesToScriptValue(engine.data(), result);
+        ScriptValueList args{ resultAsScriptValue, engine->newValue(true) };
+        callback->call(ScriptValuePointer(), args);
     } else {
-        QScriptValueList args { callback.engine()->undefinedValue(), false };
-        callback.call(QScriptValue(), args);
+        ScriptValueList args { engine->undefinedValue(), engine->newValue(false) };
+        callback->call(ScriptValuePointer(), args);
     }
 }
 

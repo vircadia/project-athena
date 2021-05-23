@@ -12,8 +12,12 @@
 #define hifi_AudioEffectOptions_h
 
 #include <QObject>
-#include <QtScript/QScriptContext>
-#include <QtScript/QScriptEngine>
+#include <QtCore/QSharedPointer>
+
+class ScriptContext;
+class ScriptEngine;
+class ScriptValue;
+using ScriptValuePointer = QSharedPointer<ScriptValue>;
 
 /*@jsdoc
  * Audio effect options used by the {@link Audio} API.
@@ -78,11 +82,11 @@ class AudioEffectOptions : public QObject {
     Q_PROPERTY(float wetDryMix READ getWetDryMix WRITE setWetDryMix)
 
 public:
-    AudioEffectOptions(QScriptValue arguments = QScriptValue());
+    AudioEffectOptions(ScriptValuePointer arguments = ScriptValuePointer());
     AudioEffectOptions(const AudioEffectOptions &other);
     AudioEffectOptions& operator=(const AudioEffectOptions &other);
 
-    static QScriptValue constructor(QScriptContext* context, QScriptEngine* engine);
+    static ScriptValuePointer constructor(ScriptContext* context, ScriptEngine* engine);
 
     float getBandwidth() const { return _bandwidth; }
     void setBandwidth(float bandwidth) { _bandwidth = bandwidth; }

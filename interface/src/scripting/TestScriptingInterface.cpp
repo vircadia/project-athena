@@ -16,6 +16,7 @@
 #include <DependencyManager.h>
 #include <MainWindow.h>
 #include <OffscreenUi.h>
+#include <ScriptValue.h>
 #include <StatTracker.h>
 #include <Trace.h>
 
@@ -153,9 +154,9 @@ void TestScriptingInterface::savePhysicsSimulationStats(QString originalPath) {
     qApp->saveNextPhysicsStats(path);
 }
 
-void TestScriptingInterface::profileRange(const QString& name, QScriptValue fn) {
+void TestScriptingInterface::profileRange(const QString& name, ScriptValuePointer fn) {
     PROFILE_RANGE(script, name);
-    fn.call();
+    fn->call();
 }
 
 void TestScriptingInterface::clearCaches() {

@@ -27,6 +27,7 @@
 #include <DebugDraw.h>
 #include <EntityScriptingInterface.h>
 #include <LocationScriptingInterface.h>
+#include <AudioScriptingInterface.h>
 #include <MessagesClient.h>
 #include <NetworkAccessManager.h>
 #include <NodeList.h>
@@ -34,7 +35,9 @@
 #include <ResourceCache.h>
 #include <ResourceScriptingInterface.h>
 #include <ScriptCache.h>
+#include <ScriptEngine.h>
 #include <ScriptEngines.h>
+#include <ScriptManager.h>
 #include <SoundCacheScriptingInterface.h>
 #include <SoundCache.h>
 #include <UserActivityLoggerScriptingInterface.h>
@@ -180,7 +183,7 @@ static const QString AGENT_LOGGING_NAME = "agent";
 
 void Agent::run() {
     // Create ScriptEngines on threaded-assignment thread then move to main thread.
-    DependencyManager::set<ScriptEngines>(ScriptEngine::AGENT_SCRIPT)->moveToThread(qApp->thread());
+    DependencyManager::set<ScriptEngines>(ScriptManager::AGENT_SCRIPT)->moveToThread(qApp->thread());
 
     DependencyManager::set<ScriptCache>();
 
@@ -372,7 +375,7 @@ void Agent::executeScript() {
     // the following block is scoped so that any shared pointers we take here
     // are cleared before we call setFinished at the end of the function
     {
-        _scriptEngine = scriptEngineFactory(ScriptEngine::AGENT_SCRIPT, _scriptContents, _payload);
+        _scriptManager = scriptManagerFactory(ScriptManager::AGENT_SCRIPT, _scriptContents, _payload);
 
         // setup an Avatar for the script to use
         auto scriptedAvatar = DependencyManager::get<ScriptableAvatar>();
@@ -386,10 +389,11 @@ void Agent::executeScript() {
         scriptedAvatar->getHeadOrientation();
 
         // give this AvatarData object to the script engine
-        _scriptEngine->registerGlobalObject("Avatar", scriptedAvatar.data());
+        auto scriptEngine = _scriptManager->engine();
+        scriptEngine->registerGlobalObject("Avatar", scriptedAvatar.data());
 
         // give scripts access to the Users object
-        _scriptEngine->registerGlobalObject("Users", DependencyManager::get<UsersScriptingInterface>().data());
+        scriptEngine->registerGlobalObject("Users", DependencyManager::get<UsersScriptingInterface>().data());
 
         auto player = DependencyManager::get<recording::Deck>();
         connect(player.data(), &recording::Deck::playbackStateChanged, [&player, &scriptedAvatar] {
@@ -493,26 +497,26 @@ void Agent::executeScript() {
         });
 
         auto avatarHashMap = DependencyManager::set<AvatarHashMap>();
-        _scriptEngine->registerGlobalObject("AvatarList", avatarHashMap.data());
+        scriptEngine->registerGlobalObject("AvatarList", avatarHashMap.data());
 
         // register ourselves to the script engine
-        _scriptEngine->registerGlobalObject("Agent", new AgentScriptingInterface(this));
+        scriptEngine->registerGlobalObject("Agent", new AgentScriptingInterface(this));
 
-        _scriptEngine->registerGlobalObject("AnimationCache", DependencyManager::get<AnimationCacheScriptingInterface>().data());
-        _scriptEngine->registerGlobalObject("SoundCache", DependencyManager::get<SoundCacheScriptingInterface>().data());
+        scriptEngine->registerGlobalObject("AnimationCache", DependencyManager::get<AnimationCacheScriptingInterface>().data());
+        scriptEngine->registerGlobalObject("SoundCache", DependencyManager::get<SoundCacheScriptingInterface>().data());
 
-        QScriptValue webSocketServerConstructorValue = _scriptEngine->newFunction(WebSocketServerClass::constructor);
-        _scriptEngine->globalObject().setProperty("WebSocketServer", webSocketServerConstructorValue);
+        ScriptValuePointer webSocketServerConstructorValue = scriptEngine->newFunction(WebSocketServerClass::constructor);
+        scriptEngine->globalObject()->setProperty("WebSocketServer", webSocketServerConstructorValue);
 
         auto entityScriptingInterface = DependencyManager::get<EntityScriptingInterface>();
 
-        _scriptEngine->registerGlobalObject("EntityViewer", &_entityViewer);
+        scriptEngine->registerGlobalObject("EntityViewer", &_entityViewer);
 
-        _scriptEngine->registerGetterSetter("location", LocationScriptingInterface::locationGetter,
+        scriptEngine->registerGetterSetter("location", LocationScriptingInterface::locationGetter,
                                             LocationScriptingInterface::locationSetter);
 
         auto recordingInterface = DependencyManager::get<RecordingScriptingInterface>();
-        _scriptEngine->registerGlobalObject("Recording", recordingInterface.data());
+        scriptEngine->registerGlobalObject("Recording", recordingInterface.data());
 
         entityScriptingInterface->init();
 
@@ -522,8 +526,8 @@ void Agent::executeScript() {
 
         DependencyManager::set<AssignmentParentFinder>(_entityViewer.getTree());
 
-        DependencyManager::get<ScriptEngines>()->runScriptInitializers(_scriptEngine);
-        _scriptEngine->run();
+        DependencyManager::get<ScriptEngines>()->runScriptInitializers(_scriptManager);
+        _scriptManager->run();
 
         Frame::clearFrameHandler(AUDIO_FRAME_TYPE);
         Frame::clearFrameHandler(AVATAR_FRAME_TYPE);
@@ -602,7 +606,7 @@ void Agent::setIsAvatar(bool isAvatar) {
             // start the timer
             _avatarQueryTimer->start(AVATAR_VIEW_PACKET_SEND_INTERVAL_MSECS);
 
-            connect(_scriptEngine.data(), &ScriptEngine::update,
+            connect(_scriptManager.data(), &ScriptManager::update,
                     scriptableAvatar.data(), &ScriptableAvatar::update, Qt::QueuedConnection);
 
             // tell the avatarAudioTimer to start ticking
@@ -638,7 +642,7 @@ void Agent::setIsAvatar(bool isAvatar) {
                 nodeList->sendPacket(std::move(packet), *node);
             });
 
-            disconnect(_scriptEngine.data(), &ScriptEngine::update,
+            disconnect(_scriptManager.data(), &ScriptManager::update,
                        scriptableAvatar.data(), &ScriptableAvatar::update);
 
             QMetaObject::invokeMethod(&_avatarAudioTimer, "stop");
@@ -875,7 +879,7 @@ void Agent::aboutToFinish() {
 
     // drop our shared pointer to the script engine, then ask ScriptEngines to shutdown scripting
     // this ensures that the ScriptEngine goes down before ScriptEngines
-    _scriptEngine.clear();
+    _scriptManager.clear();
 
     {
         DependencyManager::get<ScriptEngines>()->shutdownScripting();
@@ -895,8 +899,8 @@ void Agent::aboutToFinish() {
 }
 
 void Agent::stop() {
-    if (_scriptEngine) {
-        _scriptEngine->stop();
+    if (_scriptManager) {
+        _scriptManager->stop();
     } else {
         setFinished(true);
     }

@@ -15,20 +15,20 @@
 
 #include "SharedLogging.h"
 
-QScriptValue variantToScriptValue(QVariant& qValue, QScriptEngine& scriptEngine) {
+ScriptValuePointer variantToScriptValue(QVariant& qValue, ScriptEngine& scriptEngine) {
     switch(qValue.type()) {
         case QVariant::Bool:
-            return qValue.toBool();
+            return scriptEngine.newValue(qValue.toBool());
             break;
         case QVariant::Int:
-            return qValue.toInt();
+            return scriptEngine.newValue(qValue.toInt());
             break;
         case QVariant::Double:
-            return qValue.toDouble();
+            return scriptEngine.newValue(qValue.toDouble());
             break;
         case QVariant::String:
         case QVariant::Url:
-            return qValue.toString();
+            return scriptEngine.newValue(qValue.toString());
             break;
         case QVariant::Map: {
             QVariantMap childMap = qValue.toMap();
@@ -42,35 +42,35 @@ QScriptValue variantToScriptValue(QVariant& qValue, QScriptEngine& scriptEngine)
         }
         default:
             if (qValue.canConvert<float>()) {
-                return qValue.toFloat();
+                return scriptEngine.newValue(qValue.toFloat());
             }
             //qCDebug(shared) << "unhandled QScript type" << qValue.type();
             break;
     }
 
-    return QScriptValue();
+    return ScriptValuePointer();
 }
 
 
-QScriptValue variantMapToScriptValue(QVariantMap& variantMap, QScriptEngine& scriptEngine) {
-    QScriptValue scriptValue = scriptEngine.newObject();
+ScriptValuePointer variantMapToScriptValue(QVariantMap& variantMap, ScriptEngine& scriptEngine) {
+    ScriptValuePointer scriptValue = scriptEngine.newObject();
 
     for (QVariantMap::const_iterator iter = variantMap.begin(); iter != variantMap.end(); ++iter) {
         QString key = iter.key();
         QVariant qValue = iter.value();
-        scriptValue.setProperty(key, variantToScriptValue(qValue, scriptEngine));
+        scriptValue->setProperty(key, variantToScriptValue(qValue, scriptEngine));
     }
 
     return scriptValue;
 }
 
 
-QScriptValue variantListToScriptValue(QVariantList& variantList, QScriptEngine& scriptEngine) {
+ScriptValuePointer variantListToScriptValue(QVariantList& variantList, ScriptEngine& scriptEngine) {
 
-    QScriptValue scriptValue = scriptEngine.newArray();
+    ScriptValuePointer scriptValue = scriptEngine.newArray();
 
     for (int i = 0; i < variantList.size(); i++) {
-        scriptValue.setProperty(i, variantToScriptValue(variantList[i], scriptEngine));
+        scriptValue->setProperty(i, variantToScriptValue(variantList[i], scriptEngine));
     }
 
     return scriptValue;
