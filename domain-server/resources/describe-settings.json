@@ -1688,6 +1688,22 @@
           "advanced": true
         },
         {
+          "name": "wantAuditEditLogging",
+          "type": "checkbox",
+          "label": "Audit Edit Logging",
+          "help": "Log edits with audit information.",
+          "default": false,
+          "advanced": true
+        },
+        {
+          "name": "auditEditLoggingInterval",
+          "label": "Audit Entity Edit Logging Interval",
+          "help": "Milliseconds between the outputting and clearing of audit logs for entity edits/adds.",
+          "placeholder": "10000",
+          "default": "10000",
+          "advanced": true
+        },
+        {
           "name": "verboseDebug",
           "type": "checkbox",
           "label": "Verbose Debug",

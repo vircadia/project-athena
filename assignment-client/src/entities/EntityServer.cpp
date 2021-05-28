@@ -310,12 +310,23 @@ void EntityServer::readAdditionalConfiguration(const QJsonObject& settingsSectio
     bool wantEditLogging = false;
     readOptionBool(QString("wantEditLogging"), settingsSectionObject, wantEditLogging);
     qDebug("wantEditLogging=%s", debug::valueOf(wantEditLogging));
+    
+    bool wantAuditEditLogging = false;
+    readOptionBool(QString("wantAuditEditLogging"), settingsSectionObject, wantAuditEditLogging);
+    qDebug("wantAuditEditLogging=%s", debug::valueOf(wantAuditEditLogging));
+
+    EntityTreePointer tree = std::static_pointer_cast<EntityTree>(_tree);
+    
+    int auditEditLoggingInterval;
+    if (readOptionInt("auditEditLoggingInterval", settingsSectionObject, auditEditLoggingInterval)) {
+        tree->setAuditEditLoggingInterval(auditEditLoggingInterval);
+    } else {
+        tree->setAuditEditLoggingInterval(EntityTree::DEFAULT_AUDIT_EDIT_INTERVAL);
+    }
 
     bool wantTerseEditLogging = false;
     readOptionBool(QString("wantTerseEditLogging"), settingsSectionObject, wantTerseEditLogging);
     qDebug("wantTerseEditLogging=%s", debug::valueOf(wantTerseEditLogging));
-
-    EntityTreePointer tree = std::static_pointer_cast<EntityTree>(_tree);
 
     int maxTmpEntityLifetime;
     if (readOptionInt("maxTmpLifetime", settingsSectionObject, maxTmpEntityLifetime)) {
@@ -337,6 +348,7 @@ void EntityServer::readAdditionalConfiguration(const QJsonObject& settingsSectio
     startDynamicDomainVerification();
 
     tree->setWantEditLogging(wantEditLogging);
+    tree->setWantAuditEditLogging(wantAuditEditLogging);
     tree->setWantTerseEditLogging(wantTerseEditLogging);
 
     QString entityScriptSourceWhitelist;

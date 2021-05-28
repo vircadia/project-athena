@@ -14,6 +14,6 @@
 
 #include <QLoggingCategory>
 
-Q_DECLARE_LOGGING_CATEGORY(entities)
+Q_DECLARE_LOGGING_CATEGORY(entities);
 
 #endif // hifi_EntitiesLogging_h

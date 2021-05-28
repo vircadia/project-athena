@@ -20,6 +20,7 @@
 
 #include "AddEntityOperator.h"
 #include "EntityTreeElement.h"
+#include "EntitiesAuditLogging.h"
 #include "DeleteEntityOperator.h"
 #include "MovingEntitiesOperator.h"
 
@@ -190,6 +191,11 @@ public:
 
     bool wantEditLogging() const { return _wantEditLogging; }
     void setWantEditLogging(bool value) { _wantEditLogging = value; }
+    
+    bool wantAuditEditLogging() const { return _wantAuditEditLogging; }
+    void setWantAuditEditLogging(bool value) { _wantAuditEditLogging = value; }
+
+    void setAuditEditLoggingInterval(float value);
 
     bool wantTerseEditLogging() const { return _wantTerseEditLogging; }
     void setWantTerseEditLogging(bool value) { _wantTerseEditLogging = value; }
@@ -250,6 +256,8 @@ public:
     void notifyNewCollisionSoundURL(const QString& newCollisionSoundURL, const EntityItemID& entityID);
 
     static const float DEFAULT_MAX_TMP_ENTITY_LIFETIME;
+    
+    static const float DEFAULT_AUDIT_EDIT_INTERVAL;
 
     QByteArray computeNonce(const EntityItemID& entityID, const QString ownerKey);
     bool verifyNonce(const EntityItemID& entityID, const QString& nonce);
@@ -339,6 +347,8 @@ protected:
     EntitySimulationPointer _simulation;
 
     bool _wantEditLogging = false;
+    bool _wantAuditEditLogging { false };
+    float _auditEditLoggingInterval { DEFAULT_AUDIT_EDIT_INTERVAL };
     bool _wantTerseEditLogging = false;
 
 
@@ -400,6 +410,8 @@ private:
     std::vector<int32_t> _staleProxies;
 
     bool _serverlessDomain { false };
+
+    EntitiesAuditLogging entitiesAuditLogProcessor;
 
     std::map<QString, QString> _namedPaths;
 

@@ -45,7 +45,7 @@ public:
     virtual PacketType getMyEditNackType() const override { return PacketType::EntityEditNack; }
     virtual QString getMyDomainSettingsKey() const override { return QString("entity_server_settings"); }
 
-    // subclass may implement these method
+    // subclass may implement these methods
     virtual void beforeRun() override;
     virtual bool hasSpecialPacketsToSend(const SharedNodePointer& node) override;
     virtual int sendSpecialPackets(const SharedNodePointer& node, OctreeQueryNode* queryNode, int& packetsSent) override;
