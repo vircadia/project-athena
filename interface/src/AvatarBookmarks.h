@@ -49,21 +49,23 @@ public slots:
      * Adds a new (or updates an existing) avatar bookmark with your current avatar model, scale, and avatar entities.
      * @function AvatarBookmarks.addBookmark
      * @param {string} bookmarkName - The name of the avatar bookmark (case sensitive).
+     * @param {string} [avatarIcon=""] - A URL to an icon for the avatar bookmark.
      * @example <caption>Add a new avatar bookmark and report the bookmark data.</caption>
      * var bookmarkName = "New Bookmark";
      * AvatarBookmarks.addBookmark(bookmarkName);
      * var bookmarkData = AvatarBookmarks.getBookmark(bookmarkName);
      * print("Bookmark data: " + JSON.stringify(bookmarkData));
      */
-    void addBookmark(const QString& bookmarkName);
+    void addBookmark(const QString& bookmarkName, const QString& avatarIcon = "");
 
     /*@jsdoc
      * Updates an existing bookmark with your current avatar model, scale, and wearables. No action is taken if the bookmark 
      * doesn't exist.
      * @function AvatarBookmarks.saveBookmark
      * @param {string} bookmarkName - The name of the avatar bookmark (case sensitive).
+     * @param {string} [avatarIcon=""] - A URL to an icon for the avatar bookmark.
      */
-    void saveBookmark(const QString& bookmarkName);
+    void saveBookmark(const QString& bookmarkName, const QString& avatarIcon = "");
 
     /*@jsdoc
      * Loads an avatar bookmark, setting your avatar model, scale, and avatar entities (or attachments if an old bookmark) to 
@@ -136,7 +138,7 @@ signals:
 protected:
     void addBookmarkToMenu(Menu* menubar, const QString& name, const QVariant& bookmark) override {};
     void readFromFile() override;
-    QVariantMap getAvatarDataToBookmark();
+    QVariantMap getAvatarDataToBookmark(const QString avatarIcon);
 
 protected slots: 
     /*@jsdoc
@@ -155,7 +157,7 @@ private:
     const QString ENTRY_AVATAR_SCALE = "avatarScale";
     const QString ENTRY_VERSION = "version";
 
-    const int AVATAR_BOOKMARK_VERSION = 3;
+    const int AVATAR_BOOKMARK_VERSION = 4;
 };
 
 #endif // hifi_AvatarBookmarks_h

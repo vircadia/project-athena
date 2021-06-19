@@ -118,24 +118,24 @@ AvatarBookmarks::AvatarBookmarks() {
     readFromFile();
 }
 
-void AvatarBookmarks::addBookmark(const QString& bookmarkName) {
+void AvatarBookmarks::addBookmark(const QString& bookmarkName, const QString& avatarIcon) {
     if (QThread::currentThread() != thread()) {
-        BLOCKING_INVOKE_METHOD(this, "addBookmark", Q_ARG(QString, bookmarkName));
+        BLOCKING_INVOKE_METHOD(this, "addBookmark", Q_ARG(QString, bookmarkName), Q_ARG(QString, avatarIcon));
         return;
     }
-    QVariantMap bookmark = getAvatarDataToBookmark();
+    QVariantMap bookmark = getAvatarDataToBookmark(avatarIcon);
     insert(bookmarkName, bookmark);
 
     emit bookmarkAdded(bookmarkName);
 }
 
-void AvatarBookmarks::saveBookmark(const QString& bookmarkName) {
+void AvatarBookmarks::saveBookmark(const QString& bookmarkName, const QString& avatarIcon) {
     if (QThread::currentThread() != thread()) {
-        BLOCKING_INVOKE_METHOD(this, "saveBookmark", Q_ARG(QString, bookmarkName));
+        BLOCKING_INVOKE_METHOD(this, "saveBookmark", Q_ARG(QString, bookmarkName), Q_ARG(QString, avatarIcon));
         return;
     }
     if (contains(bookmarkName)) {
-        QVariantMap bookmark = getAvatarDataToBookmark();
+        QVariantMap bookmark = getAvatarDataToBookmark(avatarIcon);
         insert(bookmarkName, bookmark);
     }
 }
@@ -279,11 +279,10 @@ QVariantMap AvatarBookmarks::getBookmark(const QString &bookmarkName)
     return bookmark;
 }
 
-QVariantMap AvatarBookmarks::getAvatarDataToBookmark() {
+QVariantMap AvatarBookmarks::getAvatarDataToBookmark(QString avatarIcon) {
     auto myAvatar = DependencyManager::get<AvatarManager>()->getMyAvatar();
 
     const QString& avatarUrl = myAvatar->getSkeletonModelURL().toString();
-    const QString& avatarIcon = QString("");
     const QVariant& avatarScale = myAvatar->getAvatarScale();
 
     // If Avatar attachments ever change, this is where to update them, when saving remember to also append to AVATAR_BOOKMARK_VERSION
