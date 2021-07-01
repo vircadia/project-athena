@@ -74,6 +74,19 @@ Item {
     }
 
     function login() {
+        // make sure the metaverse server is set so we don't send your password to the wrong place!
+        if (!isLoggingInToDomain) {
+            Settings.setValue("private/selectedMetaverseURL", metaverseServerField.text);
+        }
+        
+        if (keepMeLoggedInCheckbox.checked) {
+            if (!isLoggingInToDomain) {
+                Settings.setValue("keepMeLoggedIn/savedUsername", emailField.text);
+            } else {
+                // ####### TODO
+            }
+        }
+
         if (!isLoggingInToDomain) {
             loginDialog.login(emailField.text, passwordField.text);
         } else {
@@ -118,6 +131,10 @@ Item {
         if (!isLoggingInToDomain) {
             var savedUsername = Settings.getValue("keepMeLoggedIn/savedUsername", "");
             emailField.text = keepMeLoggedInCheckbox.checked ? savedUsername === "Unknown user" ? "" : savedUsername : "";
+
+            var metaverseServer = Settings.getValue("private/selectedMetaverseURL", "");
+            console.log("Saved metaverse server:", metaverseServer);
+            metaverseServerField.text = metaverseServer;
         } else {
             // ####### TODO
         }
@@ -147,7 +164,7 @@ Item {
         Item {
             id: loginContainer
             width: displayNameField.width
-            height: errorContainer.height + loginDialogTextContainer.height + displayNameField.height + emailField.height + passwordField.height + 5.5 * hifi.dimensions.contentSpacing.y +
+            height: errorContainer.height + loginDialogTextContainer.height + displayNameField.height + emailField.height + passwordField.height + metaverseServerField.height + 5.5 * hifi.dimensions.contentSpacing.y +
                 keepMeLoggedInCheckbox.height + loginButton.height + cantAccessTextMetrics.height + continueButton.height
             anchors {
                 top: parent.top
@@ -237,18 +254,11 @@ Item {
                             break;
                         case Qt.Key_Backtab:
                             event.accepted = true;
-                            passwordField.focus = true;
+                            metaverseServerField.focus = true;
                             break;
                         case Qt.Key_Enter:
                         case Qt.Key_Return:
                             event.accepted = true;
-                            if (keepMeLoggedInCheckbox.checked) {
-                                if (!isLoggingInToDomain) {
-                                    Settings.setValue("keepMeLoggedIn/savedUsername", emailField.text);
-                                } else {
-                                    // ####### TODO
-                                }
-                            }
                             linkAccountBody.login();
                             break;
                     }
@@ -285,13 +295,7 @@ Item {
                         case Qt.Key_Enter:
                         case Qt.Key_Return:
                             event.accepted = true;
-                            if (keepMeLoggedInCheckbox.checked) {
-                                if (!isLoggingInToDomain) {
-                                    Settings.setValue("keepMeLoggedIn/savedUsername", emailField.text);
-                                } else {
-                                    // ####### TODO
-                                }
-                            }
+                            
                             linkAccountBody.login();
                             break;
                     }
@@ -360,7 +364,7 @@ Item {
                     switch (event.key) {
                         case Qt.Key_Tab:
                             event.accepted = true;
-                            displayNameField.focus = true;
+                            metaverseServerField.focus = true;
                             break;
                         case Qt.Key_Backtab:
                             event.accepted = true;
@@ -369,15 +373,48 @@ Item {
                         case Qt.Key_Enter:
                         case Qt.Key_Return:
                             event.accepted = true;
-                            if (keepMeLoggedInCheckbox.checked) {
-                                if (!isLoggingInToDomain) {
-                                    Settings.setValue("keepMeLoggedIn/savedUsername", emailField.text);
-                                } else {
-                                    // ####### TODO
-                                }
+                            linkAccountBody.login();
+                            break;
+                    }
+                }
+            }
+            HifiControlsUit.TextField {
+                id: metaverseServerField
+                width: root.bannerWidth
+                height: linkAccountBody.textFieldHeight
+                font.pixelSize: linkAccountBody.textFieldFontSize
+                styleRenderType: Text.QtRendering
+                anchors {
+                    top: passwordField.bottom
+                    topMargin: 1.5 * hifi.dimensions.contentSpacing.y
+                }
+                placeholderText: "Metaverse Server (optional)"
+                activeFocusOnPress: true
+                Keys.onPressed: {
+                    switch (event.key) {
+                        case Qt.Key_Tab:
+                            event.accepted = true;
+                            displayNameField.focus = true;
+                            break;
+                        case Qt.Key_Backtab:
+                            event.accepted = true;
+                            passwordField.focus = true;
+                            break;
+                        case Qt.Key_Enter:
+                        case Qt.Key_Return:
+                            event.accepted = true;
+                            if (!isLoggingInToDomain) {
+                                console.log("Setting metaverse server to", metaverseServerField.text);
+                                Settings.setValue("private/selectedMetaverseURL", metaverseServerField.text);
                             }
                             linkAccountBody.login();
                             break;
+                    }
+                }
+                onFocusChanged: {
+                    root.text = "";
+                    if (focus) {
+                        root.isPassword = false;
                     }
                 }
             }
@@ -391,9 +428,9 @@ Item {
                 color: hifi.colors.white;
                 visible: !isLoggingInToDomain
                 anchors {
-                    top: passwordField.bottom;
+                    top: metaverseServerField.bottom;
                     topMargin: hifi.dimensions.contentSpacing.y;
-                    left: passwordField.left;
+                    left: metaverseServerField.left;
                 }
                 onCheckedChanged: {
                     Settings.setValue("keepMeLoggedIn", checked);
