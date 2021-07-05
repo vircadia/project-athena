@@ -90,6 +90,7 @@ jobs:
         fi
         # Android + Quest build variables
         if [[ "${{ matrix.build_type }}" == "android" ]]; then
+          HIFI_ANDROID=true
           HIFI_ANDROID_PRECOMPILED="${{runner.workspace}}/dependencies"
           echo "HIFI_ANDROID_PRECOMPILED=$HIFI_ANDROID_PRECOMPILED" >> $GITHUB_ENV
           mkdir $HIFI_ANDROID_PRECOMPILED
@@ -139,7 +140,17 @@ jobs:
     - name: Configure CMake
       working-directory: ${{runner.workspace}}/build
       shell: bash
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DVCPKG_BUILD_TYPE=release $CMAKE_EXTRA
+
+      run: |
+        # As of 05/17/21 GitHub Virtual Environments changed their "Ubuntu 18.04.5 LTS" image to include two versions of CMake for Android
+        # https://github.com/actions/virtual-environments/blob/ubuntu18/20210517.1/images/linux/Ubuntu1804-README.md
+        # Removing 3.18.1 version of CMake as its not compatible with our Android build.
+        # It will fall back to 3.10.2 which is already installed
+        if [[ "${{ matrix.build_type }}" == "android" ]]; then
+          echo "Nuke CMake 3.18.1-g262b901"
+          /usr/local/lib/android/sdk/tools/bin/sdkmanager --uninstall 'cmake;3.18.1'
+        fi
+        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DVCPKG_BUILD_TYPE=release $CMAKE_EXTRA
     - name: Build Application
       if: matrix.build_type == 'full' || matrix.build_type == 'client'
       working-directory: ${{runner.workspace}}/build
@@ -188,23 +199,12 @@ jobs:
           done
         }
         retry cmake --build . --config $BUILD_TYPE --target package $CMAKE_BUILD_EXTRA
-    # As of 05/17/21 GitHub Virtual Environments changed their "Ubuntu 18.04.5 LTS" image to include two versions of CMake for Android
-    # https://github.com/actions/virtual-environments/blob/ubuntu18/20210517.1/images/linux/Ubuntu1804-README.md
-    # Removing 3.18.1 version of CMake as its not compatible with our Android build.
-    # It will fall back to 3.10.2 which is already installed
-    - name: Nuke CMake 3.18.1-g262b901
-      if: matrix.build_type == 'android'
-      shell: bash
-      working-directory: ${{runner.workspace}}/vircadia
-      run: |
-        /usr/local/lib/android/sdk/tools/bin/sdkmanager --uninstall 'cmake;3.18.1'
+
     - name: Build for Android + Quest
       if: matrix.build_type == 'android'
       shell: bash
       working-directory: ${{runner.workspace}}/vircadia
       run: |
-        echo "Pre-cache the vcpkg managed dependencies"
-        $PYTHON_EXEC prebuild.py --build-root ${{runner.workspace}}/build --android interface
         cd android
         # Pre-cache the gradle dependencies
         ./gradlew -m tasks -PHIFI_ANDROID_PRECOMPILED=$HIFI_ANDROID_PRECOMPILED
