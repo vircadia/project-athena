@@ -42,6 +42,7 @@ var DEFAULT_SCRIPTS_COMBINED = [
 ];
 var DEFAULT_SCRIPTS_SEPARATE = [
     "system/controllers/controllerScripts.js",
+    "system/ui/nyx/dist/nyx.js",
     "communityScripts/notificationCore/notificationCore.js",
     "simplifiedUI/ui/simplifiedNametag/simplifiedNametag.js",
     {"stable": "system/more/app-more.js", "beta": "https://cdn.vircadia.com/community-apps/more/app-more.js"},

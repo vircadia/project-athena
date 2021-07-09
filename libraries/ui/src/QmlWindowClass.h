@@ -90,7 +90,7 @@ public slots:
     /*@jsdoc
      * Shows or hides the window.
      * @function OverlayWindow.setVisible
-     * @param {boolean} visible - code>true</code> to show the window, <code>false</code> to hide it.
+     * @param {boolean} visible - <code>true</code> to show the window, <code>false</code> to hide it.
      */
     void setVisible(bool visible);
 
