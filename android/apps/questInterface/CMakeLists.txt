@@ -12,5 +12,4 @@ target_oculus_mobile()
 
 add_subdirectory("${CMAKE_SOURCE_DIR}/interface" "libraries/interface")
 include_directories("${CMAKE_SOURCE_DIR}/interface/src")
-add_subdirectory("${CMAKE_SOURCE_DIR}/plugins/hifiCodec" "libraries/hifiCodecPlugin")
 target_link_libraries(questInterface android log m interface)

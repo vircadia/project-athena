@@ -67,11 +67,6 @@ ANDROID_PACKAGES = {
         'sharedLibFolder': 'lib/release',
         'includeLibs': ['libtbb.so', 'libtbbmalloc.so'],
     },
-    'hifiAC': {
-        'baseUrl': 'https://cdn-1.vircadia.com/eu-c-1/vircadia-public/dependencies/',
-        'file': 'codecSDK-android_armv8-2.0.zip',
-        'checksum': '1cbef929675818fc64c4101b72f84a6a'
-    },
     'etc2comp': {
         'file': 'etc2comp-patched-armv8-libcpp.tgz',
         'checksum': '14b02795d774457a33bbc60e00a786bc'

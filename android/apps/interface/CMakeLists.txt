@@ -7,8 +7,6 @@ target_bullet()
 set(INTERFACE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../interface")
 add_subdirectory("${INTERFACE_DIR}" "libraries/interface")
 include_directories("${INTERFACE_DIR}/src")
-set(HIFI_CODEC_PLUGIN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../plugins/hifiCodec")
-add_subdirectory("${HIFI_CODEC_PLUGIN_DIR}" "libraries/hifiCodecPlugin")
 
 target_link_libraries(native-lib android log m interface)
 

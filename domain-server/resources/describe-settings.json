@@ -1396,8 +1396,8 @@
           "name": "codec_preference_order",
           "label": "Audio Codec Preference Order",
           "help": "List of codec names in order of preferred usage",
-          "placeholder": "opus, hifiAC, zlib, pcm",
-          "default": "opus,hifiAC,zlib,pcm",
+          "placeholder": "opus,  zlib, pcm",
+          "default": "opus,zlib,pcm",
           "advanced": true
         }
       ]

@@ -1,21 +1,6 @@
 import org.apache.tools.ant.taskdefs.condition.Os
 apply plugin: 'com.android.application'
 
-task renameHifiACTaskDebug() {
-    doLast {
-        def sourceFile = new File("${appDir}/build/intermediates/cmake/debug/obj/arm64-v8a/","libhifiCodec.so")
-        def destinationFile = new File("${appDir}/src/main/jniLibs/arm64-v8a", "libplugins_libhifiCodec.so")
-        copy { from sourceFile;  into destinationFile.parent;  rename(sourceFile.name, destinationFile.name) }
-    }
-}
-task renameHifiACTaskRelease(type: Copy) {
-    doLast {
-        def sourceFile = new File("${appDir}/build/intermediates/cmake/release/obj/arm64-v8a/","libhifiCodec.so")
-        def destinationFile = new File("${appDir}/src/main/jniLibs/arm64-v8a", "libplugins_libhifiCodec.so")
-        copy { from sourceFile;  into destinationFile.parent;  rename(sourceFile.name, destinationFile.name) }
-    }
-}
-
 android {
     compileSdkVersion 28
     defaultConfig {
@@ -93,10 +78,8 @@ android {
                 // FIXME
                 def uploadDumpSymsTask = rootProject.getTasksByName("uploadBreakpadDumpSyms${variant.name.capitalize()}", false).first()
                 def runDumpSymsTask = rootProject.getTasksByName("runBreakpadDumpSyms${variant.name.capitalize()}", false).first()
-                def renameHifiACTask = rootProject.getTasksByName("renameHifiACTask${variant.name.capitalize()}", false).first()
                 runDumpSymsTask.dependsOn(task)
                 variant.assemble.dependsOn(uploadDumpSymsTask)
-                variant.mergeResources.dependsOn(renameHifiACTask)
             }
         }
 

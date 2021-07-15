@@ -232,21 +232,6 @@ task uploadBreakpadDumpSymsRelease(type:io.github.httpbuilderng.http.HttpTask, d
     }
 }
 
-task renameHifiACTaskDebug() {
-    doLast {
-        def sourceFile = new File("${appDir}/build/intermediates/cmake/debug/obj/arm64-v8a/","libhifiCodec.so")
-        def destinationFile = new File("${appDir}/src/main/jniLibs/arm64-v8a", "libplugins_libhifiCodec.so")
-        copy { from sourceFile;  into destinationFile.parent;  rename(sourceFile.name, destinationFile.name) }
-    }
-}
-task renameHifiACTaskRelease(type: Copy) {
-    doLast {
-        def sourceFile = new File("${appDir}/build/intermediates/cmake/release/obj/arm64-v8a/","libhifiCodec.so")
-        def destinationFile = new File("${appDir}/src/main/jniLibs/arm64-v8a", "libplugins_libhifiCodec.so")
-        copy { from sourceFile;  into destinationFile.parent;  rename(sourceFile.name, destinationFile.name) }
-    }
-}
-
 // FIXME this code is prototyping the desired functionality for doing build time binary dependency resolution.
 // See the comment on the qtBundle task above
 /*
