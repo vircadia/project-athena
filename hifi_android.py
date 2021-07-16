@@ -14,8 +14,8 @@ ANDROID_PACKAGE_URL = 'https://cdn-1.vircadia.com/eu-c-1/vircadia-public/depende
 
 ANDROID_PACKAGES = {
     'qt' : {
-        'file': 'qt-5.11.1_linux_armv8-libcpp_openssl_patched.tgz',
-        'checksum': 'aa449d4bfa963f3bc9a9dfe558ba29df',
+        'file': 'qt-5.15.2_linux_ubuntu-18.04_arm8.tar.xz',
+        'checksum': '8a9e4caa9a0655e8f30aed170f0c861e',
     },
     'bullet': {
         'file': 'bullet-2.88_armv8-libcpp.tgz',
