@@ -73,8 +73,16 @@ Vircadia consists of many projects and codebases with its unifying structure's g
 
 There are many contributors to Vircadia. Code writers, reviewers, testers, documentation writers, modelers, and general supporters of the project are all integral to its development and success towards its goals. Find out how you can [contribute](CONTRIBUTING.md)!
 
-### [Supporters](https://github.com/sponsors/digisomni/)
+### Support
 
-| [Karol Suprynowicz - 74hc595](https://github.com/ksuprynowicz) | 
+You can support the Vircadia project financially through [GitHub Sponsors](https://github.com/sponsors/digisomni/).
+
+You can also support individual active contributors by visiting each repository, this is the main Vircadia repository's [list of active contributors](https://vircadia.com/contributors-redirector/?redirect=vircadia/vircadia). Click on a contributor's profile to see if they accept donations!
+
+Keep in mind that Vircadia consists of multiple smaller projects that might have different active contributors. This is a [a non-exhaustive list](https://github.com/vircadia).
+
+#### Supporters of the Vircadia Project
+
+| [Karol Suprynowicz - 74hc595](https://github.com/ksuprynowicz) |
 | --- |
-| <p align="center">[![ksuprynowicz](https://avatars.githubusercontent.com/u/11568651?s=64&v=4)](https://github.com/ksuprynowicz)</p>
+| <p align="center">[<img src="https://vircadia.com/wp-content/uploads/2021/07/74hc595_profile_2-1.png" width="80" alt="ksuprynowicz" />](https://github.com/ksuprynowicz)</p>
