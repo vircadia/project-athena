@@ -4,6 +4,7 @@
 //
 //  Created by Seth Alves on 2/19/15.
 //  Copyright 2015 High Fidelity, Inc.
+//  Copyright 2021 Vircadia contributors.
 //
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
@@ -28,6 +29,7 @@ const QString ASSIGNMENT_MAX_FORKS_OPTION = "max";
 const QString ASSIGNMENT_CLIENT_MONITOR_PORT_OPTION = "monitor-port";
 const QString ASSIGNMENT_HTTP_STATUS_PORT = "http-status-port";
 const QString ASSIGNMENT_LOG_DIRECTORY = "log-directory";
+const QString ASSIGNMENT_DISABLE_DOMAIN_AUTO_PORT_DISCOVERY = "disable-domain-port-auto-discovery";
 
 class AssignmentClientApp : public QCoreApplication {
     Q_OBJECT

@@ -42,7 +42,8 @@ AssignmentClientMonitor::AssignmentClientMonitor(const unsigned int numAssignmen
                                                  const unsigned int maxAssignmentClientForks,
                                                  Assignment::Type requestAssignmentType, QString assignmentPool,
                                                  quint16 listenPort, quint16 childMinListenPort, QUuid walletUUID, QString assignmentServerHostname,
-                                                 quint16 assignmentServerPort, quint16 httpStatusServerPort, QString logDirectory) :
+                                                 quint16 assignmentServerPort, quint16 httpStatusServerPort, QString logDirectory,
+                                                 bool disableDomainPortAutoDiscovery) :
     _httpManager(QHostAddress::LocalHost, httpStatusServerPort, "", this),
     _numAssignmentClientForks(numAssignmentClientForks),
     _minAssignmentClientForks(minAssignmentClientForks),
@@ -52,7 +53,8 @@ AssignmentClientMonitor::AssignmentClientMonitor(const unsigned int numAssignmen
     _walletUUID(walletUUID),
     _assignmentServerHostname(assignmentServerHostname),
     _assignmentServerPort(assignmentServerPort),
-    _childMinListenPort(childMinListenPort)
+    _childMinListenPort(childMinListenPort),
+    _disableDomainPortAutoDiscovery(disableDomainPortAutoDiscovery)
 {
     qDebug() << "_requestAssignmentType =" << _requestAssignmentType;
 
@@ -199,6 +201,9 @@ void AssignmentClientMonitor::spawnChildClient() {
         _childArguments.append("--" + ASSIGNMENT_TYPE_OVERRIDE_OPTION);
         _childArguments.append(QString::number(_requestAssignmentType));
     }
+    if (_disableDomainPortAutoDiscovery) {
+        _childArguments.append("--" + ASSIGNMENT_DISABLE_DOMAIN_AUTO_PORT_DISCOVERY);
+    }
 
     if (listenPort) {
         _childArguments.append("-" + ASSIGNMENT_CLIENT_LISTEN_PORT_OPTION);
@@ -267,7 +272,7 @@ void AssignmentClientMonitor::spawnChildClient() {
             stderrPath = stderrPathTemp;
             stderrFilename = stderrFilenameTemp;
         }
-        
+
         qDebug() << "Child stdout being written to: " << stdoutFilename;
         qDebug() << "Child stderr being written to: " << stderrFilename;
     }

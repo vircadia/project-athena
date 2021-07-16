@@ -14,7 +14,7 @@ User=vircadia
 Group=vircadia
 #LimitCORE=infinity
 #ExecStart=/opt/vircadia/assignment-client -n 6
-ExecStart=/opt/vircadia/assignment-client --min 6 --max 20 --server-port $HIFI_DOMAIN_SERVER_PORT
+ExecStart=/opt/vircadia/assignment-client --min 6 --max 20 --server-port $HIFI_DOMAIN_SERVER_PORT --disable-domain-port-auto-discovery
 
 [Install]
 WantedBy=multi-user.target

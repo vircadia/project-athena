@@ -1,5 +1,5 @@
 [Unit]
-Description=Assignment client service for Vircadia server
+Description=Assignment client service for the Vircadia Server
 After=network.target
 PartOf=vircadia-server.target
 

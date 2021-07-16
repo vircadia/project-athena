@@ -376,8 +376,8 @@ void NodeList::sendDomainServerCheckIn() {
             // is this our localhost domain-server?
             // if so we need to make sure we have an up-to-date local port in case it restarted
 
-            if (domainSockAddr.getAddress() == QHostAddress::LocalHost
-                || hostname == "localhost") {
+            if ((domainSockAddr.getAddress() == QHostAddress::LocalHost || hostname == "localhost")
+                && _domainPortAutoDiscovery == false) {
 
                 quint16 domainPort = DEFAULT_DOMAIN_SERVER_PORT;
                 getLocalServerPortFromSharedMemory(DOMAIN_SERVER_LOCAL_PORT_SMEM_KEY, domainPort);
@@ -534,7 +534,7 @@ void NodeList::sendDomainServerCheckIn() {
             sendPacket(std::move(packetCopy), domainSockAddr);
         }
         sendPacket(std::move(domainPacket), domainSockAddr);
-        
+
     }
 }
 
@@ -661,7 +661,7 @@ void NodeList::handleICEConnectionToDomainServer() {
                                                   _domainHandler.getICEClientID(),
                                                   _domainHandler.getPendingDomainID());
     }
-} 
+}
 
 void NodeList::pingPunchForDomainServer() {
     // make sure if we're here that we actually still need to ping the domain-server
@@ -713,7 +713,7 @@ void NodeList::processDomainServerConnectionTokenPacket(QSharedPointer<ReceivedM
 
 void NodeList::processDomainServerList(QSharedPointer<ReceivedMessage> message) {
 
-    // parse header information 
+    // parse header information
     QDataStream packetStream(message->getMessage());
 
     // grab the domain's ID from the beginning of the packet
@@ -794,7 +794,7 @@ void NodeList::processDomainServerList(QSharedPointer<ReceivedMessage> message) 
 
     if (_domainHandler.isConnected() && _domainHandler.getUUID() != domainUUID) {
         // Received packet from different domain.
-        qWarning() << "IGNORING DomainList packet from" << domainUUID << "while connected to" 
+        qWarning() << "IGNORING DomainList packet from" << domainUUID << "while connected to"
                    << _domainHandler.getUUID() << ": sent " << pingLagTime << " msec ago.";
         qWarning(networking) << "DomainList request lag (interface->ds): " << domainServerRequestLag << "msec";
         qWarning(networking) << "DomainList server processing time: " << domainServerCheckinProcessingTime << "usec";
@@ -821,7 +821,7 @@ void NodeList::processDomainServerList(QSharedPointer<ReceivedMessage> message) 
     setSessionLocalID(newLocalID);
     setSessionUUID(newUUID);
 
-    // FIXME: Remove this call to requestDomainSettings() and reinstate the one in DomainHandler::setIsConnected(), in version 
+    // FIXME: Remove this call to requestDomainSettings() and reinstate the one in DomainHandler::setIsConnected(), in version
     // 2021.2.0. (New protocol version implies a domain server upgrade.)
     if (!_domainHandler.isConnected() 
             && _domainHandler.getScheme() == URL_SCHEME_VIRCADIA && !_domainHandler.getHostname().isEmpty()) {
@@ -831,7 +831,7 @@ void NodeList::processDomainServerList(QSharedPointer<ReceivedMessage> message) 
         _domainHandler.requestDomainSettings();
     }
 
-    // Don't continue login to the domain if have avatar entities and don't have permissions to rez them, unless user has OKed 
+    // Don't continue login to the domain if have avatar entities and don't have permissions to rez them, unless user has OKed
     // continuing login.
     if (!newPermissions.can(NodePermissions::Permission::canRezAvatarEntities)
             && (!adjustedPermissions || !_domainHandler.canConnectWithoutAvatarEntities())) {
@@ -920,7 +920,7 @@ void NodeList::pingPunchForInactiveNode(const SharedNodePointer& node) {
     if (node->getConnectionAttempts() > 0 && node->getConnectionAttempts() % NUM_DEBUG_CONNECTION_ATTEMPTS == 0) {
         qCDebug(networking) << "No response to UDP hole punch pings for node" << node->getUUID() << "in last 2 s.";
     }
-    
+
     auto nodeID = node->getUUID();
 
     // send the ping packet to the local and public sockets for this node

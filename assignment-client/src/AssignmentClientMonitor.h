@@ -4,6 +4,7 @@
 //
 //  Created by Stephen Birarda on 1/10/2014.
 //  Copyright 2014 High Fidelity, Inc.
+//  Copyright 2021 Vircadia contributors.
 //
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
@@ -27,7 +28,7 @@
 extern const char* NUM_FORKS_PARAMETER;
 
 struct ACProcess {
-    QProcess* process; // looks like a dangling pointer, but is parented by the AssignmentClientMonitor 
+    QProcess* process; // looks like a dangling pointer, but is parented by the AssignmentClientMonitor
     QString logStdoutPath;
     QString logStderrPath;
 };
@@ -39,7 +40,7 @@ public:
                             const unsigned int maxAssignmentClientForks, Assignment::Type requestAssignmentType,
                             QString assignmentPool, quint16 listenPort, quint16 childMinListenPort, QUuid walletUUID,
                             QString assignmentServerHostname, quint16 assignmentServerPort, quint16 httpStatusServerPort,
-                            QString logDirectory);
+                            QString logDirectory, bool disableDomainPortAutoDiscovery);
     ~AssignmentClientMonitor();
 
     void stopChildProcesses();
@@ -80,6 +81,7 @@ private:
     QSet<quint16> _childListenPorts;
 
     bool _wantsChildFileLogging { false };
+    bool _disableDomainPortAutoDiscovery { false };
 };
 
 #endif // hifi_AssignmentClientMonitor_h
