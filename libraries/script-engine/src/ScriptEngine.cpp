@@ -76,6 +76,7 @@
 #include "ScriptEngines.h"
 #include "StackTestScriptingInterface.h"
 #include "ModelScriptingInterface.h"
+#include "ScriptEngineLoggingAgent.h"
 
 #include <Profile.h>
 
