@@ -11,3 +11,7 @@ if (UNIX AND NOT APPLE)
   find_package(Threads REQUIRED)
   target_link_libraries(image Threads::Threads)
 endif()
+
+if (WIN32)
+  add_compile_definitions(_USE_MATH_DEFINES)
+endif()

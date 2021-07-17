@@ -7,6 +7,7 @@ setup_hifi_library(Gui Network Script)
 
 if (WIN32)
     target_link_libraries(${TARGET_NAME} Wbemuuid.lib)
+    add_compile_definitions(_USE_MATH_DEFINES)
 endif()
 
 if (ANDROID)

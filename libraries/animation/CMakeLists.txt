@@ -7,3 +7,7 @@ include_hifi_library_headers(hfm)
 include_hifi_library_headers(image)
 
 target_nsight()
+
+if (WIN32)
+  add_compile_definitions(_USE_MATH_DEFINES)
+endif()

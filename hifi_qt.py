@@ -196,7 +196,7 @@ endif()
         print("https://github.com/vircadia/vircadia/tree/master/tools/qt-builder")
         print("")
         print("Alternatively, you can try building against the system Qt by setting the VIRCADIA_USE_SYSTEM_QT environment variable.")
-        print("You'll need to install the development packages, and to have Qt 5.15.0 or newer. ")
+        print("You'll need to install the development packages, and to have Qt 5.15.0 or later.")
 
     def writeConfig(self):
         print("Writing cmake config to {}".format(self.configFilePath))

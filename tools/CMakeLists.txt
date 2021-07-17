@@ -1,9 +1,13 @@
 # add the tool directories
+message(STATUS "Checking for npm")
 find_npm()
 
 if (NPM_EXECUTABLE)
-  add_subdirectory(jsdoc)
-  set_target_properties(jsdoc PROPERTIES FOLDER "Tools")
+    message(STATUS "Checking for npm - found ${NPM_EXECUTABLE}, will build jsdoc")
+    add_subdirectory(jsdoc)
+    set_target_properties(jsdoc PROPERTIES FOLDER "Tools")
+else()
+    message(NOTICE "Checking for npm - not found, jsdoc won't be genereated. Tab completion in the js console won't work!")
 endif()
 
 function(check_test name)

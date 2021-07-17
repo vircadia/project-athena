@@ -19,35 +19,35 @@ endfunction()
 
 set(CUSTOM_INTERFACE_QRC_PATHS "")
 
-find_npm()
+find_package(
+  Qt5 COMPONENTS
+  Gui Widgets Multimedia Network Qml Quick Script Svg
+  ${PLATFORM_QT_COMPONENTS}
+  WebChannel WebSockets
+)
 
-if (BUILD_TOOLS AND NPM_EXECUTABLE)
-  add_custom_qrc_path(CUSTOM_INTERFACE_QRC_PATHS "${CMAKE_SOURCE_DIR}/tools/jsdoc/out/hifiJSDoc.json" "auto-complete/hifiJSDoc.json")
+
+if (BUILD_TOOLS AND JSDOC_ENABLED)
+  message(STATUS "JSDoc enabled, depending on jsdoc")
+  add_custom_qrc_path(CUSTOM_INTERFACE_QRC_PATHS "${CMAKE_BINARY_DIR}/tools/jsdoc/out/hifiJSDoc.json" "auto-complete/hifiJSDoc.json")
 endif ()
 
 set(RESOURCES_QRC ${CMAKE_CURRENT_BINARY_DIR}/resources.qrc)
-set(RESOURCES_RCC ${CMAKE_CURRENT_SOURCE_DIR}/compiledResources/resources.rcc)
+set(RESOURCES_RCC ${CMAKE_CURRENT_BINARY_DIR}/resources.rcc)
 generate_qrc(OUTPUT ${RESOURCES_QRC} PATH ${CMAKE_CURRENT_SOURCE_DIR}/resources CUSTOM_PATHS ${CUSTOM_INTERFACE_QRC_PATHS} GLOBS *)
 
 if (ANDROID)
   # on Android, don't compress the rcc binary
-  add_custom_command(
-    OUTPUT ${RESOURCES_RCC}
-    DEPENDS ${RESOURCES_QRC} ${GENERATE_QRC_DEPENDS}
-    COMMAND "${RCC_BINARY}"
-    ARGS ${RESOURCES_QRC} -no-compress -binary -o ${RESOURCES_RCC}
-  )
+  qt5_add_binary_resources(resources "${RESOURCES_QRC}" DESTINATION "${RESOURCES_RCC}" OPTIONS -no-compress)
 else ()
-  add_custom_command(
-    OUTPUT ${RESOURCES_RCC}
-    DEPENDS ${RESOURCES_QRC} ${GENERATE_QRC_DEPENDS}
-    COMMAND "${RCC_BINARY}"
-    ARGS ${RESOURCES_QRC} -binary -o ${RESOURCES_RCC}
-  )
+  qt5_add_binary_resources(resources "${RESOURCES_QRC}" DESTINATION "${RESOURCES_RCC}")
+endif()
+
+if (BUILD_TOOLS AND JSDOC_ENABLED)
+  add_dependencies(resources jsdoc)
 endif()
 
 list(APPEND GENERATE_QRC_DEPENDS ${RESOURCES_RCC})
-add_custom_target(resources ALL DEPENDS ${GENERATE_QRC_DEPENDS})
 
 # set a default root dir for each of our optional externals if it was not passed
 set(OPTIONAL_EXTERNALS "LeapMotion")
@@ -95,13 +95,6 @@ else ()
   get_filename_component(SPEECHRECOGNIZER_CPP "src/SpeechRecognizer.cpp" ABSOLUTE)
   list(REMOVE_ITEM INTERFACE_SRCS ${SPEECHRECOGNIZER_CPP})
 endif ()
-
-find_package(
-  Qt5 COMPONENTS
-  Gui Widgets Multimedia Network Qml Quick Script Svg
-  ${PLATFORM_QT_COMPONENTS}
-  WebChannel WebSockets
-)
 
 # grab the ui files in resources/ui
 file (GLOB_RECURSE QT_UI_FILES ui/*.ui)
@@ -191,13 +184,7 @@ else ()
   add_executable(${TARGET_NAME} ${INTERFACE_SRCS} ${QM})
 endif ()
 
-
-if (BUILD_TOOLS AND NPM_EXECUTABLE)
-  # require JSDoc to be build before interface is deployed
-  add_dependencies(resources jsdoc)
-endif()
-
-if (WIN32 OR APPLE)
+if (NOT ANDROID)
   add_dependencies(${TARGET_NAME} resources)
 endif()
 
@@ -343,10 +330,6 @@ if (APPLE)
     COMMAND "${CMAKE_COMMAND}" -E copy_directory
       "${CMAKE_SOURCE_DIR}/scripts"
       "${RESOURCES_DEV_DIR}/scripts"
-    # copy JSDoc files beside the executable
-    COMMAND "${CMAKE_COMMAND}" -E copy_directory
-      "${CMAKE_SOURCE_DIR}/tools/jsdoc/out"
-      "${RESOURCES_DEV_DIR}/jsdoc"
     # copy the resources files beside the executable
     COMMAND "${CMAKE_COMMAND}" -E copy_if_different
       "${RESOURCES_RCC}"
@@ -378,6 +361,13 @@ if (APPLE)
       )
   endif()
 
+  if (JSDOC_ENABLED)
+    add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+      # copy JSDoc files beside the executable
+      COMMAND "${CMAKE_COMMAND}" -E copy_directory
+      "${JSDOC_OUTPUT_PATH}"
+      "${RESOURCES_DEV_DIR}/jsdoc")
+  endif()
   # call the fixup_interface macro to add required bundling commands for installation
   fixup_interface()
 
@@ -387,9 +377,6 @@ else()
 
   # copy the resources files beside the executable
   add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
-    COMMAND "${CMAKE_COMMAND}" -E copy_if_different
-      "${RESOURCES_RCC}"
-      "${INTERFACE_EXEC_DIR}"
     # FIXME, the edit script code loads HTML from the scripts folder
     # which in turn relies on CSS that refers to the fonts.  In theory
     # we should be able to modify the CSS to reference the QRC path to
@@ -407,11 +394,15 @@ else()
     COMMAND "${CMAKE_COMMAND}" -E copy_if_different
       "${PROJECT_SOURCE_DIR}/resources/serverless/redirect.json"
       "${RESOURCES_DEV_DIR}/serverless/redirect.json"
+  )
+
+  if (JSDOC_ENABLED)
+    add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
     # copy JSDoc files beside the executable
     COMMAND "${CMAKE_COMMAND}" -E copy_directory
-      "${CMAKE_SOURCE_DIR}/tools/jsdoc/out"
-      "${INTERFACE_EXEC_DIR}/jsdoc"
-  )
+      "${JSDOC_OUTPUT_PATH}"
+      "${INTERFACE_EXEC_DIR}/jsdoc")
+  endif()
 
   # link target to external libraries
   if (WIN32)

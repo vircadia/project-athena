@@ -4,24 +4,19 @@ project(${TARGET_NAME})
 set(CUSTOM_NITPICK_QRC_PATHS "")
 
 find_npm()
+find_package(Qt5 COMPONENTS Widgets)
 
 set(RESOURCES_QRC ${CMAKE_CURRENT_BINARY_DIR}/resources.qrc)
-set(RESOURCES_RCC ${CMAKE_CURRENT_SOURCE_DIR}/compiledResources/resources.rcc)
+set(RESOURCES_RCC ${CMAKE_CURRENT_BINARY_DIR}/resources.rcc)
 generate_qrc(OUTPUT ${RESOURCES_QRC} PATH ${CMAKE_CURRENT_SOURCE_DIR}/resources CUSTOM_PATHS ${CUSTOM_NITPICK_QRC_PATHS} GLOBS *)
 
-add_custom_command(
-    OUTPUT ${RESOURCES_RCC}
-    DEPENDS ${RESOURCES_QRC} ${GENERATE_QRC_DEPENDS}
-    COMMAND "${RCC_BINARY}"
-    ARGS ${RESOURCES_QRC} -binary -o ${RESOURCES_RCC}
-)
+qt5_add_binary_resources(nitpick_resources "${RESOURCES_QRC}" DESTINATION "${RESOURCES_RCC}" OPTIONS -no-compress)
 
 # grab the implementation and header files from src dirs
 file(GLOB_RECURSE NITPICK_SRCS "src/*.cpp" "src/*.h")
 GroupSources("src")
 list(APPEND NITPICK_SRCS ${RESOURCES_RCC})
 
-find_package(Qt5 COMPONENTS Widgets)
 
 # grab the ui files in ui
 file (GLOB_RECURSE QT_UI_FILES ui/*.ui)
@@ -83,9 +78,7 @@ else ()
     add_executable(${TARGET_NAME} ${NITPICK_SRCS} ${QM})
 endif ()
 
-if (NOT UNIX)
-    add_dependencies(${TARGET_NAME} resources)
-endif()
+add_dependencies(${TARGET_NAME} nitpick_resources)
 
 # disable /OPT:REF and /OPT:ICF for the Debug builds
 # This will prevent the following linker warnings
